@@ -3,66 +3,67 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<title>盃員計數器</title>
+<title>羽球團</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--p:#2563eb;--s:#16a34a;--d:#dc2626;--bg:#f1f5f9;--c:#fff;--t:#1e293b;--m:#64748b;--b:#e2e8f0;--r:12px}
-body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
-header{background:var(--p);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-header h1{font-size:1.1rem;font-weight:700}
-.tabs{display:flex;gap:6px}
-.tab-btn{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:20px;padding:6px 14px;font-size:.85rem;cursor:pointer}
+html{font-size:16px}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t);min-height:100vh;-webkit-text-size-adjust:100%}
+header{background:var(--p);color:#fff;padding:12px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
+header h1{font-size:1rem;font-weight:700;white-space:nowrap}
+.tabs{display:flex;gap:6px;flex-shrink:0}
+.tab-btn{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:20px;padding:7px 14px;font-size:.82rem;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 .tab-btn.active{background:rgba(255,255,255,.9);color:var(--p);font-weight:700}
-.sync-bar{background:#1e3a5f;color:#93c5fd;font-size:.78rem;padding:5px 20px;display:flex;align-items:center;gap:8px;min-height:28px}
+.sync-bar{background:#1e3a5f;color:#93c5fd;font-size:.75rem;padding:4px 16px;display:flex;align-items:center;gap:8px;min-height:26px}
 .dot{width:7px;height:7px;border-radius:50%;background:#94a3b8;flex-shrink:0}
-.dot.ok{background:#4ade80}.dot.err{background:#f87171}.dot.go{background:#fbbf24;animation:p .8s infinite}
-@keyframes p{0%,100%{opacity:1}50%{opacity:.4}}
-.view{display:none;padding:16px 16px 80px}.view.active{display:block}
-.card{background:var(--c);border-radius:var(--r);padding:16px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:8px;padding:10px 18px;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent}
-.btn:active{transform:scale(.96);opacity:.85}
+.dot.ok{background:#4ade80}.dot.err{background:#f87171}.dot.go{background:#fbbf24;animation:pulse .8s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.view{display:none;padding:12px 12px 88px}.view.active{display:block}
+.card{background:var(--c);border-radius:var(--r);padding:14px;margin-bottom:12px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;border:none;border-radius:8px;padding:11px 18px;font-size:.9rem;font-weight:600;cursor:pointer;transition:opacity .15s,transform .1s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.btn:active{transform:scale(.95);opacity:.8}
 .bp{background:var(--p);color:#fff}.bs{background:var(--s);color:#fff}.bd{background:var(--d);color:#fff}
 .bo{background:transparent;color:var(--p);border:2px solid var(--p)}
-.add-row{display:flex;gap:8px;margin-bottom:16px}
-.add-row input{flex:1;padding:10px 14px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none}
+.add-row{display:flex;gap:8px;margin-bottom:14px}
+.add-row input{flex:1;padding:11px 14px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none;-webkit-appearance:none}
 .add-row input:focus{border-color:var(--p)}
-.pi{display:flex;align-items:center;gap:12px;padding:12px 14px;border-bottom:1px solid var(--b)}
+.pi{display:flex;align-items:center;gap:10px;padding:11px 12px;border-bottom:1px solid var(--b)}
 .pi:last-child{border-bottom:none}
 .pck{width:22px;height:22px;accent-color:var(--p);cursor:pointer;flex-shrink:0}
-.pn{flex:1;font-size:1rem}
-.pd{background:none;border:none;color:var(--d);font-size:1.2rem;cursor:pointer;padding:4px 8px}
-.eh{text-align:center;color:var(--m);padding:32px 0;font-size:.95rem}
-.sar{display:flex;align-items:center;gap:10px;padding:8px 0 12px;font-size:.9rem;color:var(--m)}
-.sar input{width:20px;height:20px;accent-color:var(--p);cursor:pointer}
-.gg{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
-.gc{background:var(--c);border-radius:var(--r);padding:16px 12px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;gap:10px}
-.gn{font-size:1rem;font-weight:600;word-break:break-all}
-.gct{font-size:2.8rem;font-weight:800;color:var(--p);line-height:1;transition:transform .2s}
-.cr{display:flex;align-items:center;gap:8px}
-.cb{width:44px;height:44px;border:none;border-radius:50%;font-size:1.4rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center}
-.cp{background:var(--s);color:#fff;width:52px;height:52px;font-size:1.8rem}
+.pn{flex:1;font-size:.95rem}
+.pd{background:none;border:none;color:var(--d);font-size:1.3rem;cursor:pointer;padding:4px 10px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.eh{text-align:center;color:var(--m);padding:32px 0;font-size:.9rem}
+.sar{display:flex;align-items:center;gap:10px;padding:6px 0 12px;font-size:.88rem;color:var(--m)}
+.sar input{width:22px;height:22px;accent-color:var(--p);cursor:pointer;flex-shrink:0}
+/* 今日比賽：固定 4 欄，最多 8 人一屏 */
+.gg{display:grid;grid-template-columns:repeat(4,1fr);gap:8px}
+.gc{background:var(--c);border-radius:10px;padding:10px 6px;text-align:center;box-shadow:0 1px 4px rgba(0,0,0,.06);display:flex;flex-direction:column;align-items:center;gap:6px}
+.gn{font-size:.78rem;font-weight:600;word-break:break-all;line-height:1.2;max-height:2.4em;overflow:hidden}
+.gct{font-size:2.4rem;font-weight:800;color:var(--p);line-height:1;transition:transform .18s}
+.cr{display:flex;align-items:center;gap:5px}
+.cb{width:40px;height:40px;border:none;border-radius:50%;font-size:1.4rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;display:flex;align-items:center;justify-content:center;touch-action:manipulation;user-select:none}
+.cp{background:var(--s);color:#fff;width:46px;height:46px;font-size:1.7rem}
 .cm{background:#f1f5f9;color:var(--t);border:2px solid var(--b)}
-.sb{display:flex;gap:16px;flex-wrap:wrap;font-size:.9rem;color:var(--m);margin-bottom:12px;padding:10px 14px;background:var(--c);border-radius:var(--r)}
+.sb{display:flex;gap:12px;flex-wrap:wrap;font-size:.85rem;color:var(--m);margin-bottom:10px;padding:9px 12px;background:var(--c);border-radius:var(--r)}
 .sb strong{color:var(--t)}
-.fab{position:fixed;bottom:20px;left:0;right:0;display:flex;justify-content:center;pointer-events:none}
-.fab .btn{pointer-events:all;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:14px 32px;font-size:1rem;border-radius:30px}
-.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center}
+.fab{position:fixed;bottom:16px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;padding:0 16px}
+.fab .btn{pointer-events:all;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:14px 36px;font-size:1rem;border-radius:30px;width:100%;max-width:340px}
+.mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
 .mo.show{display:flex}
-.mb{background:#fff;border-radius:var(--r);padding:24px;max-width:320px;width:90%;text-align:center}
-.mb h2{font-size:1.1rem;margin-bottom:8px}
-.mb p{color:var(--m);font-size:.9rem;margin-bottom:20px}
+.mb{background:#fff;border-radius:var(--r);padding:24px;width:100%;max-width:320px;text-align:center}
+.mb h2{font-size:1.05rem;margin-bottom:8px}
+.mb p{color:var(--m);font-size:.88rem;margin-bottom:20px;line-height:1.5}
 .ma{display:flex;gap:10px}
 .ma .btn{flex:1}
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(20px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:.9rem;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;z-index:300}
+.toast{position:fixed;bottom:84px;left:50%;transform:translateX(-50%) translateY(16px);background:#1e293b;color:#fff;padding:10px 20px;border-radius:20px;font-size:.88rem;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-@media(max-width:400px){.gg{grid-template-columns:repeat(2,1fr)}.gct{font-size:2.2rem}}
 </style>
 </head>
 <body>
 <header>
-<h1>🏸 盃員計數器</h1>
+<h1>🏸 羽球團</h1>
 <div class="tabs">
-<button class="tab-btn active" onclick="switchTab('manage')">盃員管理</button>
+<button class="tab-btn active" onclick="switchTab('manage')">球員管理</button>
 <button class="tab-btn" onclick="switchTab('game')">今日比賽</button>
 </div>
 </header>
@@ -70,7 +71,7 @@ header h1{font-size:1.1rem;font-weight:700}
 <div id="vm" class="view active">
 <div class="card">
 <div class="add-row">
-<input id="nn" type="text" placeholder="輸入盃員宥名..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
+<input id="nn" type="text" placeholder="輸入球員姓名..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
 <button class="btn bp" onclick="addPlayer()">新增</button>
 </div>
 <div class="sar">
@@ -84,7 +85,7 @@ header h1{font-size:1.1rem;font-weight:700}
 <div id="vg" class="view">
 <div class="sb" id="bar"></div>
 <div class="gg" id="grid"></div>
-<div style="margin-top:16px">
+<div style="margin-top:12px">
 <button class="btn bo" onclick="showReset()">重置今日次數</button>
 </div>
 </div>
@@ -92,7 +93,7 @@ header h1{font-size:1.1rem;font-weight:700}
 <div class="mo" id="rm">
 <div class="mb">
 <h2>確認重置？</h2>
-<p>將清除所有盃員今日的上場次數，無法後悔。</p>
+<p>將清除所有球員今日的上場次數，無法復原。</p>
 <div class="ma">
 <button class="btn bo" onclick="hideReset()">取消</button>
 <button class="btn bd" onclick="resetCounts()">確認重置</button>
@@ -111,8 +112,8 @@ async function pull(){
     if(!r.ok)throw 0;
     var d=await r.json(),c=d.files[GF]&&d.files[GF].content;
     if(c){var p=JSON.parse(c);players=p.players||[];gc=p.gameCounts||{};}
-    ss('ok','已同步 v');
-  }catch(e){ss('err','離線模式');ll();}
+    ss('ok','已同步 ✓');
+  }catch(e){ss('err','離線模式');loadLocal();}
   renderManage();if(tab==='game')renderGame();
 }
 async function push(){
@@ -124,7 +125,7 @@ async function push(){
       body:JSON.stringify({files:{[GF]:{content:JSON.stringify({players,gameCounts:gc},null,2)}}})
     });
     if(!r.ok)throw 0;
-    saveLocal();ss('ok','已同步 v');
+    saveLocal();ss('ok','已同步 ✓');
   }catch(e){saveLocal();ss('err','儲存失敗');}
 }
 function saveLocal(){localStorage.setItem('pp',JSON.stringify(players));localStorage.setItem('pc',JSON.stringify(gc));}
@@ -152,25 +153,25 @@ function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.se
 function toggleAll(v){players.forEach(function(p){p.selected=v;});save();renderManage();}
 function renderManage(){
   var list=document.getElementById('pl'),sc=document.getElementById('sc'),ca=document.getElementById('ca');
-  if(!players.length){list.innerHTML='<div class="eh">尚未新增任何盃員</div>';sc.textContent='';ca.checked=ca.indeterminate=false;return;}
+  if(!players.length){list.innerHTML='<div class="eh">尚未新增任何球員</div>';sc.textContent='';ca.checked=ca.indeterminate=false;return;}
   var sel=players.filter(function(p){return p.selected;}).length;
   sc.textContent='已選 '+sel+' / '+players.length;
   ca.checked=sel===players.length;ca.indeterminate=sel>0&&sel<players.length;
   list.innerHTML=players.map(function(p){
     var chk=p.selected?'checked':'';
-    return '<div class="pi"><input type="checkbox" class="pck" '+chk+' onchange="togP(\''+p.id+'\',this.checked)"/><span class="pn">'+esc(p.name)+'</span><button class="pd" onclick="delP(\''+p.id+'\')">X</button></div>';
+    return '<div class="pi"><input type="checkbox" class="pck" '+chk+' onchange="togP(\''+p.id+'\',this.checked)"/><span class="pn">'+esc(p.name)+'</span><button class="pd" onclick="delP(\''+p.id+'\')">✕</button></div>';
   }).join('');
 }
-function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選盃員');return;}switchTab('game');}
+function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選球員');return;}switchTab('game');}
 function renderGame(){
   var active=players.filter(function(p){return p.selected;}),grid=document.getElementById('grid'),bar=document.getElementById('bar');
-  if(!active.length){grid.innerHTML='<div class="eh" style="grid-column:1/-1">請先勾選盃員</div>';bar.innerHTML='';return;}
+  if(!active.length){grid.innerHTML='<div class="eh" style="grid-column:1/-1">請先勾選球員</div>';bar.innerHTML='';return;}
   var total=active.reduce(function(s,p){return s+(gc[p.id]||0);},0);
   var maxP=active.reduce(function(m,p){return(gc[p.id]||0)>(gc[m.id]||0)?p:m;},active[0]);
   bar.innerHTML='<span>人數 <strong>'+active.length+'</strong></span><span>總計 <strong>'+total+'</strong></span>'+(total>0?'<span>最多 <strong>'+esc(maxP.name)+'</strong> ('+(gc[maxP.id]||0)+')</span>':'');
   grid.innerHTML=active.map(function(p){
     var cnt=gc[p.id]||0;
-    return '<div class="gc"><div class="gn">'+esc(p.name)+'</div><div class="gct" id="c'+p.id+'">'+cnt+'</div><div class="cr"><button class="cb cm" onclick="adj(\''+p.id+'\',-1)">-</button><button class="cb cp" onclick="adj(\''+p.id+'\',1)">+</button></div></div>';
+    return '<div class="gc"><div class="gn">'+esc(p.name)+'</div><div class="gct" id="c'+p.id+'">'+cnt+'</div><div class="cr"><button class="cb cm" onclick="adj(\''+p.id+'\',-1)">−</button><button class="cb cp" onclick="adj(\''+p.id+'\',1)">+</button></div></div>';
   }).join('');
 }
 function adj(id,d){
