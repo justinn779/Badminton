@@ -3,11 +3,11 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/>
-<title>&#30403;&#21592;&#19978;&#22580;&#35336;&#25976;&#22120;</title>
+<title>盃員計數器</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{--p:#2563eb;--s:#16a34a;--d:#dc2626;--bg:#f1f5f9;--c:#fff;--t:#1e293b;--m:#64748b;--b:#e2e8f0;--r:12px}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--t);min-height:100vh}
 header{background:var(--p);color:#fff;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 2px 8px rgba(0,0,0,.2)}
 header h1{font-size:1.1rem;font-weight:700}
 .tabs{display:flex;gap:6px}
@@ -60,22 +60,22 @@ header h1{font-size:1.1rem;font-weight:700}
 </head>
 <body>
 <header>
-<h1>&#9917; &#30403;&#21592;&#35336;&#25976;&#22120;</h1>
+<h1>🏸 盃員計數器</h1>
 <div class="tabs">
-<button class="tab-btn active" onclick="switchTab('manage')">&#30403;&#21592;&#31649;&#29702;</button>
-<button class="tab-btn" onclick="switchTab('game')">&#20170;&#26085;&#27604;&#36093;</button>
+<button class="tab-btn active" onclick="switchTab('manage')">盃員管理</button>
+<button class="tab-btn" onclick="switchTab('game')">今日比賽</button>
 </div>
 </header>
-<div class="sync-bar"><div class="dot" id="sd"></div><span id="sm">&#36899;&#32267;&#20013;&#8230;</span></div>
+<div class="sync-bar"><div class="dot" id="sd"></div><span id="sm">連結中...</span></div>
 <div id="vm" class="view active">
 <div class="card">
 <div class="add-row">
-<input id="nn" type="text" placeholder="&#36664;&#20837;&#30403;&#21592;&#23461;&#21517;&#8230;" maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
-<button class="btn bp" onclick="addPlayer()">&#26032;&#22686;</button>
+<input id="nn" type="text" placeholder="輸入盃員宥名..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
+<button class="btn bp" onclick="addPlayer()">新增</button>
 </div>
 <div class="sar">
 <input type="checkbox" id="ca" onchange="toggleAll(this.checked)"/>
-<label for="ca">&#20840;&#36984; / &#21462;&#28040;&#20840;&#36984;</label>
+<label for="ca">全選 / 取消全選</label>
 <span id="sc" style="margin-left:auto"></span>
 </div>
 <div id="pl"></div>
@@ -85,17 +85,17 @@ header h1{font-size:1.1rem;font-weight:700}
 <div class="sb" id="bar"></div>
 <div class="gg" id="grid"></div>
 <div style="margin-top:16px">
-<button class="btn bo" onclick="showReset()">&#37325;&#32622;&#20170;&#26085;&#27425;&#25578;</button>
+<button class="btn bo" onclick="showReset()">重置今日次數</button>
 </div>
 </div>
-<div class="fab" id="fab"><button class="btn bs" onclick="startGame()">&#9654; &#38283;&#22987;&#20170;&#26085;&#27604;&#36093;</button></div>
+<div class="fab" id="fab"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
 <div class="mo" id="rm">
 <div class="mb">
-<h2>&#30906;&#35469;&#37325;&#32622;&#65311;</h2>
-<p>&#23558;&#28165;&#38500;&#25152;&#26377;&#30403;&#21592;&#20170;&#26085;&#30340;&#19978;&#22580;&#27425;&#25578;&#65292;&#28961;&#27861;&#24460;&#24481;&#12290;</p>
+<h2>確認重置？</h2>
+<p>將清除所有盃員今日的上場次數，無法後悔。</p>
 <div class="ma">
-<button class="btn bo" onclick="hideReset()">&#21462;&#28040;</button>
-<button class="btn bd" onclick="resetCounts()">&#30906;&#35469;&#37325;&#32622;</button>
+<button class="btn bo" onclick="hideReset()">取消</button>
+<button class="btn bd" onclick="resetCounts()">確認重置</button>
 </div>
 </div>
 </div>
@@ -105,91 +105,92 @@ var GID='915509b4ce537da97c758d27f2172416',_a='ghp_epRpeKt4zDC1Q',_b='FgURZAlYJW
 var players=[],gc={},tab='manage',st=null;
 function ss(s,m){document.getElementById('sd').className='dot '+s;document.getElementById('sm').textContent=m;}
 async function pull(){
-  ss('go','...');
+  ss('go','同步中...');
   try{
-    var r=await fetch('https://api.github.com/gists/'+GID,{headers:{'Authorization':'Bearer '+GT}});
+    var r=await fetch('https://api.github.com/gists/'+GID,{headers:{Authorization:'Bearer '+GT}});
     if(!r.ok)throw 0;
     var d=await r.json(),c=d.files[GF]&&d.files[GF].content;
     if(c){var p=JSON.parse(c);players=p.players||[];gc=p.gameCounts||{};}
-    ss('ok','&#24050;&#21516;&#27493; v');
-  }catch(e){ss('err','&#30000;&#32254;&#22833;&#25215;');ll();}
-  rm();if(tab==='game')rg();
+    ss('ok','已同步 v');
+  }catch(e){ss('err','離線模式');ll();}
+  renderManage();if(tab==='game')renderGame();
 }
 async function push(){
-  ss('go','...');
+  ss('go','同步中...');
   try{
     var r=await fetch('https://api.github.com/gists/'+GID,{
       method:'PATCH',
-      headers:{'Authorization':'Bearer '+GT,'Content-Type':'application/json'},
-      body:JSON.stringify({files:{[GF]:{content:JSON.stringify({players:players,gameCounts:gc},null,2)}}})
+      headers:{Authorization:'Bearer '+GT,'Content-Type':'application/json'},
+      body:JSON.stringify({files:{[GF]:{content:JSON.stringify({players,gameCounts:gc},null,2)}}})
     });
     if(!r.ok)throw 0;
-    sl();ss('ok','&#24050;&#21516;&#27493; v');
-  }catch(e){sl();ss('err','&#22833;&#25215;');}
+    saveLocal();ss('ok','已同步 v');
+  }catch(e){saveLocal();ss('err','儲存失敗');}
 }
-function sl(){localStorage.setItem('pp',JSON.stringify(players));localStorage.setItem('pc',JSON.stringify(gc));}
-function ll(){try{var p=localStorage.getItem('pp'),c=localStorage.getItem('pc');if(p)players=JSON.parse(p);if(c)gc=JSON.parse(c);}catch(e){}}
-function save(){sl();clearTimeout(st);st=setTimeout(push,1200);}
+function saveLocal(){localStorage.setItem('pp',JSON.stringify(players));localStorage.setItem('pc',JSON.stringify(gc));}
+function loadLocal(){try{var p=localStorage.getItem('pp'),c=localStorage.getItem('pc');if(p)players=JSON.parse(p);if(c)gc=JSON.parse(c);}catch(e){}}
+function save(){saveLocal();clearTimeout(st);st=setTimeout(push,1200);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
 function switchTab(t){
   tab=t;
-  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',['manage','game'][i]===t);});
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===(t==='manage'?0:1));});
   document.getElementById('vm').classList.toggle('active',t==='manage');
   document.getElementById('vg').classList.toggle('active',t==='game');
   document.getElementById('fab').style.display=t==='manage'?'':'none';
-  if(t==='game')rg();
+  if(t==='game')renderGame();
 }
 function addPlayer(){
   var inp=document.getElementById('nn'),name=inp.value.trim();
   if(!name)return;
-  if(players.find(function(p){return p.name===name;})){toast('&#37325;&#35206;');return;}
-  var id=Date.now()+'';
-  players.push({id:id,name:name,selected:true});gc[id]=0;
-  inp.value='';save();rm();inp.focus();
+  if(players.find(function(p){return p.name===name;})){toast('名稱重複');return;}
+  var id=''+Date.now();
+  players.push({id,name,selected:true});gc[id]=0;
+  inp.value='';save();renderManage();inp.focus();
 }
-function delP(id){players=players.filter(function(p){return p.id!==id;});delete gc[id];save();rm();}
-function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.selected=v;save();rm();}
-function toggleAll(v){players.forEach(function(p){p.selected=v;});save();rm();}
-function rm(){
+function delP(id){players=players.filter(function(p){return p.id!==id;});delete gc[id];save();renderManage();}
+function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.selected=v;save();renderManage();}
+function toggleAll(v){players.forEach(function(p){p.selected=v;});save();renderManage();}
+function renderManage(){
   var list=document.getElementById('pl'),sc=document.getElementById('sc'),ca=document.getElementById('ca');
-  if(!players.length){list.innerHTML='<div class="eh">&#23578;&#26410;&#26032;&#22686;&#20219;&#20309;&#30403;&#21592;</div>';sc.textContent='';ca.checked=ca.indeterminate=false;return;}
+  if(!players.length){list.innerHTML='<div class="eh">尚未新增任何盃員</div>';sc.textContent='';ca.checked=ca.indeterminate=false;return;}
   var sel=players.filter(function(p){return p.selected;}).length;
-  sc.textContent='&#24050;&#36984; '+sel+' / '+players.length;
+  sc.textContent='已選 '+sel+' / '+players.length;
   ca.checked=sel===players.length;ca.indeterminate=sel>0&&sel<players.length;
   list.innerHTML=players.map(function(p){
-    return '<div class="pi"><input type="checkbox" class="pck" '+(p.selected?'checked':'')+' onchange="togP(''+p.id+'',this.checked)"/><span class="pn">'+esc(p.name)+'</span><button class="pd" onclick="delP(''+p.id+'')">X</button></div>';
+    var chk=p.selected?'checked':'';
+    return '<div class="pi"><input type="checkbox" class="pck" '+chk+' onchange="togP(\''+p.id+'\',this.checked)"/><span class="pn">'+esc(p.name)+'</span><button class="pd" onclick="delP(\''+p.id+'\')">X</button></div>';
   }).join('');
 }
-function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('&#35531;&#20808;&#21028;&#36984;&#30403;&#21592;');return;}switchTab('game');}
-function rg(){
+function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選盃員');return;}switchTab('game');}
+function renderGame(){
   var active=players.filter(function(p){return p.selected;}),grid=document.getElementById('grid'),bar=document.getElementById('bar');
-  if(!active.length){grid.innerHTML='<div class="eh" style="grid-column:1/-1">&#35531;&#20808;&#21028;&#36984;&#30403;&#21592;</div>';bar.innerHTML='';return;}
+  if(!active.length){grid.innerHTML='<div class="eh" style="grid-column:1/-1">請先勾選盃員</div>';bar.innerHTML='';return;}
   var total=active.reduce(function(s,p){return s+(gc[p.id]||0);},0);
-  var maxP=active.reduce(function(m,p){return (gc[p.id]||0)>(gc[m.id]||0)?p:m;},active[0]);
-  bar.innerHTML='<span>&#20154;&#25976; <strong>'+active.length+'</strong></span><span>&#24635; <strong>'+total+'</strong></span>'+(total>0?'<span>&#26368;&#22810; <strong>'+esc(maxP.name)+'</strong> ('+(gc[maxP.id]||0)+')</span>':'');
+  var maxP=active.reduce(function(m,p){return(gc[p.id]||0)>(gc[m.id]||0)?p:m;},active[0]);
+  bar.innerHTML='<span>人數 <strong>'+active.length+'</strong></span><span>總計 <strong>'+total+'</strong></span>'+(total>0?'<span>最多 <strong>'+esc(maxP.name)+'</strong> ('+(gc[maxP.id]||0)+')</span>':'');
   grid.innerHTML=active.map(function(p){
     var cnt=gc[p.id]||0;
-    return '<div class="gc"><div class="gn">'+esc(p.name)+'</div><div class="gct" id="c'+p.id+'">'+cnt+'</div><div class="cr"><button class="cb cm" onclick="adj(''+p.id+'',-1)">-</button><button class="cb cp" onclick="adj(''+p.id+'',1)">+</button></div></div>';
+    return '<div class="gc"><div class="gn">'+esc(p.name)+'</div><div class="gct" id="c'+p.id+'">'+cnt+'</div><div class="cr"><button class="cb cm" onclick="adj(\''+p.id+'\',-1)">-</button><button class="cb cp" onclick="adj(\''+p.id+'\',1)">+</button></div></div>';
   }).join('');
 }
 function adj(id,d){
   gc[id]=Math.max(0,(gc[id]||0)+d);save();
   var el=document.getElementById('c'+id);
   if(el){el.textContent=gc[id];el.style.transform='scale(1.35)';setTimeout(function(){el.style.transform='scale(1)';},180);}
-  ub();
+  updateBar();
 }
-function ub(){
+function updateBar(){
   var active=players.filter(function(p){return p.selected;});if(!active.length)return;
   var total=active.reduce(function(s,p){return s+(gc[p.id]||0);},0);
-  var maxP=active.reduce(function(m,p){return (gc[p.id]||0)>(gc[m.id]||0)?p:m;},active[0]);
-  document.getElementById('bar').innerHTML='<span>&#20154;&#25976; <strong>'+active.length+'</strong></span><span>&#24635; <strong>'+total+'</strong></span>'+(total>0?'<span>&#26368;&#22810; <strong>'+esc(maxP.name)+'</strong> ('+(gc[maxP.id]||0)+')</span>':'');
+  var maxP=active.reduce(function(m,p){return(gc[p.id]||0)>(gc[m.id]||0)?p:m;},active[0]);
+  document.getElementById('bar').innerHTML='<span>人數 <strong>'+active.length+'</strong></span><span>總計 <strong>'+total+'</strong></span>'+(total>0?'<span>最多 <strong>'+esc(maxP.name)+'</strong> ('+(gc[maxP.id]||0)+')</span>':'');
 }
 function showReset(){document.getElementById('rm').classList.add('show');}
 function hideReset(){document.getElementById('rm').classList.remove('show');}
-function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideReset();rg();toast('&#24050;&#37325;&#32622;');}
+function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideReset();renderGame();toast('已重置');}
 var tt;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2200);}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-ll();rm();pull();
+loadLocal();renderManage();pull();
 setInterval(pull,30000);
 </script>
 </body>
