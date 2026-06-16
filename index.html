@@ -43,22 +43,47 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .sb{flex-shrink:0;display:flex;gap:10px;flex-wrap:wrap;font-size:.82rem;color:var(--m);padding:6px 10px;background:var(--c);border-radius:8px}
 .sb strong{color:var(--t)}
 .gg{flex:1;display:grid;gap:6px;overflow:hidden;grid-auto-rows:1fr}
-/* Container queries：讓卡片內容跟著卡片大小縮放 */
-.gc{background:var(--c);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);
-  display:flex;flex-direction:column;align-items:center;justify-content:space-evenly;
-  padding:4px;overflow:hidden;min-height:0;
-  container-type:size;container-name:card}
+
+/* ── 卡片：左[−] 中[姓名+計數] 右[+] ── */
+.gc{
+  background:var(--c);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);
+  display:flex;flex-direction:row;align-items:stretch;
+  padding:4px;gap:4px;overflow:hidden;min-height:0;
+  container-type:size;container-name:card
+}
+/* 左右按鈕：貼齊上下、寬度跟著卡片比例 */
 @container card (min-width:1px){
-  .gn{font-size:min(13cqh,22cqw);font-weight:600;word-break:break-all;text-align:center;line-height:1.2;max-height:2.6em;overflow:hidden}
-  .gct{font-size:min(38cqh,52cqw);font-weight:800;color:var(--p);line-height:1;transition:transform .18s}
-  .cr{display:flex;align-items:center;gap:min(2cqh,3cqw)}
-  .cb{border:none;border-radius:50%;font-weight:700;cursor:pointer;
+  .cb{
+    flex-shrink:0;
+    width:min(28cqh,30cqw);
+    align-self:stretch;
+    border:none;border-radius:8px;
+    font-size:min(22cqh,16cqw);
+    font-weight:800;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
     -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-    display:flex;align-items:center;justify-content:center;user-select:none;
-    width:min(26cqh,34cqw);height:min(26cqh,34cqw);
-    font-size:min(15cqh,20cqw)}
+    user-select:none;transition:opacity .1s,transform .1s
+  }
+  .cb:active{opacity:.7;transform:scale(.93)}
   .cp{background:var(--s);color:#fff}
-  .cm{background:#f1f5f9;color:var(--t);border:2px solid var(--b)}
+  .cm{background:#e8f5e9;color:var(--s)}
+  /* 中間區塊：姓名上 計數下 */
+  .gmid{
+    flex:1;min-width:0;
+    display:flex;flex-direction:column;
+    align-items:center;justify-content:center;
+    gap:min(2cqh,2cqw)
+  }
+  .gn{
+    font-size:min(13cqh,18cqw);
+    font-weight:600;word-break:break-all;text-align:center;
+    line-height:1.2;max-height:2.4em;overflow:hidden;width:100%
+  }
+  .gct{
+    font-size:min(48cqh,50cqw);
+    font-weight:800;color:var(--p);line-height:1;
+    transition:transform .18s
+  }
 }
 .rst{flex-shrink:0}
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
@@ -173,10 +198,9 @@ function renderManage(){
   }).join('');
 }
 function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選球員');return;}switchTab('game');}
-/* 直式：最多2欄（卡片大）；橫式：最多4欄 */
 function getCols(n){
   var land=window.innerWidth>window.innerHeight;
-  if(land) return Math.min(n,4);
+  if(land)return Math.min(n,4);
   return Math.min(n,2);
 }
 function renderGame(){
@@ -188,7 +212,11 @@ function renderGame(){
   grid.style.gridTemplateColumns='repeat('+cols+',1fr)';
   grid.innerHTML=active.map(function(p){
     var cnt=gc[p.id]||0;
-    return '<div class="gc"><div class="gn">'+esc(p.name)+'</div><div class="gct" id="c'+p.id+'">'+cnt+'</div><div class="cr"><button class="cb cm" onclick="adj(\''+p.id+'\',-1)">−</button><button class="cb cp" onclick="adj(\''+p.id+'\',1)">+</button></div></div>';
+    return '<div class="gc">'
+      +'<button class="cb cm" onclick="adj(\''+p.id+'\',-1)">−</button>'
+      +'<div class="gmid"><div class="gn">'+esc(p.name)+'</div><div class="gct" id="c'+p.id+'">'+cnt+'</div></div>'
+      +'<button class="cb cp" onclick="adj(\''+p.id+'\',1)">+</button>'
+      +'</div>';
   }).join('');
 }
 function adj(id,d){
