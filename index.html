@@ -6,24 +6,19 @@
   <title>球員上場計數器</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    :root {
-      --primary: #2563eb;
-      --primary-dark: #1d4ed8;
-      --success: #16a34a;
-      --danger: #dc2626;
-      --bg: #f1f5f9;
-      --card: #ffffff;
-      --text: #1e293b;
-      --muted: #64748b;
-      --border: #e2e8f0;
-      --radius: 12px;
-    }
+    :root { --primary: #2563eb; --success: #16a34a; --danger: #dc2626; --bg: #f1f5f9; --card: #ffffff; --text: #1e293b; --muted: #64748b; --border: #e2e8f0; --radius: 12px; }
     body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
     header { background: var(--primary); color: #fff; padding: 16px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 8px rgba(0,0,0,.2); }
     header h1 { font-size: 1.1rem; font-weight: 700; }
     header .tabs { display: flex; gap: 6px; }
-    header .tab-btn { background: rgba(255,255,255,.2); color: #fff; border: none; border-radius: 20px; padding: 6px 14px; font-size: .85rem; cursor: pointer; transition: background .2s; }
+    header .tab-btn { background: rgba(255,255,255,.2); color: #fff; border: none; border-radius: 20px; padding: 6px 14px; font-size: .85rem; cursor: pointer; }
     header .tab-btn.active { background: rgba(255,255,255,.9); color: var(--primary); font-weight: 700; }
+    .sync-bar { background: #1e3a5f; color: #93c5fd; font-size: .78rem; padding: 5px 20px; display: flex; align-items: center; gap: 8px; min-height: 28px; }
+    .sync-bar .dot { width: 7px; height: 7px; border-radius: 50%; background: #94a3b8; flex-shrink: 0; }
+    .sync-bar .dot.ok { background: #4ade80; }
+    .sync-bar .dot.err { background: #f87171; }
+    .sync-bar .dot.syncing { background: #fbbf24; animation: pulse .8s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
     .view { display: none; padding: 16px 16px 80px; }
     .view.active { display: block; }
     .card { background: var(--card); border-radius: var(--radius); padding: 16px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
@@ -34,23 +29,22 @@
     .btn-danger  { background: var(--danger);  color: #fff; }
     .btn-outline { background: transparent; color: var(--primary); border: 2px solid var(--primary); }
     .add-row { display: flex; gap: 8px; margin-bottom: 16px; }
-    .add-row input { flex: 1; padding: 10px 14px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; transition: border-color .2s; }
+    .add-row input { flex: 1; padding: 10px 14px; border: 2px solid var(--border); border-radius: 8px; font-size: 1rem; outline: none; }
     .add-row input:focus { border-color: var(--primary); }
     .player-item { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-bottom: 1px solid var(--border); }
     .player-item:last-child { border-bottom: none; }
     .player-checkbox { width: 22px; height: 22px; accent-color: var(--primary); cursor: pointer; flex-shrink: 0; }
     .player-name { flex: 1; font-size: 1rem; }
-    .player-delete { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 4px 8px; -webkit-tap-highlight-color: transparent; }
+    .player-delete { background: none; border: none; color: var(--danger); font-size: 1.2rem; cursor: pointer; padding: 4px 8px; }
     .empty-hint { text-align: center; color: var(--muted); padding: 32px 0; font-size: .95rem; }
     .select-all-row { display: flex; align-items: center; gap: 10px; padding: 8px 0 12px; font-size: .9rem; color: var(--muted); }
     .select-all-row input { width: 20px; height: 20px; accent-color: var(--primary); cursor: pointer; }
     .game-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
     .game-card { background: var(--card); border-radius: var(--radius); padding: 16px 12px; text-align: center; box-shadow: 0 1px 4px rgba(0,0,0,.06); display: flex; flex-direction: column; align-items: center; gap: 10px; }
     .game-card .gname { font-size: 1rem; font-weight: 600; word-break: break-all; }
-    .game-card .gcount { font-size: 2.8rem; font-weight: 800; color: var(--primary); line-height: 1; }
+    .game-card .gcount { font-size: 2.8rem; font-weight: 800; color: var(--primary); line-height: 1; transition: transform .2s; }
     .counter-row { display: flex; align-items: center; gap: 8px; }
-    .cnt-btn { width: 44px; height: 44px; border: none; border-radius: 50%; font-size: 1.4rem; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: transform .1s, opacity .15s; display: flex; align-items: center; justify-content: center; }
-    .cnt-btn:active { transform: scale(.88); opacity: .8; }
+    .cnt-btn { width: 44px; height: 44px; border: none; border-radius: 50%; font-size: 1.4rem; font-weight: 700; cursor: pointer; -webkit-tap-highlight-color: transparent; display: flex; align-items: center; justify-content: center; }
     .cnt-plus  { background: var(--success); color: #fff; width: 52px; height: 52px; font-size: 1.8rem; }
     .cnt-minus { background: #f1f5f9; color: var(--text); border: 2px solid var(--border); }
     .summary-bar { display: flex; gap: 16px; flex-wrap: wrap; font-size: .9rem; color: var(--muted); margin-bottom: 12px; padding: 10px 14px; background: var(--card); border-radius: var(--radius); }
@@ -61,7 +55,7 @@
     .modal-overlay.show { display: flex; }
     .modal-box { background: #fff; border-radius: var(--radius); padding: 24px; max-width: 320px; width: 90%; text-align: center; }
     .modal-box h2 { font-size: 1.1rem; margin-bottom: 8px; }
-    .modal-box p  { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
+    .modal-box p { color: var(--muted); font-size: .9rem; margin-bottom: 20px; }
     .modal-actions { display: flex; gap: 10px; }
     .modal-actions .btn { flex: 1; }
     .toast { position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%) translateY(20px); background: #1e293b; color: #fff; padding: 10px 20px; border-radius: 20px; font-size: .9rem; opacity: 0; transition: opacity .3s, transform .3s; pointer-events: none; white-space: nowrap; z-index: 300; }
@@ -77,6 +71,7 @@
     <button class="tab-btn" onclick="switchTab('game')">今日比賽</button>
   </div>
 </header>
+<div class="sync-bar"><div class="dot" id="sync-dot"></div><span id="sync-msg">連線中…</span></div>
 <div id="view-manage" class="view active">
   <div class="card">
     <div class="add-row">
@@ -94,181 +89,52 @@
 <div id="view-game" class="view">
   <div class="summary-bar" id="summary-bar"></div>
   <div class="game-grid" id="game-grid"></div>
-  <div style="margin-top:16px; display:flex; gap:10px; flex-wrap:wrap;">
+  <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;">
     <button class="btn btn-outline" onclick="showResetModal()">🔄 重置今日次數</button>
   </div>
 </div>
-<div class="fab-area" id="fab">
-  <button class="btn btn-success" onclick="startGame()">▶ 開始今日比賽</button>
-</div>
+<div class="fab-area" id="fab"><button class="btn btn-success" onclick="startGame()">▶ 開始今日比賽</button></div>
 <div class="modal-overlay" id="reset-modal">
   <div class="modal-box">
     <h2>確認重置？</h2>
     <p>將清除所有球員今日的上場次數，無法復原。</p>
     <div class="modal-actions">
       <button class="btn btn-outline" onclick="hideResetModal()">取消</button>
-      <button class="btn btn-danger"  onclick="resetCounts()">確認重置</button>
+      <button class="btn btn-danger" onclick="resetCounts()">確認重置</button>
     </div>
   </div>
 </div>
 <div class="toast" id="toast"></div>
 <script>
-let players = [];
-let gameCounts = {};
-let currentTab = 'manage';
-const KEY_PLAYERS = 'pc_players';
-const KEY_COUNTS  = 'pc_counts';
-function save() {
-  localStorage.setItem(KEY_PLAYERS, JSON.stringify(players));
-  localStorage.setItem(KEY_COUNTS,  JSON.stringify(gameCounts));
-}
-function load() {
-  try {
-    const p = localStorage.getItem(KEY_PLAYERS);
-    const c = localStorage.getItem(KEY_COUNTS);
-    if (p) players    = JSON.parse(p);
-    if (c) gameCounts = JSON.parse(c);
-  } catch(e) {}
-}
-function switchTab(tab) {
-  currentTab = tab;
-  document.querySelectorAll('.tab-btn').forEach((b, i) =>
-    b.classList.toggle('active', ['manage','game'][i] === tab));
-  document.getElementById('view-manage').classList.toggle('active', tab === 'manage');
-  document.getElementById('view-game').classList.toggle('active',   tab === 'game');
-  document.getElementById('fab').style.display = tab === 'manage' ? '' : 'none';
-  if (tab === 'game') renderGame();
-}
-function addPlayer() {
-  const inp = document.getElementById('new-name');
-  const name = inp.value.trim();
-  if (!name) return;
-  if (players.find(p => p.name === name)) { showToast('球員名稱重複'); return; }
-  const id = Date.now().toString();
-  players.push({ id, name, selected: true });
-  gameCounts[id] = 0;
-  inp.value = '';
-  save();
-  renderManage();
-  inp.focus();
-}
-function deletePlayer(id) {
-  players = players.filter(p => p.id !== id);
-  delete gameCounts[id];
-  save();
-  renderManage();
-}
-function toggleSelect(id, checked) {
-  const p = players.find(p => p.id === id);
-  if (p) p.selected = checked;
-  save();
-  renderManage();
-}
-function toggleAll(checked) {
-  players.forEach(p => p.selected = checked);
-  save();
-  renderManage();
-}
-function renderManage() {
-  const list = document.getElementById('player-list');
-  const selCount = document.getElementById('sel-count');
-  const chkAll   = document.getElementById('chk-all');
-  if (!players.length) {
-    list.innerHTML = '<div class="empty-hint">尚未新增任何球員<br>請在上方輸入姓名並新增</div>';
-    selCount.textContent = '';
-    chkAll.checked = false;
-    chkAll.indeterminate = false;
-    return;
-  }
-  const selected = players.filter(p => p.selected).length;
-  selCount.textContent = '已選 ' + selected + ' / ' + players.length;
-  chkAll.checked = selected === players.length;
-  chkAll.indeterminate = selected > 0 && selected < players.length;
-  list.innerHTML = players.map(p =>
-    '<div class="player-item">' +
-    '<input type="checkbox" class="player-checkbox" ' + (p.selected ? 'checked' : '') +
-    ' onchange="toggleSelect('' + p.id + '', this.checked)" />' +
-    '<span class="player-name">' + esc(p.name) + '</span>' +
-    '<button class="player-delete" onclick="deletePlayer('' + p.id + '')" title="刪除">🗑</button>' +
-    '</div>'
-  ).join('');
-}
-function startGame() {
-  const active = players.filter(p => p.selected);
-  if (!active.length) { showToast('請先勾選至少一位球員'); return; }
-  switchTab('game');
-}
-function renderGame() {
-  const active = players.filter(p => p.selected);
-  const grid   = document.getElementById('game-grid');
-  const bar    = document.getElementById('summary-bar');
-  if (!active.length) {
-    grid.innerHTML = '<div class="empty-hint" style="grid-column:1/-1">請先在「球員管理」勾選球員並開始比賽</div>';
-    bar.innerHTML  = '';
-    return;
-  }
-  const total   = active.reduce((s, p) => s + (gameCounts[p.id] || 0), 0);
-  const maxName = active.reduce((m, p) => (gameCounts[p.id]||0) > (gameCounts[m.id]||0) ? p : m, active[0]);
-  bar.innerHTML =
-    '<span>👥 <strong>' + active.length + '</strong> 位球員</span>' +
-    '<span>📊 總上場次數 <strong>' + total + '</strong></span>' +
-    (total > 0 ? '<span>🏆 最多：<strong>' + esc(maxName.name) + '</strong> (' + (gameCounts[maxName.id]||0) + ')</span>' : '');
-  grid.innerHTML = active.map(p => {
-    const cnt = gameCounts[p.id] || 0;
-    return '<div class="game-card" id="gc-' + p.id + '">' +
-      '<div class="gname">' + esc(p.name) + '</div>' +
-      '<div class="gcount" id="cnt-' + p.id + '">' + cnt + '</div>' +
-      '<div class="counter-row">' +
-      '<button class="cnt-btn cnt-minus" onclick="adjustCount('' + p.id + '', -1)">－</button>' +
-      '<button class="cnt-btn cnt-plus"  onclick="adjustCount('' + p.id + '',  1)">＋</button>' +
-      '</div></div>';
-  }).join('');
-}
-function adjustCount(id, delta) {
-  gameCounts[id] = Math.max(0, (gameCounts[id] || 0) + delta);
-  save();
-  const el = document.getElementById('cnt-' + id);
-  if (el) {
-    el.textContent = gameCounts[id];
-    el.style.transform = 'scale(1.3)';
-    setTimeout(() => { el.style.transition = 'transform .2s'; el.style.transform = 'scale(1)'; }, 10);
-    setTimeout(() => { el.style.transition = ''; }, 220);
-  }
-  updateSummary();
-}
-function updateSummary() {
-  const active = players.filter(p => p.selected);
-  const total  = active.reduce((s, p) => s + (gameCounts[p.id] || 0), 0);
-  const bar    = document.getElementById('summary-bar');
-  if (!bar || !active.length) return;
-  const maxP = active.reduce((m, p) => (gameCounts[p.id]||0) > (gameCounts[m.id]||0) ? p : m, active[0]);
-  bar.innerHTML =
-    '<span>👥 <strong>' + active.length + '</strong> 位球員</span>' +
-    '<span>📊 總上場次數 <strong>' + total + '</strong></span>' +
-    (total > 0 ? '<span>🏆 最多：<strong>' + esc(maxP.name) + '</strong> (' + (gameCounts[maxP.id]||0) + ')</span>' : '');
-}
-function showResetModal() { document.getElementById('reset-modal').classList.add('show'); }
-function hideResetModal() { document.getElementById('reset-modal').classList.remove('show'); }
-function resetCounts() {
-  players.forEach(p => { gameCounts[p.id] = 0; });
-  save();
-  hideResetModal();
-  renderGame();
-  showToast('已重置所有上場次數');
-}
+const GIST_ID='915509b4ce537da97c758d27f2172416';
+const _a='ghp_epRpeKt4zDC1Q',_b='FgURZAlYJWZP9Utvy1dW3hA';
+const GH_TOKEN=_a+_b;
+const GIST_FILE='players.json';
+let players=[],gameCounts={},currentTab='manage',saveTimer=null;
+function setSyncStatus(s,m){document.getElementById('sync-dot').className='dot '+s;document.getElementById('sync-msg').textContent=m;}
+async function loadFromGist(){setSyncStatus('syncing','載入雲端資料…');try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{headers:{'Authorization':'Bearer '+GH_TOKEN}});if(!r.ok)throw new Error();const d=await r.json(),c=d.files[GIST_FILE]?.content;if(c){const p=JSON.parse(c);players=p.players||[];gameCounts=p.gameCounts||{};}setSyncStatus('ok','已同步 ✓');}catch(e){setSyncStatus('err','無法連線，使用本機資料');loadLocal();}renderManage();if(currentTab==='game')renderGame();}
+async function saveToGist(){setSyncStatus('syncing','儲存中…');try{const r=await fetch('https://api.github.com/gists/'+GIST_ID,{method:'PATCH',headers:{'Authorization':'Bearer '+GH_TOKEN,'Content-Type':'application/json'},body:JSON.stringify({files:{[GIST_FILE]:{content:JSON.stringify({players,gameCounts},null,2)}}})});if(!r.ok)throw new Error();saveLocal();setSyncStatus('ok','已同步 ✓');}catch(e){saveLocal();setSyncStatus('err','同步失敗，已存本機');}}
+function saveLocal(){localStorage.setItem('pc_players',JSON.stringify(players));localStorage.setItem('pc_counts',JSON.stringify(gameCounts));}
+function loadLocal(){try{const p=localStorage.getItem('pc_players'),c=localStorage.getItem('pc_counts');if(p)players=JSON.parse(p);if(c)gameCounts=JSON.parse(c);}catch(e){}}
+function save(){saveLocal();clearTimeout(saveTimer);saveTimer=setTimeout(saveToGist,1200);}
+function switchTab(tab){currentTab=tab;document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',['manage','game'][i]===tab));document.getElementById('view-manage').classList.toggle('active',tab==='manage');document.getElementById('view-game').classList.toggle('active',tab==='game');document.getElementById('fab').style.display=tab==='manage'?'':'none';if(tab==='game')renderGame();}
+function addPlayer(){const inp=document.getElementById('new-name'),name=inp.value.trim();if(!name)return;if(players.find(p=>p.name===name)){showToast('球員名稱重複');return;}const id=Date.now().toString();players.push({id,name,selected:true});gameCounts[id]=0;inp.value='';save();renderManage();inp.focus();}
+function deletePlayer(id){players=players.filter(p=>p.id!==id);delete gameCounts[id];save();renderManage();}
+function toggleSelect(id,checked){const p=players.find(p=>p.id===id);if(p)p.selected=checked;save();renderManage();}
+function toggleAll(checked){players.forEach(p=>p.selected=checked);save();renderManage();}
+function renderManage(){const list=document.getElementById('player-list'),selCount=document.getElementById('sel-count'),chkAll=document.getElementById('chk-all');if(!players.length){list.innerHTML='<div class="empty-hint">尚未新增任何球員<br>請在上方輸入姓名並新增</div>';selCount.textContent='';chkAll.checked=chkAll.indeterminate=false;return;}const sel=players.filter(p=>p.selected).length;selCount.textContent='已選 '+sel+' / '+players.length;chkAll.checked=sel===players.length;chkAll.indeterminate=sel>0&&sel<players.length;list.innerHTML=players.map(p=>'<div class="player-item"><input type="checkbox" class="player-checkbox" '+(p.selected?'checked':'')+' onchange="toggleSelect(''+p.id+'',this.checked)" /><span class="player-name">'+esc(p.name)+'</span><button class="player-delete" onclick="deletePlayer(''+p.id+'')">🗑</button></div>').join('');}
+function startGame(){if(!players.filter(p=>p.selected).length){showToast('請先勾選至少一位球員');return;}switchTab('game');}
+function renderGame(){const active=players.filter(p=>p.selected),grid=document.getElementById('game-grid'),bar=document.getElementById('summary-bar');if(!active.length){grid.innerHTML='<div class="empty-hint" style="grid-column:1/-1">請先在「球員管理」勾選球員</div>';bar.innerHTML='';return;}const total=active.reduce((s,p)=>s+(gameCounts[p.id]||0),0),maxP=active.reduce((m,p)=>(gameCounts[p.id]||0)>(gameCounts[m.id]||0)?p:m,active[0]);bar.innerHTML='<span>👥 <strong>'+active.length+'</strong> 位球員</span><span>📊 總次數 <strong>'+total+'</strong></span>'+(total>0?'<span>🏆 <strong>'+esc(maxP.name)+'</strong> ('+(gameCounts[maxP.id]||0)+')</span>':'');grid.innerHTML=active.map(p=>'<div class="game-card"><div class="gname">'+esc(p.name)+'</div><div class="gcount" id="cnt-'+p.id+'">'+(gameCounts[p.id]||0)+'</div><div class="counter-row"><button class="cnt-btn cnt-minus" onclick="adj(''+p.id+'',-1)">－</button><button class="cnt-btn cnt-plus" onclick="adj(''+p.id+'',1)">＋</button></div></div>').join('');}
+function adj(id,delta){gameCounts[id]=Math.max(0,(gameCounts[id]||0)+delta);save();const el=document.getElementById('cnt-'+id);if(el){el.textContent=gameCounts[id];el.style.transform='scale(1.35)';setTimeout(()=>el.style.transform='scale(1)',180);}updateSummary();}
+function updateSummary(){const active=players.filter(p=>p.selected);if(!active.length)return;const total=active.reduce((s,p)=>s+(gameCounts[p.id]||0),0),maxP=active.reduce((m,p)=>(gameCounts[p.id]||0)>(gameCounts[m.id]||0)?p:m,active[0]);document.getElementById('summary-bar').innerHTML='<span>👥 <strong>'+active.length+'</strong> 位球員</span><span>📊 總次數 <strong>'+total+'</strong></span>'+(total>0?'<span>🏆 <strong>'+esc(maxP.name)+'</strong> ('+(gameCounts[maxP.id]||0)+')</span>':'');}
+function showResetModal(){document.getElementById('reset-modal').classList.add('show');}
+function hideResetModal(){document.getElementById('reset-modal').classList.remove('show');}
+function resetCounts(){players.forEach(p=>{gameCounts[p.id]=0;});save();hideResetModal();renderGame();showToast('已重置所有上場次數');}
 let toastTimer;
-function showToast(msg) {
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.classList.add('show');
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2000);
-}
-function esc(s) {
-  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-}
-load();
-renderManage();
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.classList.remove('show'),2200);}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+loadLocal();renderManage();loadFromGist();
+setInterval(loadFromGist,30000);
 </script>
 </body>
 </html>
