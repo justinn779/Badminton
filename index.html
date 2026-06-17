@@ -244,7 +244,12 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
     </div>
   </div>
   <div class="card">
-    <div id="ji-player-list"><div class="eh">請先在「球員管理」勾選出席球員</div></div>
+    <div class="sum-section-title" style="margin-bottom:6px">季打成員</div>
+    <div id="ji-member-list"><div class="eh">尚未新增球員</div></div>
+  </div>
+  <div class="card">
+    <div class="sum-section-title" style="margin-bottom:6px">收費紀錄</div>
+    <div id="ji-player-list"><div class="eh">尚無季打成員</div></div>
     <div class="sfooter">
       <span>已收 <strong id="ji-paid-amt">0</strong> 元</span>
       <span>未收 <strong id="ji-unpaid-amt">0</strong> 元</span>
@@ -358,7 +363,7 @@ function renderBill(){
 }
 function renderSummary(){
   var fee=parseFloat(document.getElementById('ji-fee-input').value)||0;
-  var ps=players.filter(function(p){return p.selected;});
+  var ps=players.filter(function(p){return p.isJi;});
   var jiPaidCnt=ps.filter(function(p){return jiPaid[p.id];}).length;
   var jiPaidAmt=jiPaidCnt*fee;
   var jiUnpaidAmt=(ps.length-jiPaidCnt)*fee;
@@ -411,21 +416,41 @@ function renderExpenses(){
 function renderJi(){
   var fee=parseFloat(document.getElementById('ji-fee-input').value)||0;
   saveBillLocal();
-  var ps=players.filter(function(p){return p.selected;});
-  var list=document.getElementById('ji-player-list');
-  if(!ps.length){
-    list.innerHTML='<div class="eh">請先在「球員管理」勾選出席球員</div>';
+  // 成員選擇列表
+  var mlist=document.getElementById('ji-member-list');
+  if(!players.length){
+    mlist.innerHTML='<div class="eh">尚未新增球員</div>';
+  }else{
+    mlist.innerHTML=players.map(function(p){
+      var isJi=!!p.isJi;
+      return '<div class="ji-player">'
+        +'<input type="checkbox" class="pck" '+(isJi?'checked':'')
+        +' onchange="toggleJiMember(\''+p.id+'\',this.checked)" style="flex-shrink:0"/>'
+        +'<span class="ji-pname">'+esc(p.name)+'</span>'
+        +(isJi?'<span style="font-size:.72rem;color:var(--p);background:#eff6ff;border-radius:10px;padding:2px 8px">季打</span>':'')
+        +'</div>';
+    }).join('');
+  }
+  // 收費列表（僅季打成員）
+  var jiPs=players.filter(function(p){return p.isJi;});
+  var flist=document.getElementById('ji-player-list');
+  if(!jiPs.length){
+    flist.innerHTML='<div class="eh">尚無季打成員</div>';
     ['ji-paid-amt','ji-unpaid-amt','ji-total-amt'].forEach(function(id){document.getElementById(id).textContent=0;});
     return;
   }
-  list.innerHTML=ps.map(function(p){
+  flist.innerHTML=jiPs.map(function(p){
     var paid=!!jiPaid[p.id];
     return '<div class="ji-player"><span class="ji-pname">'+esc(p.name)+'</span><span class="ji-iamt">'+fee+'元</span><button class="ji-pb '+(paid?'yes':'no')+'" onclick="toggleJiPaid(\''+p.id+'\','+(paid?'false':'true')+')">'+(paid?'已收':'未收')+'</button></div>';
   }).join('');
-  var paidCnt=ps.filter(function(p){return jiPaid[p.id];}).length;
+  var paidCnt=jiPs.filter(function(p){return jiPaid[p.id];}).length;
   document.getElementById('ji-paid-amt').textContent=paidCnt*fee;
-  document.getElementById('ji-unpaid-amt').textContent=(ps.length-paidCnt)*fee;
-  document.getElementById('ji-total-amt').textContent=ps.length*fee;
+  document.getElementById('ji-unpaid-amt').textContent=(jiPs.length-paidCnt)*fee;
+  document.getElementById('ji-total-amt').textContent=jiPs.length*fee;
+}
+function toggleJiMember(id,v){
+  var p=players.find(function(p){return p.id===id;});
+  if(p){p.isJi=v;save();renderJi();}
 }
 function toggleJiPaid(id,v){jiPaid[id]=v;saveBillLocal();renderJi();}
 function addLinRecord(){
