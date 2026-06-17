@@ -131,6 +131,18 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .lin-iamt{font-size:.95rem;font-weight:700;color:var(--s);white-space:nowrap;padding-top:2px}
 .sfooter{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:.83rem;color:var(--m);border-top:1px solid var(--b);margin-top:6px}
 .sfooter span strong{color:var(--t)}
+.sum-net-row{display:flex;align-items:center;justify-content:space-between}
+.sum-net-label{font-size:.9rem;color:var(--m);font-weight:600}
+.sum-net-amt{font-size:1.6rem;font-weight:800;color:var(--s)}
+.sum-net-amt.neg{color:var(--d)}
+.sum-row{display:flex;align-items:center;justify-content:space-between;padding:9px 4px;border-bottom:1px solid var(--b)}
+.sum-label{font-size:.88rem;color:var(--t)}
+.sum-val{font-size:.95rem;font-weight:700}
+.sum-val.income{color:var(--s)}.sum-val.expense{color:var(--d)}.sum-val.pending{color:#d97706}
+.sum-section-title{font-size:.78rem;font-weight:700;color:var(--m);padding-bottom:6px;margin-bottom:2px;border-bottom:1px solid var(--b)}
+.sum-recent-item{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid var(--b);font-size:.85rem}
+.sum-recent-item:last-child{border-bottom:none}
+.sum-recent-dt{font-size:.75rem;color:var(--m);margin-top:1px}
 </style>
 </head>
 <body>
@@ -165,11 +177,46 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div class="fab" id="fab"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
 <div id="vb" class="view">
 <div class="bill-tabs">
-  <button class="btab active" onclick="switchBill('expense')">支出</button>
+  <button class="btab active" onclick="switchBill('summary')">總覽</button>
+  <button class="btab" onclick="switchBill('expense')">支出</button>
   <button class="btab" onclick="switchBill('ji')">季打收費</button>
   <button class="btab" onclick="switchBill('lin')">臨打紀錄</button>
 </div>
-<div id="bv-expense" class="bview active">
+<div id="bv-summary" class="bview active">
+  <div class="card" id="sum-net-card">
+    <div class="sum-net-row">
+      <span class="sum-net-label">淨餘</span>
+      <span class="sum-net-amt" id="sum-net">0 元</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sum-row">
+      <span class="sum-label">💰 臨打收入</span>
+      <span class="sum-val income" id="sum-lin-total">0 元</span>
+    </div>
+    <div class="sum-row">
+      <span class="sum-label">✅ 季打已收</span>
+      <span class="sum-val income" id="sum-ji-paid">0 元</span>
+    </div>
+    <div class="sum-row">
+      <span class="sum-label">⏳ 季打未收</span>
+      <span class="sum-val pending" id="sum-ji-unpaid">0 元</span>
+    </div>
+    <div class="sum-row" style="border-bottom:none">
+      <span class="sum-label">📋 支出總計</span>
+      <span class="sum-val expense" id="sum-exp-total">0 元</span>
+    </div>
+  </div>
+  <div class="card">
+    <div class="sum-section-title">最近支出</div>
+    <div id="sum-exp-recent"></div>
+  </div>
+  <div class="card">
+    <div class="sum-section-title">最近臨打</div>
+    <div id="sum-lin-recent"></div>
+  </div>
+</div>
+<div id="bv-expense" class="bview">
   <div class="card">
     <div class="bform">
       <input id="exp-name" type="text" placeholder="項目名稱（場地費、球費...）" maxlength="30"/>
@@ -267,7 +314,7 @@ function saveLocal(){localStorage.setItem('pp',JSON.stringify(players));localSto
 function loadLocal(){try{var p=localStorage.getItem('pp'),c=localStorage.getItem('pc');if(p)players=JSON.parse(p);if(c)gc=JSON.parse(c);}catch(e){}}
 function save(){saveLocal();clearTimeout(st);st=setTimeout(push,1200);}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-var billTab='expense',expenses=[],jiPaid={},linRecords=[];
+var billTab='summary',expenses=[],jiPaid={},linRecords=[];
 function loadBillLocal(){
   try{
     var e=localStorage.getItem('bill_exp');if(e)expenses=JSON.parse(e);
@@ -294,18 +341,47 @@ function switchTab(t){
 }
 function switchBill(t){
   billTab=t;
-  ['expense','ji','lin'].forEach(function(x,i){
+  ['summary','expense','ji','lin'].forEach(function(x,i){
     document.querySelectorAll('.btab')[i].classList.toggle('active',x===t);
     document.getElementById('bv-'+x).classList.toggle('active',x===t);
   });
-  if(t==='ji')renderJi();
+  if(t==='summary')renderSummary();
+  else if(t==='ji')renderJi();
   else if(t==='expense')renderExpenses();
   else renderLin();
 }
 function renderBill(){
-  if(billTab==='ji')renderJi();
+  if(billTab==='summary')renderSummary();
+  else if(billTab==='ji')renderJi();
   else if(billTab==='expense')renderExpenses();
   else renderLin();
+}
+function renderSummary(){
+  var fee=parseFloat(document.getElementById('ji-fee-input').value)||0;
+  var ps=players.filter(function(p){return p.selected;});
+  var jiPaidCnt=ps.filter(function(p){return jiPaid[p.id];}).length;
+  var jiPaidAmt=jiPaidCnt*fee;
+  var jiUnpaidAmt=(ps.length-jiPaidCnt)*fee;
+  var linTotal=linRecords.reduce(function(s,r){return s+r.amount;},0);
+  var expTotal=expenses.reduce(function(s,e){return s+e.amount;},0);
+  var net=jiPaidAmt+linTotal-expTotal;
+  var netEl=document.getElementById('sum-net');
+  netEl.textContent=(net>=0?'+':'')+net+' 元';
+  netEl.className='sum-net-amt'+(net<0?' neg':'');
+  document.getElementById('sum-lin-total').textContent=linTotal+' 元';
+  document.getElementById('sum-ji-paid').textContent=jiPaidAmt+' 元';
+  document.getElementById('sum-ji-unpaid').textContent=jiUnpaidAmt+' 元';
+  document.getElementById('sum-exp-total').textContent=expTotal+' 元';
+  var expRecent=document.getElementById('sum-exp-recent');
+  var last5exp=expenses.slice().reverse().slice(0,5);
+  expRecent.innerHTML=last5exp.length?last5exp.map(function(e){
+    return '<div class="sum-recent-item"><div><div>'+esc(e.name)+'</div><div class="sum-recent-dt">'+fmtDt(e.dt)+'</div></div><span style="color:var(--d);font-weight:600">-'+e.amount+'元</span></div>';
+  }).join(''):'<div class="eh" style="padding:12px 0">尚無紀錄</div>';
+  var linRecent=document.getElementById('sum-lin-recent');
+  var last5lin=linRecords.slice().reverse().slice(0,5);
+  linRecent.innerHTML=last5lin.length?last5lin.map(function(r){
+    return '<div class="sum-recent-item"><div><div>'+esc(r.name)+'</div><div class="sum-recent-dt">'+r.date.replace(/-/g,'/')+'</div></div><span style="color:var(--s);font-weight:600">+'+r.amount+'元</span></div>';
+  }).join(''):'<div class="eh" style="padding:12px 0">尚無紀錄</div>';
 }
 function pad(n){return n<10?'0'+n:''+n;}
 function nowDt(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}
