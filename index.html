@@ -129,6 +129,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .lin-iname{font-size:.92rem;font-weight:600}
 .lin-idate{font-size:.75rem;color:var(--m);margin-top:2px}
 .lin-iamt{font-size:.95rem;font-weight:700;color:var(--s);white-space:nowrap;padding-top:2px}
+.collapse-header{display:flex;align-items:center;justify-content:space-between;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
 .sfooter{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:.83rem;color:var(--m);border-top:1px solid var(--b);margin-top:6px}
 .sfooter span strong{color:var(--t)}
 .sum-net-row{display:flex;align-items:center;justify-content:space-between}
@@ -244,8 +245,11 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
     </div>
   </div>
   <div class="card">
-    <div class="sum-section-title" style="margin-bottom:6px">季打成員</div>
-    <div id="ji-member-list"><div class="eh">尚未新增球員</div></div>
+    <div class="collapse-header" onclick="toggleJiMembers()">
+      <span class="sum-section-title" style="margin-bottom:0">季打成員設定</span>
+      <span id="ji-member-arrow" style="font-size:.8rem;color:var(--m);transition:transform .2s">▼</span>
+    </div>
+    <div id="ji-member-list" style="display:none"><div class="eh">尚未新增球員</div></div>
   </div>
   <div class="card">
     <div class="sum-section-title" style="margin-bottom:6px">收費紀錄</div>
@@ -447,6 +451,14 @@ function renderJi(){
   document.getElementById('ji-paid-amt').textContent=paidCnt*fee;
   document.getElementById('ji-unpaid-amt').textContent=(jiPs.length-paidCnt)*fee;
   document.getElementById('ji-total-amt').textContent=jiPs.length*fee;
+}
+function toggleJiMembers(){
+  var el=document.getElementById('ji-member-list');
+  var arrow=document.getElementById('ji-member-arrow');
+  var open=el.style.display==='none';
+  el.style.display=open?'':'none';
+  arrow.style.transform=open?'rotate(180deg)':'';
+  if(open)renderJi();
 }
 function toggleJiMember(id,v){
   var p=players.find(function(p){return p.id===id;});
