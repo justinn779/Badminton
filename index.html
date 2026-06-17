@@ -96,31 +96,41 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .ma{display:flex;gap:10px}.ma .btn{flex:1}
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(12px);background:#1e293b;color:#fff;padding:9px 18px;border-radius:18px;font-size:.85rem;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
-#vb.view.active{overflow-y:auto;padding:12px 12px 80px}
-.cost-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
-.cost-row label{font-size:.85rem;color:var(--m);width:64px;flex-shrink:0}
-.cost-row input{flex:1;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none;-webkit-appearance:none}
-.cost-row input:focus{border-color:var(--p)}
-.cost-row span{font-size:.82rem;color:var(--m);white-space:nowrap}
-.bill-divider{font-size:.78rem;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.04em;padding:10px 2px 4px;border-top:1px solid var(--b);margin-top:6px}
-.bill-divider:first-child{border-top:none;margin-top:0;padding-top:4px}
-.bill-sum-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;margin:6px 0 2px;font-size:.88rem}
-.bill-sum-row.ji{background:#eff6ff;color:var(--p)}
-.bill-sum-row.lin{background:#f0fdf4;color:var(--s)}
-.bill-sum-row strong{font-size:1.05rem;font-weight:700}
-.bi{display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid var(--b)}
-.bi:last-child{border-bottom:none}
-.bi-name{flex:1;font-size:.92rem}
-.bi-amt{font-size:.88rem;font-weight:600;color:var(--t);white-space:nowrap}
-.bi-paid{display:flex;align-items:center;gap:5px;font-size:.8rem}
-.paid-cb{width:19px;height:19px;accent-color:var(--s);cursor:pointer;flex-shrink:0}
-.paid-label{color:var(--m)}
-.paid-label.yes{color:var(--s);font-weight:600}
-.bill-footer{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:.83rem;color:var(--m);border-top:1px solid var(--b);margin-top:6px}
-.bill-footer span strong{color:var(--t)}
-.lin-row{display:flex;align-items:center;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--b)}
-.lin-row:last-child{border-bottom:none}
-.surplus{color:var(--s);font-size:.8rem;text-align:right;padding:4px 6px}
+#vb.view.active{display:flex;flex-direction:column;overflow:hidden}
+.bill-tabs{flex-shrink:0;display:flex;background:var(--c);border-bottom:2px solid var(--b);padding:0 12px}
+.btab{flex:1;background:none;border:none;border-bottom:3px solid transparent;padding:10px 4px;font-size:.85rem;color:var(--m);cursor:pointer;font-weight:500;margin-bottom:-2px;-webkit-tap-highlight-color:transparent}
+.btab.active{color:var(--p);border-bottom-color:var(--p);font-weight:700}
+.bview{display:none;flex:1;overflow-y:auto;padding:12px 12px 80px}
+.bview.active{display:block}
+.bform{display:grid;gap:8px}
+.bform input{width:100%;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:.95rem;outline:none;-webkit-appearance:none}
+.bform input:focus{border-color:var(--p)}
+.bform .frow{display:flex;gap:8px}
+.bform .frow input{flex:1;min-width:0}
+.exp-item{display:flex;align-items:flex-start;gap:8px;padding:10px 4px;border-bottom:1px solid var(--b)}
+.exp-item:last-child{border-bottom:none}
+.exp-info{flex:1;min-width:0}
+.exp-iname{font-size:.92rem;font-weight:600}
+.exp-idt{font-size:.75rem;color:var(--m);margin-top:2px}
+.exp-iamt{font-size:.95rem;font-weight:700;color:var(--d);white-space:nowrap;padding-top:2px}
+.ji-fee-row{display:flex;align-items:center;gap:8px}
+.ji-fee-row label{font-size:.85rem;color:var(--m);white-space:nowrap}
+.ji-fee-row input{flex:1;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none;-webkit-appearance:none}
+.ji-fee-row input:focus{border-color:var(--p)}
+.ji-player{display:flex;align-items:center;gap:8px;padding:10px 4px;border-bottom:1px solid var(--b)}
+.ji-player:last-child{border-bottom:none}
+.ji-pname{flex:1;font-size:.92rem}
+.ji-iamt{font-size:.88rem;font-weight:600;color:var(--t);white-space:nowrap}
+.ji-pb{border:none;border-radius:20px;padding:5px 13px;font-size:.78rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.ji-pb.no{background:#fef2f2;color:var(--d)}.ji-pb.yes{background:#f0fdf4;color:var(--s)}
+.lin-item{display:flex;align-items:flex-start;gap:8px;padding:10px 4px;border-bottom:1px solid var(--b)}
+.lin-item:last-child{border-bottom:none}
+.lin-info{flex:1;min-width:0}
+.lin-iname{font-size:.92rem;font-weight:600}
+.lin-idate{font-size:.75rem;color:var(--m);margin-top:2px}
+.lin-iamt{font-size:.95rem;font-weight:700;color:var(--s);white-space:nowrap;padding-top:2px}
+.sfooter{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:.83rem;color:var(--m);border-top:1px solid var(--b);margin-top:6px}
+.sfooter span strong{color:var(--t)}
 </style>
 </head>
 <body>
@@ -154,59 +164,65 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 </div>
 <div class="fab" id="fab"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
 <div id="vb" class="view">
-<div class="card">
-  <div class="bill-divider" style="border-top:none;margin-top:0">費用</div>
-  <div class="cost-row">
-    <label>場地費</label>
-    <input id="court-fee" type="number" min="0" placeholder="0" oninput="calcBill()"/>
-    <span>元</span>
+<div class="bill-tabs">
+  <button class="btab active" onclick="switchBill('expense')">支出</button>
+  <button class="btab" onclick="switchBill('ji')">季打收費</button>
+  <button class="btab" onclick="switchBill('lin')">臨打紀錄</button>
+</div>
+<div id="bv-expense" class="bview active">
+  <div class="card">
+    <div class="bform">
+      <input id="exp-name" type="text" placeholder="項目名稱（場地費、球費...）" maxlength="30"/>
+      <div class="frow">
+        <input id="exp-amt" type="number" min="0" placeholder="金額"/>
+        <input id="exp-dt" type="datetime-local"/>
+        <button class="btn bp" style="flex-shrink:0;padding:9px 14px" onclick="addExpense()">新增</button>
+      </div>
+    </div>
   </div>
-  <div class="cost-row">
-    <label>球費</label>
-    <input id="shuttle-fee" type="number" min="0" placeholder="0" oninput="calcBill()"/>
-    <span>元</span>
-  </div>
-  <div class="cost-row">
-    <label>其他費用</label>
-    <input id="other-fee" type="number" min="0" placeholder="0" oninput="calcBill()"/>
-    <span>元</span>
-  </div>
-  <div class="bill-divider">臨打設定</div>
-  <div class="cost-row">
-    <label>臨打人數</label>
-    <input id="lin-count" type="number" min="0" placeholder="0" oninput="calcBill()"/>
-    <span>人</span>
-  </div>
-  <div class="cost-row">
-    <label>臨打費用</label>
-    <input id="lin-fee" type="number" min="0" placeholder="200" oninput="calcBill()"/>
-    <span>元／人</span>
+  <div class="card">
+    <div id="exp-list"><div class="eh">尚無支出紀錄</div></div>
+    <div class="sfooter" id="exp-footer" style="display:none">
+      <span>筆數 <strong id="exp-count">0</strong></span>
+      <span>總支出 <strong id="exp-total">0</strong> 元</span>
+    </div>
   </div>
 </div>
-<div class="card">
-  <div class="bill-divider" style="border-top:none;margin-top:0">季打</div>
-  <div id="ji-list"><div class="eh">請先在「球員管理」勾選出席球員</div></div>
-  <div class="bill-sum-row ji">
-    <span>季打每人應付</span>
-    <strong id="ji-per">— 元</strong>
+<div id="bv-ji" class="bview">
+  <div class="card">
+    <div class="ji-fee-row">
+      <label>每人收費</label>
+      <input id="ji-fee-input" type="number" min="0" placeholder="0" oninput="renderJi()"/>
+      <span style="font-size:.82rem;color:var(--m);flex-shrink:0">元</span>
+    </div>
   </div>
-  <div class="bill-divider">臨打</div>
-  <div id="lin-summary" class="lin-row">
-    <span style="font-size:.9rem">臨打人數</span>
-    <span style="font-size:.9rem;font-weight:600" id="lin-cnt-show">0 人</span>
-  </div>
-  <div class="bill-sum-row lin">
-    <span>臨打每人應付</span>
-    <strong id="lin-per">200 元</strong>
-  </div>
-  <div class="bill-footer">
-    <span>已收 <strong id="b-paid">0</strong> 元</span>
-    <span>未收 <strong id="b-unpaid">0</strong> 元</span>
-    <span>總計 <strong id="b-total">0</strong> 元</span>
+  <div class="card">
+    <div id="ji-player-list"><div class="eh">請先在「球員管理」勾選出席球員</div></div>
+    <div class="sfooter">
+      <span>已收 <strong id="ji-paid-amt">0</strong> 元</span>
+      <span>未收 <strong id="ji-unpaid-amt">0</strong> 元</span>
+      <span>總計 <strong id="ji-total-amt">0</strong> 元</span>
+    </div>
   </div>
 </div>
-<div class="fab" id="fab-bill" style="display:none">
-  <button class="btn bd" onclick="clearBillPaid()">清除付款記錄</button>
+<div id="bv-lin" class="bview">
+  <div class="card">
+    <div class="bform">
+      <input id="lin-iname" type="text" placeholder="人員名稱" maxlength="20"/>
+      <div class="frow">
+        <input id="lin-iamt" type="number" min="0" placeholder="金額"/>
+        <input id="lin-idate" type="date"/>
+        <button class="btn bs" style="flex-shrink:0;padding:9px 14px" onclick="addLinRecord()">新增</button>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <div id="lin-list"><div class="eh">尚無臨打紀錄</div></div>
+    <div class="sfooter" id="lin-footer" style="display:none">
+      <span>人次 <strong id="lin-count">0</strong></span>
+      <span>總收入 <strong id="lin-total">0</strong> 元</span>
+    </div>
+  </div>
 </div>
 </div>
 <div class="mo" id="rm">
@@ -251,7 +267,21 @@ function saveLocal(){localStorage.setItem('pp',JSON.stringify(players));localSto
 function loadLocal(){try{var p=localStorage.getItem('pp'),c=localStorage.getItem('pc');if(p)players=JSON.parse(p);if(c)gc=JSON.parse(c);}catch(e){}}
 function save(){saveLocal();clearTimeout(st);st=setTimeout(push,1200);}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-var billPaid={};
+var billTab='expense',expenses=[],jiPaid={},linRecords=[];
+function loadBillLocal(){
+  try{
+    var e=localStorage.getItem('bill_exp');if(e)expenses=JSON.parse(e);
+    var j=localStorage.getItem('bill_ji');if(j)jiPaid=JSON.parse(j);
+    var l=localStorage.getItem('bill_lin');if(l)linRecords=JSON.parse(l);
+  }catch(x){}
+}
+function saveBillLocal(){
+  localStorage.setItem('bill_exp',JSON.stringify(expenses));
+  localStorage.setItem('bill_ji',JSON.stringify(jiPaid));
+  localStorage.setItem('bill_lin',JSON.stringify(linRecords));
+  var f=document.getElementById('ji-fee-input');
+  if(f&&f.value)localStorage.setItem('bill_ji_fee',f.value);
+}
 function switchTab(t){
   tab=t;
   document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===(t==='manage'?0:t==='game'?1:2));});
@@ -259,54 +289,91 @@ function switchTab(t){
   document.getElementById('vg').classList.toggle('active',t==='game');
   document.getElementById('vb').classList.toggle('active',t==='bill');
   document.getElementById('fab').style.display=t==='manage'?'':'none';
-  document.getElementById('fab-bill').style.display=t==='bill'?'':'none';
   if(t==='game')renderGame();
-  if(t==='bill')renderBill();
+  if(t==='bill'){renderBill();}
 }
-function calcBill(){renderBill();}
+function switchBill(t){
+  billTab=t;
+  ['expense','ji','lin'].forEach(function(x,i){
+    document.querySelectorAll('.btab')[i].classList.toggle('active',x===t);
+    document.getElementById('bv-'+x).classList.toggle('active',x===t);
+  });
+  if(t==='ji')renderJi();
+  else if(t==='expense')renderExpenses();
+  else renderLin();
+}
 function renderBill(){
-  var court=parseFloat(document.getElementById('court-fee').value)||0;
-  var shuttle=parseFloat(document.getElementById('shuttle-fee').value)||0;
-  var other=parseFloat(document.getElementById('other-fee').value)||0;
-  var linCount=parseInt(document.getElementById('lin-count').value)||0;
-  var linFee=parseFloat(document.getElementById('lin-fee').value);
-  if(isNaN(linFee))linFee=200;
-  var total=court+shuttle+other;
-  var linTotal=linCount*linFee;
-  var jiPlayers=players.filter(function(p){return p.selected;});
-  var jiRemainder=total-linTotal;
-  var jiPer=jiPlayers.length?Math.ceil(jiRemainder/jiPlayers.length):0;
-  // 更新臨打顯示
-  document.getElementById('lin-per').textContent=linFee+'元';
-  document.getElementById('lin-cnt-show').textContent=linCount+' 人';
-  document.getElementById('ji-per').textContent=jiPlayers.length?(jiPer+'元'):'— 元';
-  // 季打列表
-  var jiList=document.getElementById('ji-list');
-  if(!jiPlayers.length){
-    jiList.innerHTML='<div class="eh">請先在「球員管理」勾選出席球員</div>';
-  }else{
-    jiList.innerHTML=jiPlayers.map(function(p){
-      var paid=!!billPaid[p.id];
-      return '<div class="bi">'
-        +'<span class="bi-name">'+esc(p.name)+'</span>'
-        +'<span class="bi-amt">'+jiPer+'元</span>'
-        +'<label class="bi-paid"><input type="checkbox" class="paid-cb" '+(paid?'checked':'')
-        +' onchange="togglePaid(\''+p.id+'\',this.checked)"/>'
-        +'<span class="paid-label'+(paid?' yes':'')+'">'+( paid?'已付':'未付')+'</span></label>'
-        +'</div>';
-    }).join('');
-  }
-  // 統計
-  var jiPaidCount=jiPlayers.filter(function(p){return billPaid[p.id];}).length;
-  var jiPaidAmt=jiPaidCount*jiPer;
-  var jiUnpaidAmt=(jiPlayers.length-jiPaidCount)*jiPer;
-  var linPaidAmt=billPaid['__lin__']?linTotal:0;
-  document.getElementById('b-paid').textContent=jiPaidAmt+linPaidAmt;
-  document.getElementById('b-unpaid').textContent=jiUnpaidAmt+(linTotal-linPaidAmt);
-  document.getElementById('b-total').textContent=jiPlayers.length*jiPer+linTotal;
+  if(billTab==='ji')renderJi();
+  else if(billTab==='expense')renderExpenses();
+  else renderLin();
 }
-function togglePaid(id,v){billPaid[id]=v;renderBill();}
-function clearBillPaid(){billPaid={};renderBill();toast('已清除付款記錄');}
+function pad(n){return n<10?'0'+n:''+n;}
+function nowDt(){var d=new Date();return d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate())+'T'+pad(d.getHours())+':'+pad(d.getMinutes());}
+function fmtDt(s){if(!s)return '';var p=s.split('T');return p[0].replace(/-/g,'/')+(p[1]?' '+p[1]:'');}
+function addExpense(){
+  var name=document.getElementById('exp-name').value.trim();
+  var amt=parseFloat(document.getElementById('exp-amt').value);
+  var dt=document.getElementById('exp-dt').value||nowDt();
+  if(!name||isNaN(amt)||amt<=0){toast('請填寫名稱與金額');return;}
+  expenses.push({id:''+Date.now(),name:name,amount:amt,dt:dt});
+  document.getElementById('exp-name').value='';
+  document.getElementById('exp-amt').value='';
+  saveBillLocal();renderExpenses();
+}
+function delExpense(id){expenses=expenses.filter(function(e){return e.id!==id;});saveBillLocal();renderExpenses();}
+function renderExpenses(){
+  var list=document.getElementById('exp-list'),footer=document.getElementById('exp-footer');
+  if(!expenses.length){list.innerHTML='<div class="eh">尚無支出紀錄</div>';footer.style.display='none';return;}
+  footer.style.display='flex';
+  var total=expenses.reduce(function(s,e){return s+e.amount;},0);
+  document.getElementById('exp-count').textContent=expenses.length;
+  document.getElementById('exp-total').textContent=total;
+  list.innerHTML=expenses.slice().reverse().map(function(e){
+    return '<div class="exp-item"><div class="exp-info"><div class="exp-iname">'+esc(e.name)+'</div><div class="exp-idt">'+fmtDt(e.dt)+'</div></div><span class="exp-iamt">-'+e.amount+'元</span><button class="pd" onclick="delExpense(\''+e.id+'\')">✕</button></div>';
+  }).join('');
+}
+function renderJi(){
+  var fee=parseFloat(document.getElementById('ji-fee-input').value)||0;
+  saveBillLocal();
+  var ps=players.filter(function(p){return p.selected;});
+  var list=document.getElementById('ji-player-list');
+  if(!ps.length){
+    list.innerHTML='<div class="eh">請先在「球員管理」勾選出席球員</div>';
+    ['ji-paid-amt','ji-unpaid-amt','ji-total-amt'].forEach(function(id){document.getElementById(id).textContent=0;});
+    return;
+  }
+  list.innerHTML=ps.map(function(p){
+    var paid=!!jiPaid[p.id];
+    return '<div class="ji-player"><span class="ji-pname">'+esc(p.name)+'</span><span class="ji-iamt">'+fee+'元</span><button class="ji-pb '+(paid?'yes':'no')+'" onclick="toggleJiPaid(\''+p.id+'\','+(paid?'false':'true')+')">'+(paid?'已收':'未收')+'</button></div>';
+  }).join('');
+  var paidCnt=ps.filter(function(p){return jiPaid[p.id];}).length;
+  document.getElementById('ji-paid-amt').textContent=paidCnt*fee;
+  document.getElementById('ji-unpaid-amt').textContent=(ps.length-paidCnt)*fee;
+  document.getElementById('ji-total-amt').textContent=ps.length*fee;
+}
+function toggleJiPaid(id,v){jiPaid[id]=v;saveBillLocal();renderJi();}
+function addLinRecord(){
+  var name=document.getElementById('lin-iname').value.trim();
+  var amt=parseFloat(document.getElementById('lin-iamt').value);
+  var date=document.getElementById('lin-idate').value||new Date().toISOString().slice(0,10);
+  if(!name||isNaN(amt)||amt<=0){toast('請填寫人員名稱與金額');return;}
+  linRecords.push({id:''+Date.now(),name:name,amount:amt,date:date});
+  document.getElementById('lin-iname').value='';
+  document.getElementById('lin-iamt').value='';
+  saveBillLocal();renderLin();
+}
+function delLinRecord(id){linRecords=linRecords.filter(function(r){return r.id!==id;});saveBillLocal();renderLin();}
+function renderLin(){
+  var list=document.getElementById('lin-list'),footer=document.getElementById('lin-footer');
+  if(!linRecords.length){list.innerHTML='<div class="eh">尚無臨打紀錄</div>';footer.style.display='none';return;}
+  footer.style.display='flex';
+  var total=linRecords.reduce(function(s,r){return s+r.amount;},0);
+  document.getElementById('lin-count').textContent=linRecords.length;
+  document.getElementById('lin-total').textContent=total;
+  list.innerHTML=linRecords.slice().reverse().map(function(r){
+    return '<div class="lin-item"><div class="lin-info"><div class="lin-iname">'+esc(r.name)+'</div><div class="lin-idate">'+r.date.replace(/-/g,'/')+'</div></div><span class="lin-iamt">+'+r.amount+'元</span><button class="pd" onclick="delLinRecord(\''+r.id+'\')">✕</button></div>';
+  }).join('');
+}
 function addPlayer(){
   var inp=document.getElementById('nn'),name=inp.value.trim();
   if(!name)return;
@@ -365,7 +432,10 @@ function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideRese
 var tt;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2200);}
 window.addEventListener('resize',function(){if(tab==='game')renderGame();});
-loadLocal();renderManage();pull();
+loadLocal();loadBillLocal();
+var _jf=localStorage.getItem('bill_ji_fee');
+if(_jf){var _jfi=document.getElementById('ji-fee-input');if(_jfi)_jfi.value=_jf;}
+renderManage();pull();
 setInterval(pull,30000);
 </script>
 </body>
