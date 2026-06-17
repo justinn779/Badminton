@@ -96,6 +96,31 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .ma{display:flex;gap:10px}.ma .btn{flex:1}
 .toast{position:fixed;bottom:70px;left:50%;transform:translateX(-50%) translateY(12px);background:#1e293b;color:#fff;padding:9px 18px;border-radius:18px;font-size:.85rem;opacity:0;transition:opacity .3s,transform .3s;pointer-events:none;white-space:nowrap;z-index:300}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+#vb.view.active{overflow-y:auto;padding:12px 12px 80px}
+.cost-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cost-row label{font-size:.85rem;color:var(--m);width:64px;flex-shrink:0}
+.cost-row input{flex:1;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none;-webkit-appearance:none}
+.cost-row input:focus{border-color:var(--p)}
+.cost-row span{font-size:.82rem;color:var(--m);white-space:nowrap}
+.bill-divider{font-size:.78rem;font-weight:700;color:var(--m);text-transform:uppercase;letter-spacing:.04em;padding:10px 2px 4px;border-top:1px solid var(--b);margin-top:6px}
+.bill-divider:first-child{border-top:none;margin-top:0;padding-top:4px}
+.bill-sum-row{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;border-radius:8px;margin:6px 0 2px;font-size:.88rem}
+.bill-sum-row.ji{background:#eff6ff;color:var(--p)}
+.bill-sum-row.lin{background:#f0fdf4;color:var(--s)}
+.bill-sum-row strong{font-size:1.05rem;font-weight:700}
+.bi{display:flex;align-items:center;gap:10px;padding:10px 6px;border-bottom:1px solid var(--b)}
+.bi:last-child{border-bottom:none}
+.bi-name{flex:1;font-size:.92rem}
+.bi-amt{font-size:.88rem;font-weight:600;color:var(--t);white-space:nowrap}
+.bi-paid{display:flex;align-items:center;gap:5px;font-size:.8rem}
+.paid-cb{width:19px;height:19px;accent-color:var(--s);cursor:pointer;flex-shrink:0}
+.paid-label{color:var(--m)}
+.paid-label.yes{color:var(--s);font-weight:600}
+.bill-footer{display:flex;justify-content:space-between;padding:10px 4px 0;font-size:.83rem;color:var(--m);border-top:1px solid var(--b);margin-top:6px}
+.bill-footer span strong{color:var(--t)}
+.lin-row{display:flex;align-items:center;justify-content:space-between;padding:10px 6px;border-bottom:1px solid var(--b)}
+.lin-row:last-child{border-bottom:none}
+.surplus{color:var(--s);font-size:.8rem;text-align:right;padding:4px 6px}
 </style>
 </head>
 <body>
@@ -104,6 +129,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div class="tabs">
 <button class="tab-btn active" onclick="switchTab('manage')">球員管理</button>
 <button class="tab-btn" onclick="switchTab('game')">今日比賽</button>
+<button class="tab-btn" onclick="switchTab('bill')">記帳</button>
 </div>
 </header>
 <div class="sync-bar"><div class="dot" id="sd"></div><span id="sm">連結中...</span></div>
@@ -127,6 +153,62 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div class="rst"><button class="btn bo" style="font-size:.8rem;padding:7px 13px" onclick="showReset()">重置今日次數</button></div>
 </div>
 <div class="fab" id="fab"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
+<div id="vb" class="view">
+<div class="card">
+  <div class="bill-divider" style="border-top:none;margin-top:0">費用</div>
+  <div class="cost-row">
+    <label>場地費</label>
+    <input id="court-fee" type="number" min="0" placeholder="0" oninput="calcBill()"/>
+    <span>元</span>
+  </div>
+  <div class="cost-row">
+    <label>球費</label>
+    <input id="shuttle-fee" type="number" min="0" placeholder="0" oninput="calcBill()"/>
+    <span>元</span>
+  </div>
+  <div class="cost-row">
+    <label>其他費用</label>
+    <input id="other-fee" type="number" min="0" placeholder="0" oninput="calcBill()"/>
+    <span>元</span>
+  </div>
+  <div class="bill-divider">臨打設定</div>
+  <div class="cost-row">
+    <label>臨打人數</label>
+    <input id="lin-count" type="number" min="0" placeholder="0" oninput="calcBill()"/>
+    <span>人</span>
+  </div>
+  <div class="cost-row">
+    <label>臨打費用</label>
+    <input id="lin-fee" type="number" min="0" placeholder="200" oninput="calcBill()"/>
+    <span>元／人</span>
+  </div>
+</div>
+<div class="card">
+  <div class="bill-divider" style="border-top:none;margin-top:0">季打</div>
+  <div id="ji-list"><div class="eh">請先在「球員管理」勾選出席球員</div></div>
+  <div class="bill-sum-row ji">
+    <span>季打每人應付</span>
+    <strong id="ji-per">— 元</strong>
+  </div>
+  <div class="bill-divider">臨打</div>
+  <div id="lin-summary" class="lin-row">
+    <span style="font-size:.9rem">臨打人數</span>
+    <span style="font-size:.9rem;font-weight:600" id="lin-cnt-show">0 人</span>
+  </div>
+  <div class="bill-sum-row lin">
+    <span>臨打每人應付</span>
+    <strong id="lin-per">200 元</strong>
+  </div>
+  <div class="bill-footer">
+    <span>已收 <strong id="b-paid">0</strong> 元</span>
+    <span>未收 <strong id="b-unpaid">0</strong> 元</span>
+    <span>總計 <strong id="b-total">0</strong> 元</span>
+  </div>
+</div>
+<div class="fab" id="fab-bill" style="display:none">
+  <button class="btn bd" onclick="clearBillPaid()">清除付款記錄</button>
+</div>
+</div>
 <div class="mo" id="rm">
 <div class="mb">
 <h2>確認重置？</h2>
@@ -169,14 +251,62 @@ function saveLocal(){localStorage.setItem('pp',JSON.stringify(players));localSto
 function loadLocal(){try{var p=localStorage.getItem('pp'),c=localStorage.getItem('pc');if(p)players=JSON.parse(p);if(c)gc=JSON.parse(c);}catch(e){}}
 function save(){saveLocal();clearTimeout(st);st=setTimeout(push,1200);}
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+var billPaid={};
 function switchTab(t){
   tab=t;
-  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===(t==='manage'?0:1));});
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===(t==='manage'?0:t==='game'?1:2));});
   document.getElementById('vm').classList.toggle('active',t==='manage');
   document.getElementById('vg').classList.toggle('active',t==='game');
+  document.getElementById('vb').classList.toggle('active',t==='bill');
   document.getElementById('fab').style.display=t==='manage'?'':'none';
+  document.getElementById('fab-bill').style.display=t==='bill'?'':'none';
   if(t==='game')renderGame();
+  if(t==='bill')renderBill();
 }
+function calcBill(){renderBill();}
+function renderBill(){
+  var court=parseFloat(document.getElementById('court-fee').value)||0;
+  var shuttle=parseFloat(document.getElementById('shuttle-fee').value)||0;
+  var other=parseFloat(document.getElementById('other-fee').value)||0;
+  var linCount=parseInt(document.getElementById('lin-count').value)||0;
+  var linFee=parseFloat(document.getElementById('lin-fee').value);
+  if(isNaN(linFee))linFee=200;
+  var total=court+shuttle+other;
+  var linTotal=linCount*linFee;
+  var jiPlayers=players.filter(function(p){return p.selected;});
+  var jiRemainder=total-linTotal;
+  var jiPer=jiPlayers.length?Math.ceil(jiRemainder/jiPlayers.length):0;
+  // 更新臨打顯示
+  document.getElementById('lin-per').textContent=linFee+'元';
+  document.getElementById('lin-cnt-show').textContent=linCount+' 人';
+  document.getElementById('ji-per').textContent=jiPlayers.length?(jiPer+'元'):'— 元';
+  // 季打列表
+  var jiList=document.getElementById('ji-list');
+  if(!jiPlayers.length){
+    jiList.innerHTML='<div class="eh">請先在「球員管理」勾選出席球員</div>';
+  }else{
+    jiList.innerHTML=jiPlayers.map(function(p){
+      var paid=!!billPaid[p.id];
+      return '<div class="bi">'
+        +'<span class="bi-name">'+esc(p.name)+'</span>'
+        +'<span class="bi-amt">'+jiPer+'元</span>'
+        +'<label class="bi-paid"><input type="checkbox" class="paid-cb" '+(paid?'checked':'')
+        +' onchange="togglePaid(\''+p.id+'\',this.checked)"/>'
+        +'<span class="paid-label'+(paid?' yes':'')+'">'+( paid?'已付':'未付')+'</span></label>'
+        +'</div>';
+    }).join('');
+  }
+  // 統計
+  var jiPaidCount=jiPlayers.filter(function(p){return billPaid[p.id];}).length;
+  var jiPaidAmt=jiPaidCount*jiPer;
+  var jiUnpaidAmt=(jiPlayers.length-jiPaidCount)*jiPer;
+  var linPaidAmt=billPaid['__lin__']?linTotal:0;
+  document.getElementById('b-paid').textContent=jiPaidAmt+linPaidAmt;
+  document.getElementById('b-unpaid').textContent=jiUnpaidAmt+(linTotal-linPaidAmt);
+  document.getElementById('b-total').textContent=jiPlayers.length*jiPer+linTotal;
+}
+function togglePaid(id,v){billPaid[id]=v;renderBill();}
+function clearBillPaid(){billPaid={};renderBill();toast('已清除付款記錄');}
 function addPlayer(){
   var inp=document.getElementById('nn'),name=inp.value.trim();
   if(!name)return;
