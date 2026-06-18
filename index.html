@@ -264,8 +264,8 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div id="bv-lin" class="bview">
   <div class="card">
     <div class="bform">
-      <input id="lin-iname" type="text" placeholder="人員名稱" maxlength="20" list="lin-name-list" autocomplete="off"/>
-      <datalist id="lin-name-list"></datalist>
+      <select id="lin-iname-sel" onchange="toggleLinCustom()" style="width:100%;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:.95rem;outline:none;background:var(--c);color:var(--t)"></select>
+      <input id="lin-iname" type="text" placeholder="自訂名稱" maxlength="20" style="display:none"/>
       <div class="frow">
         <input id="lin-iamt" type="number" min="0" placeholder="金額"/>
         <input id="lin-idate" type="date"/>
@@ -476,7 +476,8 @@ function toggleJiMember(id,v){
 }
 function toggleJiPaid(id,v){jiPaid[id]=v;saveBillLocal();renderJi();}
 function addLinRecord(){
-  var name=document.getElementById('lin-iname').value.trim();
+  var sel=document.getElementById('lin-iname-sel');
+  var name=sel.value==='__custom__'?document.getElementById('lin-iname').value.trim():sel.value;
   var amt=parseFloat(document.getElementById('lin-iamt').value);
   var date=document.getElementById('lin-idate').value||new Date().toISOString().slice(0,10);
   if(!name||isNaN(amt)||amt<=0){toast('請填寫人員名稱與金額');return;}
@@ -486,9 +487,21 @@ function addLinRecord(){
   saveBillLocal();renderLin();
 }
 function delLinRecord(id){linRecords=linRecords.filter(function(r){return r.id!==id;});saveBillLocal();renderLin();}
+function toggleLinCustom(){
+  var sel=document.getElementById('lin-iname-sel');
+  var inp=document.getElementById('lin-iname');
+  var isCustom=sel.value==='__custom__';
+  inp.style.display=isCustom?'':'none';
+  if(isCustom)inp.focus();
+}
 function renderLin(){
-  var dl=document.getElementById('lin-name-list');
-  if(dl)dl.innerHTML=players.map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
+  var sel=document.getElementById('lin-iname-sel');
+  if(sel){
+    var prev=sel.value;
+    sel.innerHTML=players.map(function(p){return '<option value="'+esc(p.name)+'">'+esc(p.name)+'</option>';}).join('')
+      +'<option value="__custom__">✏️ 自訂名稱...</option>';
+    if(prev&&sel.querySelector('option[value="'+prev+'"]'))sel.value=prev;
+  }
   var list=document.getElementById('lin-list'),footer=document.getElementById('lin-footer');
   if(!linRecords.length){list.innerHTML='<div class="eh">尚無臨打紀錄</div>';footer.style.display='none';return;}
   footer.style.display='flex';
