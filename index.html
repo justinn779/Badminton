@@ -293,7 +293,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 </div>
 <div class="toast" id="toast"></div>
 <script>
-var GID='915509b4ce537da97c758d27f2172416',_a='ghp_epRpeKt4zDC1Q',_b='FgURZAlYJWZP9Utvy1dW3hA',GT=_a+_b,GF='players.json';
+var GID='915509b4ce537da97c758d27f2172416',_a='ghp_epRpeKt4zDC1Q',_b='FgURZAlYJWZP9Utvy1dW3hA',GT=_a+_b,GF='players.json',GBF='bill.json';
 var players=[],gc={},tab='manage',st=null;
 function ss(s,m){document.getElementById('sd').className='dot '+s;document.getElementById('sm').textContent=m;}
 async function pull(){
@@ -303,17 +303,25 @@ async function pull(){
     if(!r.ok)throw 0;
     var d=await r.json(),c=d.files[GF]&&d.files[GF].content;
     if(c){var p=JSON.parse(c);players=p.players||[];gc=p.gameCounts||{};}
+    var bc=d.files[GBF]&&d.files[GBF].content;
+    if(bc){var b=JSON.parse(bc);expenses=b.expenses||[];jiPaid=b.jiPaid||{};linRecords=b.linRecords||[];
+      if(b.jiFee!=null){var _f=document.getElementById('ji-fee-input');if(_f)_f.value=b.jiFee;localStorage.setItem('bill_ji_fee',b.jiFee);}
+    }
     ss('ok','已同步 ✓');
   }catch(e){ss('err','離線模式');loadLocal();}
-  renderManage();if(tab==='game')renderGame();
+  renderManage();if(tab==='game')renderGame();if(tab==='bill')renderBill();
 }
 async function push(){
   ss('go','儲存中...');
   try{
+    var jiFee=parseFloat((document.getElementById('ji-fee-input')||{}).value)||0;
     var r=await fetch('https://api.github.com/gists/'+GID,{
       method:'PATCH',
       headers:{Authorization:'Bearer '+GT,'Content-Type':'application/json'},
-      body:JSON.stringify({files:{[GF]:{content:JSON.stringify({players,gameCounts:gc},null,2)}}})
+      body:JSON.stringify({files:{
+        [GF]:{content:JSON.stringify({players,gameCounts:gc},null,2)},
+        [GBF]:{content:JSON.stringify({expenses,jiPaid,linRecords,jiFee},null,2)}
+      }})
     });
     if(!r.ok)throw 0;
     saveLocal();ss('ok','已同步 ✓');
@@ -337,6 +345,7 @@ function saveBillLocal(){
   localStorage.setItem('bill_lin',JSON.stringify(linRecords));
   var f=document.getElementById('ji-fee-input');
   if(f&&f.value)localStorage.setItem('bill_ji_fee',f.value);
+  clearTimeout(st);st=setTimeout(push,1200);
 }
 function switchTab(t){
   tab=t;
