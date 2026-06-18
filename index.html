@@ -150,8 +150,8 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <header>
 <h1>🏸 羽球團</h1>
 <div class="tabs">
-<button class="tab-btn active" onclick="switchTab('manage')">球員管理</button>
-<button class="tab-btn" onclick="switchTab('game')">今日比賽</button>
+<button class="tab-btn active" onclick="switchTab('manage')">人員管理</button>
+<button class="tab-btn" onclick="switchTab('game')">上場次數</button>
 <button class="tab-btn" onclick="switchTab('bill')">記帳</button>
 </div>
 </header>
@@ -264,7 +264,8 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div id="bv-lin" class="bview">
   <div class="card">
     <div class="bform">
-      <input id="lin-iname" type="text" placeholder="人員名稱" maxlength="20"/>
+      <input id="lin-iname" type="text" placeholder="人員名稱" maxlength="20" list="lin-name-list" autocomplete="off"/>
+      <datalist id="lin-name-list"></datalist>
       <div class="frow">
         <input id="lin-iamt" type="number" min="0" placeholder="金額"/>
         <input id="lin-idate" type="date"/>
@@ -486,6 +487,8 @@ function addLinRecord(){
 }
 function delLinRecord(id){linRecords=linRecords.filter(function(r){return r.id!==id;});saveBillLocal();renderLin();}
 function renderLin(){
+  var dl=document.getElementById('lin-name-list');
+  if(dl)dl.innerHTML=players.map(function(p){return '<option value="'+esc(p.name)+'">';}).join('');
   var list=document.getElementById('lin-list'),footer=document.getElementById('lin-footer');
   if(!linRecords.length){list.innerHTML='<div class="eh">尚無臨打紀錄</div>';footer.style.display='none';return;}
   footer.style.display='flex';
