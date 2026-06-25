@@ -170,7 +170,10 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .apm-label{font-size:.82rem;color:var(--m);display:block;margin-bottom:5px;font-weight:500}
 
 /* Scheduling view */
-#vs.view.active{overflow-y:auto;padding:12px 12px 90px;display:flex;flex-direction:column;gap:0}
+#vs.view.active{overflow:hidden;padding:0;display:flex;flex-direction:column}
+.vs-hdr{flex-shrink:0;padding:10px 14px;background:var(--c);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.vs-hdr-title{font-size:.9rem;font-weight:700;color:var(--t)}
+.vs-body{flex:1;overflow-y:auto;padding:12px 12px 90px}
 .sched-team{flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center}
 .sched-team-name{font-size:.95rem;font-weight:600;color:var(--t);line-height:1.4}
 .sched-team-meta{font-size:.72rem;color:var(--m)}
@@ -375,6 +378,34 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
   <div class="ma" style="margin-top:20px">
     <button class="btn bo" onclick="hideAddPlayerModal()">取消</button>
     <button class="btn bp" onclick="addPlayerFromModal()">新增</button>
+  </div>
+</div>
+</div>
+
+<!-- 選擇比賽模式 Bottom Sheet -->
+<div class="bsht" id="mode-bsht" onclick="hideModeSheet()">
+<div class="bsht-body" onclick="event.stopPropagation()">
+  <div class="bsht-title">選擇今日比賽模式</div>
+  <div class="bsht-item" onclick="hideModeSheet();goScheduling()">
+    <span style="font-size:1.3rem">🎯</span>
+    <div><div style="font-weight:600">自動排點</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">系統自動安排每輪出賽名單</div></div>
+  </div>
+  <div class="bsht-item" onclick="hideModeSheet();switchTab('game')">
+    <span style="font-size:1.3rem">📋</span>
+    <div><div style="font-weight:600">手動紀錄</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">自行決定出賽，手動累計次數</div></div>
+  </div>
+  <button class="bsht-cancel" onclick="hideModeSheet()">取消</button>
+</div>
+</div>
+
+<!-- 確認結束排點 Modal -->
+<div class="mo" id="end-sched-mo" onclick="this.classList.remove('show')">
+<div class="mb" onclick="event.stopPropagation()">
+  <h2>確認結束排點？</h2>
+  <p>本次所有排點紀錄將被清除，無法復原。</p>
+  <div class="ma">
+    <button class="btn bo" onclick="document.getElementById('end-sched-mo').classList.remove('show')">取消</button>
+    <button class="btn bd" onclick="document.getElementById('end-sched-mo').classList.remove('show');endScheduling()">確認結束</button>
   </div>
 </div>
 </div>
@@ -946,7 +977,12 @@ function renderManage(){
 }
 
 function renderManageMobile(pl){
-  var html='<div style="padding:12px 12px 0"><button class="btn bp" style="width:100%;padding:12px" onclick="showAddPlayerModal()">＋ 新增球員</button></div>'
+  var selCnt=players.filter(function(p){return p.selected;}).length;
+  var html='<div style="padding:12px 12px 0;display:flex;gap:8px">'
+    +'<button class="btn bp" style="flex:1;padding:12px" onclick="showAddPlayerModal()">＋ 新增球員</button>'
+    +'<button class="btn bo" style="flex-shrink:0;padding:12px 14px" onclick="showGroupModal()">群組</button>'
+    +'</div>'
+    +(selCnt?'<div style="padding:6px 14px 0;font-size:.78rem;color:var(--p);font-weight:600">已勾選 '+selCnt+' 人出席</div>':'')
     +'<div style="padding:12px 12px 130px">';
 
   if(!players.length){
@@ -1144,7 +1180,11 @@ function delGroup(id){
 }
 
 /* ===== 上場計數 ===== */
-function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選球員');return;}switchTab('game');}
+function startGame(){
+  if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選球員');return;}
+  document.getElementById('mode-bsht').classList.add('show');
+}
+function hideModeSheet(){document.getElementById('mode-bsht').classList.remove('show');}
 function getCols(n){return window.innerWidth>window.innerHeight?Math.min(n,4):Math.min(n,2);}
 function renderGame(){
   var active=players.filter(function(p){return p.selected;}),grid=document.getElementById('grid'),bar=document.getElementById('bar');
@@ -1360,53 +1400,63 @@ function renderScheduling(){
   var el=document.getElementById('vs');
   if(!el)return;
   var attending=sched.active?sched.attending:players.filter(function(p){return p.selected;});
-  var html='';
 
-  /* gender checkbox card */
-  html+='<div class="card"><label style="display:flex;align-items:center;gap:10px;cursor:pointer">'
+  /* ── Top header bar (only when active) ── */
+  var hdrHtml='';
+  if(sched.active){
+    var rounds=sched.history.length+(sched.current?1:0);
+    hdrHtml='<div class="vs-hdr">'
+      +'<span class="vs-hdr-title">排點中・第 '+rounds+' 輪</span>'
+      +'<button class="btn bd" style="padding:8px 16px;font-size:.85rem" onclick="document.getElementById(\'end-sched-mo\').classList.add(\'show\')">結束排點</button>'
+      +'</div>';
+  }
+
+  /* ── Scrollable body ── */
+  var body='';
+
+  /* gender checkbox */
+  body+='<div class="card"><label style="display:flex;align-items:center;gap:10px;cursor:pointer">'
     +'<input type="checkbox" id="sched-gender" style="width:18px;height:18px;accent-color:var(--p)"'+(sched.genderBalance?' checked':'')+(sched.active?' disabled':'')+'>'
     +'<span style="font-size:.9rem;font-weight:500">性別平衡（2男2女 / 4男 / 4女）</span></label></div>';
 
   /* attending players */
   if(attending.length){
-    html+='<div class="card"><div class="sum-section-title" style="margin-bottom:8px">出席球員（'+attending.length+'人）</div>'
+    body+='<div class="card"><div class="sum-section-title" style="margin-bottom:8px">出席球員（'+attending.length+'人）</div>'
       +'<div style="display:flex;flex-wrap:wrap;gap:6px">';
     attending.forEach(function(p){
       var cnt=sched.counts[p.id]||0;
-      html+='<div class="sched-player-chip">'
+      body+='<div class="sched-player-chip">'
         +'<span class="sched-chip-name">'+esc(p.name)+'</span>'
         +'<span class="sched-chip-meta">Lv.'+(p.level||'?')+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
         +'<span class="sched-chip-cnt">'+cnt+'</span>'
         +'</div>';
     });
-    html+='</div></div>';
+    body+='</div></div>';
   }else{
-    html+='<div class="card"><div class="eh">請先在人員頁勾選出席球員</div></div>';
+    body+='<div class="card"><div class="eh">請先在人員頁勾選出席球員</div></div>';
   }
 
   /* current round */
   if(sched.active&&sched.current){
-    html+='<div class="card" style="border:2px solid var(--p);margin-bottom:10px">'
+    body+='<div class="card" style="border:2px solid var(--p);margin-bottom:10px">'
       +'<div style="font-size:.78rem;font-weight:700;color:var(--p);margin-bottom:10px">本輪</div>'
       +renderRoundCard(sched.current)+'</div>';
   }
 
   /* next round preview */
   if(sched.active&&sched.next){
-    html+='<div class="card" style="opacity:.65;margin-bottom:10px">'
+    body+='<div class="card" style="opacity:.65;margin-bottom:10px">'
       +'<div style="font-size:.78rem;font-weight:700;color:var(--m);margin-bottom:10px">下輪（預覽）</div>'
       +renderRoundCard(sched.next)+'</div>';
   }
 
-  /* action button */
+  /* start button (inactive state) */
   if(!sched.active){
     var disabled=attending.length<4?' disabled':'';
-    html+='<button class="btn bp" style="width:100%;padding:14px;font-size:1rem"'+disabled+' onclick="startScheduling()">開始排點</button>';
-  }else{
-    html+='<button class="btn bd" style="width:100%;padding:14px;font-size:1rem" onclick="endScheduling()">結束排點</button>';
+    body+='<button class="btn bp" style="width:100%;padding:14px;font-size:1rem"'+disabled+' onclick="startScheduling()">開始排點</button>';
   }
 
-  el.innerHTML=html;
+  el.innerHTML=hdrHtml+'<div class="vs-body">'+body+'</div>';
 }
 </script>
 </body>
