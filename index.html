@@ -14,6 +14,8 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .tabs{display:flex;gap:6px}
 .tab-btn{background:rgba(255,255,255,.2);color:#fff;border:none;border-radius:20px;padding:7px 13px;font-size:.8rem;cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent}
 .tab-btn.active{background:rgba(255,255,255,.92);color:var(--p);font-weight:700}
+.hdr-settings{background:rgba(255,255,255,.15);border:none;color:#fff;border-radius:50%;width:32px;height:32px;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.hdr-settings:active{background:rgba(255,255,255,.3)}
 .sync-bar{flex-shrink:0;background:#1e3a5f;color:#93c5fd;font-size:.72rem;padding:4px 14px;display:flex;align-items:center;gap:7px;min-height:24px}
 .dot{width:6px;height:6px;border-radius:50%;background:#94a3b8;flex-shrink:0}
 .dot.ok{background:#4ade80}.dot.err{background:#f87171}.dot.go{background:#fbbf24;animation:pu .8s infinite}
@@ -26,66 +28,31 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .btn:active{transform:scale(.94);opacity:.75}
 .bp{background:var(--p);color:#fff}.bs{background:var(--s);color:#fff}.bd{background:var(--d);color:#fff}
 .bo{background:transparent;color:var(--p);border:2px solid var(--p)}
-.add-row{display:flex;gap:8px;margin-bottom:12px}
+.add-row{display:flex;gap:8px}
 .add-row input{flex:1;padding:10px 13px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none;-webkit-appearance:none}
 .add-row input:focus{border-color:var(--p)}
-.pi{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--b)}
+.ng-row{display:flex;gap:8px;margin-top:8px}
+.ng-sel{flex:1;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:.9rem;outline:none;background:var(--c);color:var(--t);-webkit-appearance:none;min-width:0}
+.ng-sel:focus{border-color:var(--p)}
+.pi{display:flex;align-items:center;gap:10px;padding:10px;border-bottom:1px solid var(--b);user-select:none}
 .pi:last-child{border-bottom:none}
 .pck{width:22px;height:22px;accent-color:var(--p);cursor:pointer;flex-shrink:0}
 .pn{flex:1;font-size:.92rem}
 .pd{background:none;border:none;color:var(--d);font-size:1.2rem;cursor:pointer;padding:4px 9px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .eh{text-align:center;color:var(--m);padding:28px 0;font-size:.88rem}
-.sar{display:flex;align-items:center;gap:10px;padding:5px 0 11px;font-size:.85rem;color:var(--m)}
-.sar input{width:21px;height:21px;accent-color:var(--p);cursor:pointer;flex-shrink:0}
 .fab{position:fixed;bottom:14px;left:0;right:0;display:flex;justify-content:center;pointer-events:none;padding:0 14px;z-index:50}
 .fab .btn{pointer-events:all;box-shadow:0 4px 16px rgba(0,0,0,.25);padding:13px 32px;font-size:.95rem;border-radius:28px;width:100%;max-width:320px}
 #vg.view.active{padding:6px;gap:6px}
 .sb{flex-shrink:0;display:flex;gap:10px;flex-wrap:wrap;font-size:.82rem;color:var(--m);padding:6px 10px;background:var(--c);border-radius:8px}
 .sb strong{color:var(--t)}
 .gg{flex:1;display:grid;gap:6px;overflow:hidden;grid-auto-rows:1fr}
-
-/* 整張卡是 + 按鈕 */
-.gc{
-  position:relative;
-  background:var(--c);border-radius:10px;
-  box-shadow:0 1px 3px rgba(0,0,0,.08);
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  overflow:hidden;min-height:0;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-  user-select:none;
-  container-type:size;container-name:card;
-  transition:background .12s,transform .1s
-}
+.gc{position:relative;background:var(--c);border-radius:10px;box-shadow:0 1px 3px rgba(0,0,0,.08);display:flex;flex-direction:column;align-items:center;justify-content:center;overflow:hidden;min-height:0;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none;container-type:size;container-name:card;transition:background .12s,transform .1s}
 .gc:active{background:#e8f5e9;transform:scale(.97)}
-
-/* 右上角 − 按鈕 */
-.cm{
-  position:absolute;top:0;right:0;
-  background:rgba(0,0,0,.06);
-  border:none;border-radius:0 10px 0 10px;
-  color:#888;cursor:pointer;
-  -webkit-tap-highlight-color:transparent;touch-action:manipulation;
-  display:flex;align-items:center;justify-content:center;
-  font-weight:700;line-height:1;
-  /* 大小用 container query */
-}
-
+.cm{position:absolute;top:0;right:0;background:rgba(0,0,0,.06);border:none;border-radius:0 10px 0 10px;color:#888;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:flex;align-items:center;justify-content:center;font-weight:700;line-height:1}
 @container card (min-width:1px){
-  .gn{
-    font-size:min(13cqh,20cqw);font-weight:600;
-    word-break:break-all;text-align:center;line-height:1.2;
-    max-height:2.4em;overflow:hidden;width:90%;
-    color:var(--t)
-  }
-  .gct{
-    font-size:min(50cqh,60cqw);
-    font-weight:800;color:var(--p);line-height:1;
-    transition:transform .15s
-  }
-  .cm{
-    width:min(28cqh,32cqw);height:min(22cqh,26cqw);
-    font-size:min(14cqh,17cqw)
-  }
+  .gn{font-size:min(13cqh,20cqw);font-weight:600;word-break:break-all;text-align:center;line-height:1.2;max-height:2.4em;overflow:hidden;width:90%;color:var(--t)}
+  .gct{font-size:min(50cqh,60cqw);font-weight:800;color:var(--p);line-height:1;transition:transform .15s}
+  .cm{width:min(28cqh,32cqw);height:min(22cqh,26cqw);font-size:min(14cqh,17cqw)}
 }
 .rst{flex-shrink:0}
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:200;align-items:center;justify-content:center;padding:16px}
@@ -144,9 +111,80 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .sum-recent-item{display:flex;justify-content:space-between;align-items:center;padding:7px 2px;border-bottom:1px solid var(--b);font-size:.85rem}
 .sum-recent-item:last-child{border-bottom:none}
 .sum-recent-dt{font-size:.75rem;color:var(--m);margin-top:1px}
+.grp-sec{background:var(--c);border-radius:var(--r);margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow:hidden}
+.grp-hdr{display:flex;align-items:center;gap:8px;padding:12px 13px;cursor:pointer;-webkit-tap-highlight-color:transparent;user-select:none}
+.grp-hdr-name{flex:1;font-weight:700;font-size:.92rem;color:var(--t)}
+.grp-hdr-cnt{font-size:.74rem;color:var(--m);background:var(--bg);border-radius:10px;padding:2px 8px;flex-shrink:0}
+.grp-hdr-arr{font-size:.65rem;color:var(--m);transition:transform .2s;flex-shrink:0}
+.grp-hdr-arr.open{transform:rotate(180deg)}
+.grp-body{border-top:1px solid var(--b)}
+.gm-wrap{max-width:340px;text-align:left;max-height:85vh;display:flex;flex-direction:column;overflow:hidden}
+.gm-list-wrap{flex:1;overflow-y:auto;min-height:0}
+.gm-item{display:flex;align-items:center;gap:7px;padding:9px 0;border-bottom:1px solid var(--b)}
+.gm-item:last-child{border-bottom:none}
+.gm-name{flex:1;font-size:.92rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:0}
+.gm-edit-inp{flex:1;padding:6px 10px;border:2px solid var(--p);border-radius:6px;font-size:.9rem;outline:none;-webkit-appearance:none;min-width:0}
+.gm-btn{border:none;border-radius:6px;padding:6px 10px;font-size:.78rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;flex-shrink:0}
+.gm-btn.edit{background:#eff6ff;color:var(--p)}
+.gm-btn.del{background:#fef2f2;color:var(--d)}
+.gm-btn.ok{background:#f0fdf4;color:var(--s)}
+.gm-add-row{display:flex;gap:8px;margin-top:12px;flex-shrink:0}
+.gm-add-row input{flex:1;padding:9px 12px;border:2px solid var(--b);border-radius:8px;font-size:.95rem;outline:none;-webkit-appearance:none}
+.gm-add-row input:focus{border-color:var(--p)}
+.bsht{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:250;display:none;align-items:flex-end}
+.bsht.show{display:flex}
+.bsht-body{background:#fff;border-radius:16px 16px 0 0;width:100%;padding:16px;max-height:70vh;overflow-y:auto;padding-bottom:calc(16px + env(safe-area-inset-bottom,0px))}
+.bsht-title{font-size:.8rem;font-weight:700;color:var(--m);margin-bottom:8px;letter-spacing:.04em}
+.bsht-item{display:flex;align-items:center;gap:10px;padding:13px 4px;border-bottom:1px solid var(--b);font-size:.95rem;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.bsht-item:last-child{border-bottom:none}
+.bsht-item:active{background:var(--bg)}
+.bsht-cancel{display:block;width:100%;background:var(--bg);border:none;border-radius:10px;padding:13px;font-size:.95rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:8px}
+
+/* Login */
+.login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;background:var(--bg)}
+.login-card{background:#fff;border-radius:16px;padding:32px 24px;width:100%;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center}
+.login-logo{font-size:2.5rem;margin-bottom:8px}
+.login-title{font-size:1.3rem;font-weight:800;color:var(--t);margin-bottom:4px}
+.login-sub{font-size:.82rem;color:var(--m);margin-bottom:24px}
+.login-inp{width:100%;padding:12px 14px;border:2px solid var(--b);border-radius:10px;font-size:1rem;outline:none;margin-bottom:12px;-webkit-appearance:none;display:block}
+.login-inp:focus{border-color:var(--p)}
+.login-btn{width:100%;padding:13px;border:none;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;margin-bottom:10px;-webkit-tap-highlight-color:transparent;transition:opacity .15s;display:flex;align-items:center;justify-content:center;gap:8px}
+.login-btn:active{opacity:.75}
+.login-btn-phone{background:var(--p);color:#fff}
+.login-divider{display:flex;align-items:center;gap:10px;margin:2px 0 10px;color:var(--m);font-size:.82rem}
+.login-divider::before,.login-divider::after{content:'';flex:1;height:1px;background:var(--b)}
+.login-btn-google{background:#fff;color:#444;border:2px solid var(--b)}
+.login-err{color:var(--d);font-size:.82rem;margin-top:2px;min-height:18px;text-align:left}
+.login-loading{color:var(--m);font-size:.82rem;margin-top:8px}
+
+/* Settings modal */
+.settings-info{text-align:left;padding:0 0 14px;border-bottom:1px solid var(--b);margin-bottom:14px}
+.settings-label{font-size:.72rem;color:var(--m);margin-bottom:3px}
+.settings-val{font-size:.9rem;font-weight:600;color:var(--t);word-break:break-all}
+.settings-link-row{margin-bottom:14px}
 </style>
 </head>
 <body>
+
+<!-- Login screen -->
+<div id="login-screen" class="login-wrap" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">🏸</div>
+    <div class="login-title">羽球團</div>
+    <div class="login-sub">登入後開始管理你的球隊</div>
+    <input id="login-phone" class="login-inp" type="tel" placeholder="手機號碼（如 0912345678）" maxlength="15" onkeydown="if(event.key==='Enter')loginPhone()"/>
+    <button class="login-btn login-btn-phone" onclick="loginPhone()">手機號碼登入 / 註冊</button>
+    <div class="login-err" id="login-err"></div>
+    <div class="login-divider">或</div>
+    <button class="login-btn login-btn-google" onclick="loginGoogle()">
+      <svg width="18" height="18" viewBox="0 0 48 48" style="flex-shrink:0"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/></svg>
+      Google 帳號登入
+    </button>
+  </div>
+</div>
+
+<!-- App (shown after auth) -->
+<div id="app" style="display:none;flex-direction:column;flex:1;overflow:hidden">
 <header>
 <h1>🏸 羽球團</h1>
 <div class="tabs">
@@ -154,28 +192,34 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <button class="tab-btn" onclick="switchTab('game')">上場</button>
 <button class="tab-btn" onclick="switchTab('bill')">記帳</button>
 </div>
+<button class="hdr-settings" onclick="showSettings()">⚙</button>
 </header>
 <div class="sync-bar"><div class="dot" id="sd"></div><span id="sm">連結中...</span></div>
+
+<!-- 人員頁 -->
 <div id="vm" class="view active">
 <div class="card">
-<div class="add-row">
-<input id="nn" type="text" placeholder="輸入球員姓名..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
-<button class="btn bp" onclick="addPlayer()">新增</button>
-</div>
-<div class="sar">
-<input type="checkbox" id="ca" onchange="toggleAll(this.checked)"/>
-<label for="ca">全選 / 取消全選</label>
-<span id="sc" style="margin-left:auto"></span>
+  <div class="add-row">
+    <input id="nn" type="text" placeholder="輸入球員姓名..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
+    <button class="btn bp" onclick="addPlayer()">新增</button>
+  </div>
+  <div class="ng-row">
+    <select id="ng" class="ng-sel"><option value="">未分組</option></select>
+    <button class="btn bo" style="font-size:.82rem;padding:8px 12px;flex-shrink:0" onclick="showGroupModal()">管理群組</button>
+  </div>
 </div>
 <div id="pl"></div>
 </div>
-</div>
+
+<!-- 上場頁 -->
 <div id="vg" class="view">
 <div class="sb" id="bar"></div>
 <div class="gg" id="grid"></div>
 <div class="rst"><button class="btn bo" style="font-size:.8rem;padding:7px 13px" onclick="showReset()">重置今日次數</button></div>
 </div>
 <div class="fab" id="fab"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
+
+<!-- 記帳頁 -->
 <div id="vb" class="view">
 <div class="bill-tabs">
   <button class="btab active" onclick="switchBill('summary')">總覽</button>
@@ -191,31 +235,13 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
     </div>
   </div>
   <div class="card">
-    <div class="sum-row">
-      <span class="sum-label">💰 臨打收入</span>
-      <span class="sum-val income" id="sum-lin-total">0 元</span>
-    </div>
-    <div class="sum-row">
-      <span class="sum-label">✅ 季打已收</span>
-      <span class="sum-val income" id="sum-ji-paid">0 元</span>
-    </div>
-    <div class="sum-row">
-      <span class="sum-label">⏳ 季打未收</span>
-      <span class="sum-val pending" id="sum-ji-unpaid">0 元</span>
-    </div>
-    <div class="sum-row" style="border-bottom:none">
-      <span class="sum-label">📋 支出總計</span>
-      <span class="sum-val expense" id="sum-exp-total">0 元</span>
-    </div>
+    <div class="sum-row"><span class="sum-label">💰 臨打收入</span><span class="sum-val income" id="sum-lin-total">0 元</span></div>
+    <div class="sum-row"><span class="sum-label">✅ 季打已收</span><span class="sum-val income" id="sum-ji-paid">0 元</span></div>
+    <div class="sum-row"><span class="sum-label">⏳ 季打未收</span><span class="sum-val pending" id="sum-ji-unpaid">0 元</span></div>
+    <div class="sum-row" style="border-bottom:none"><span class="sum-label">📋 支出總計</span><span class="sum-val expense" id="sum-exp-total">0 元</span></div>
   </div>
-  <div class="card">
-    <div class="sum-section-title">最近支出</div>
-    <div id="sum-exp-recent"></div>
-  </div>
-  <div class="card">
-    <div class="sum-section-title">最近臨打</div>
-    <div id="sum-lin-recent"></div>
-  </div>
+  <div class="card"><div class="sum-section-title">最近支出</div><div id="sum-exp-recent"></div></div>
+  <div class="card"><div class="sum-section-title">最近臨打</div><div id="sum-lin-recent"></div></div>
 </div>
 <div id="bv-expense" class="bview">
   <div class="card">
@@ -282,6 +308,8 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
   </div>
 </div>
 </div>
+
+<!-- 重置 Modal -->
 <div class="mo" id="rm">
 <div class="mb">
 <h2>確認重置？</h2>
@@ -292,61 +320,278 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 </div>
 </div>
 </div>
+
+<!-- 群組管理 Modal -->
+<div class="mo" id="gm" onclick="hideGroupModal()">
+<div class="mb gm-wrap" onclick="event.stopPropagation()">
+  <h2 style="margin-bottom:12px;flex-shrink:0">管理群組</h2>
+  <div class="gm-list-wrap"><div id="gm-list"></div></div>
+  <div class="gm-add-row">
+    <input id="gm-inp" type="text" placeholder="新群組名稱..." maxlength="20" onkeydown="if(event.key==='Enter')addGroup()"/>
+    <button class="btn bp" style="padding:9px 14px;flex-shrink:0" onclick="addGroup()">新增</button>
+  </div>
+  <button class="btn bo" style="width:100%;margin-top:10px;flex-shrink:0" onclick="hideGroupModal()">關閉</button>
+</div>
+</div>
+
+<!-- 移動球員 Bottom Sheet -->
+<div class="bsht" id="bsht" onclick="hideMoveSheet()">
+<div class="bsht-body" onclick="event.stopPropagation()">
+  <div class="bsht-title">移動到群組</div>
+  <div id="bsht-list"></div>
+  <button class="bsht-cancel" onclick="hideMoveSheet()">取消</button>
+</div>
+</div>
+
+<!-- 設定 Modal -->
+<div class="mo" id="settings-mo" onclick="hideSettings()">
+<div class="mb" onclick="event.stopPropagation()" style="text-align:left">
+  <h2 style="margin-bottom:14px;text-align:center">帳號設定</h2>
+  <div class="settings-info">
+    <div class="settings-label">登入方式</div>
+    <div class="settings-val" id="settings-provider">—</div>
+    <div class="settings-label" style="margin-top:8px">帳號</div>
+    <div class="settings-val" id="settings-account">—</div>
+  </div>
+  <div class="settings-link-row" id="settings-link-row">
+    <button class="btn bo" style="width:100%;font-size:.85rem" onclick="linkGoogle()">綁定 Google 帳號</button>
+    <div style="font-size:.75rem;color:var(--m);margin-top:6px">綁定後可同時用 Google 或手機號碼登入同一帳號</div>
+  </div>
+  <button class="btn bd" style="width:100%;margin-bottom:8px" onclick="doLogout()">登出</button>
+  <button class="btn bo" style="width:100%" onclick="hideSettings()">關閉</button>
+</div>
+</div>
+
 <div class="toast" id="toast"></div>
+</div><!-- #app -->
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script>
-var GID='915509b4ce537da97c758d27f2172416',_a='ghp_epRpeKt4zDC1Q',_b='FgURZAlYJWZP9Utvy1dW3hA',GT=_a+_b,GF='players.json',GBF='bill.json';
-var players=[],gc={},tab='manage',st=null;
+/* ===== Firebase init ===== */
+const firebaseConfig = {
+  apiKey: "AIzaSyAH4jsqqWrvaVfT7I47DFCu526nLaOlgTc",
+  authDomain: "badminton-club-78479.firebaseapp.com",
+  projectId: "badminton-club-78479",
+  storageBucket: "badminton-club-78479.firebasestorage.app",
+  messagingSenderId: "830078015158",
+  appId: "1:830078015158:web:1d1c40cef5c5658fc03817"
+};
+firebase.initializeApp(firebaseConfig);
+var auth = firebase.auth();
+var db = firebase.firestore();
+
+var currentUser = null;
+
+// Handle redirect result (only meaningful on http/https)
+if (location.protocol === 'http:' || location.protocol === 'https:') {
+  auth.getRedirectResult().then(function(result) {
+    if (result && result.user && result.operationType === 'link') {
+      toast('已成功綁定 Google 帳號');
+    }
+  }).catch(function(e) {
+    var errEl = document.getElementById('login-err');
+    if (errEl) errEl.textContent = 'Google 登入失敗：' + e.message;
+  });
+}
+
+auth.onAuthStateChanged(function(user) {
+  currentUser = user;
+  if (user) {
+    document.getElementById('login-screen').style.display = 'none';
+    var app = document.getElementById('app');
+    app.style.display = 'flex';
+    fsLoad();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('app').style.display = 'none';
+  }
+});
+
+/* ===== Login ===== */
+function phoneToEmail(phone) {
+  return phone.replace(/\D/g,'') + '@badminton.app';
+}
+
+async function loginPhone() {
+  var phone = document.getElementById('login-phone').value.trim();
+  var digits = phone.replace(/\D/g,'');
+  if (!digits || digits.length < 8) {
+    document.getElementById('login-err').textContent = '請輸入正確的手機號碼';
+    return;
+  }
+  document.getElementById('login-err').textContent = '登入中...';
+  var email = phoneToEmail(digits);
+  try {
+    await auth.signInWithEmailAndPassword(email, digits);
+  } catch(e) {
+    if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/invalid-email') {
+      try {
+        await auth.createUserWithEmailAndPassword(email, digits);
+      } catch(e2) {
+        document.getElementById('login-err').textContent = '建立帳號失敗：' + e2.message;
+      }
+    } else if (e.code === 'auth/wrong-password') {
+      document.getElementById('login-err').textContent = '此號碼已被其他方式註冊';
+    } else {
+      document.getElementById('login-err').textContent = '登入失敗：' + e.message;
+    }
+  }
+}
+
+function loginGoogle() {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+    document.getElementById('login-err').textContent = '請透過網頁伺服器（http/https）開啟此頁才能使用 Google 登入，部署到 GitHub Pages 後即可正常使用。';
+    return;
+  }
+  document.getElementById('login-err').textContent = '導向 Google 登入...';
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithRedirect(provider);
+}
+
+async function doLogout() {
+  hideSettings();
+  players=[];gc={};groups=[];expenses=[];jiPaid={};linRecords=[];
+  await auth.signOut();
+}
+
+/* ===== Settings ===== */
+function showSettings() {
+  if (!currentUser) return;
+  var providerEl = document.getElementById('settings-provider');
+  var accountEl = document.getElementById('settings-account');
+  var linkRow = document.getElementById('settings-link-row');
+  var providers = currentUser.providerData.map(function(p){return p.providerId;});
+  var hasGoogle = providers.indexOf('google.com') >= 0;
+  var hasPhone = providers.indexOf('password') >= 0;
+  providerEl.textContent = (hasPhone ? '手機號碼' : '') + (hasPhone && hasGoogle ? ' + ' : '') + (hasGoogle ? 'Google' : '');
+  if (hasPhone) {
+    var email = currentUser.email || '';
+    accountEl.textContent = email.replace('@badminton.app','');
+  } else {
+    accountEl.textContent = currentUser.email || currentUser.displayName || '—';
+  }
+  linkRow.style.display = hasGoogle ? 'none' : '';
+  document.getElementById('settings-mo').classList.add('show');
+}
+function hideSettings() { document.getElementById('settings-mo').classList.remove('show'); }
+
+function linkGoogle() {
+  if (location.protocol !== 'http:' && location.protocol !== 'https:') {
+    toast('請透過 GitHub Pages 開啟後再綁定 Google');
+    return;
+  }
+  var provider = new firebase.auth.GoogleAuthProvider();
+  hideSettings();
+  currentUser.linkWithRedirect(provider);
+}
+
+/* ===== Firestore sync ===== */
+var st = null;
+
 function ss(s,m){document.getElementById('sd').className='dot '+s;document.getElementById('sm').textContent=m;}
-async function pull(){
-  ss('go','同步中...');
-  try{
-    var r=await fetch('https://api.github.com/gists/'+GID,{headers:{Authorization:'Bearer '+GT}});
-    if(!r.ok)throw 0;
-    var d=await r.json(),c=d.files[GF]&&d.files[GF].content;
-    if(c){var p=JSON.parse(c);players=p.players||[];gc=p.gameCounts||{};}
-    var bc=d.files[GBF]&&d.files[GBF].content;
-    if(bc){var b=JSON.parse(bc);expenses=b.expenses||[];jiPaid=b.jiPaid||{};linRecords=b.linRecords||[];
-      if(b.jiFee!=null){var _f=document.getElementById('ji-fee-input');if(_f)_f.value=b.jiFee;localStorage.setItem('bill_ji_fee',b.jiFee);}
+
+async function fsLoad() {
+  if (!currentUser) return;
+  ss('go','載入中...');
+  try {
+    var uid = currentUser.uid;
+    var pSnap = await db.collection('users').doc(uid).collection('data').doc('players').get();
+    var bSnap = await db.collection('users').doc(uid).collection('data').doc('bill').get();
+    if (pSnap.exists) {
+      var d = pSnap.data();
+      players = d.players || [];
+      gc = d.gameCounts || {};
+      var ng = d.groups || [];
+      groups = ng.map(function(g) {
+        var ex = groups.find(function(e){return e.id===g.id;});
+        return {id:g.id, name:g.name, collapsed: ex ? ex.collapsed : true};
+      });
+    }
+    if (bSnap.exists) {
+      var b = bSnap.data();
+      expenses = b.expenses || [];
+      jiPaid = b.jiPaid || {};
+      linRecords = b.linRecords || [];
+      if (b.jiFee != null) {
+        var fEl = document.getElementById('ji-fee-input');
+        if (fEl) fEl.value = b.jiFee;
+      }
     }
     ss('ok','已同步 ✓');
-  }catch(e){ss('err','離線模式');loadLocal();}
-  renderManage();if(tab==='game')renderGame();if(tab==='bill')renderBill();
+  } catch(e) {
+    ss('err','載入失敗');
+    loadLocal();
+  }
+  renderManage();
+  if (tab==='game') renderGame();
+  if (tab==='bill') renderBill();
 }
-async function push(){
+
+async function fsSave() {
+  if (!currentUser) return;
   ss('go','儲存中...');
-  try{
-    var jiFee=parseFloat((document.getElementById('ji-fee-input')||{}).value)||0;
-    var r=await fetch('https://api.github.com/gists/'+GID,{
-      method:'PATCH',
-      headers:{Authorization:'Bearer '+GT,'Content-Type':'application/json'},
-      body:JSON.stringify({files:{
-        [GF]:{content:JSON.stringify({players,gameCounts:gc},null,2)},
-        [GBF]:{content:JSON.stringify({expenses,jiPaid,linRecords,jiFee},null,2)}
-      }})
-    });
-    if(!r.ok)throw 0;
-    saveLocal();ss('ok','已同步 ✓');
-  }catch(e){saveLocal();ss('err','儲存失敗');}
+  var uid = currentUser.uid;
+  var jiFee = parseFloat((document.getElementById('ji-fee-input')||{}).value) || 0;
+  try {
+    await Promise.all([
+      db.collection('users').doc(uid).collection('data').doc('players').set({
+        players: players,
+        gameCounts: gc,
+        groups: groups.map(function(g){return {id:g.id,name:g.name};})
+      }),
+      db.collection('users').doc(uid).collection('data').doc('bill').set({
+        expenses: expenses,
+        jiPaid: jiPaid,
+        linRecords: linRecords,
+        jiFee: jiFee
+      })
+    ]);
+    saveLocal();
+    ss('ok','已同步 ✓');
+  } catch(e) {
+    saveLocal();
+    ss('err','儲存失敗');
+  }
 }
-function saveLocal(){localStorage.setItem('pp',JSON.stringify(players));localStorage.setItem('pc',JSON.stringify(gc));}
-function loadLocal(){try{var p=localStorage.getItem('pp'),c=localStorage.getItem('pc');if(p)players=JSON.parse(p);if(c)gc=JSON.parse(c);}catch(e){}}
-function save(){saveLocal();clearTimeout(st);st=setTimeout(push,1200);}
-function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-var billTab='summary',expenses=[],jiPaid={},linRecords=[];
-function loadBillLocal(){
+
+function saveLocal(){
+  localStorage.setItem('pp',JSON.stringify(players));
+  localStorage.setItem('pc',JSON.stringify(gc));
+  localStorage.setItem('pg',JSON.stringify(groups.map(function(g){return {id:g.id,name:g.name};})));
+  localStorage.setItem('bill_exp',JSON.stringify(expenses));
+  localStorage.setItem('bill_ji',JSON.stringify(jiPaid));
+  localStorage.setItem('bill_lin',JSON.stringify(linRecords));
+}
+function loadLocal(){
   try{
+    var p=localStorage.getItem('pp'),c=localStorage.getItem('pc'),g=localStorage.getItem('pg');
+    if(p)players=JSON.parse(p);
+    if(c)gc=JSON.parse(c);
+    if(g){var lg=JSON.parse(g);groups=lg.map(function(x){return {id:x.id,name:x.name,collapsed:true};});}
     var e=localStorage.getItem('bill_exp');if(e)expenses=JSON.parse(e);
     var j=localStorage.getItem('bill_ji');if(j)jiPaid=JSON.parse(j);
     var l=localStorage.getItem('bill_lin');if(l)linRecords=JSON.parse(l);
-  }catch(x){}
+  }catch(e){}
 }
+
+function save(){saveLocal();clearTimeout(st);st=setTimeout(fsSave,1200);}
+
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+
+/* ===== State ===== */
+var players=[],gc={},groups=[],tab='manage';
+var billTab='summary',expenses=[],jiPaid={},linRecords=[];
+
+/* ===== BILLING ===== */
 function saveBillLocal(){
   localStorage.setItem('bill_exp',JSON.stringify(expenses));
   localStorage.setItem('bill_ji',JSON.stringify(jiPaid));
   localStorage.setItem('bill_lin',JSON.stringify(linRecords));
   var f=document.getElementById('ji-fee-input');
   if(f&&f.value)localStorage.setItem('bill_ji_fee',f.value);
-  clearTimeout(st);st=setTimeout(push,1200);
+  clearTimeout(st);st=setTimeout(fsSave,1200);
 }
 function switchTab(t){
   tab=t;
@@ -356,7 +601,7 @@ function switchTab(t){
   document.getElementById('vb').classList.toggle('active',t==='bill');
   document.getElementById('fab').style.display=t==='manage'?'':'none';
   if(t==='game')renderGame();
-  if(t==='bill'){renderBill();}
+  if(t==='bill')renderBill();
 }
 function switchBill(t){
   billTab=t;
@@ -430,7 +675,6 @@ function renderExpenses(){
 function renderJi(){
   var fee=parseFloat(document.getElementById('ji-fee-input').value)||0;
   saveBillLocal();
-  // 成員選擇列表
   var mlist=document.getElementById('ji-member-list');
   if(!players.length){
     mlist.innerHTML='<div class="eh">尚未新增球員</div>';
@@ -445,7 +689,6 @@ function renderJi(){
         +'</div>';
     }).join('');
   }
-  // 收費列表（僅季打成員）
   var jiPs=players.filter(function(p){return p.isJi;});
   var flist=document.getElementById('ji-player-list');
   if(!jiPs.length){
@@ -512,32 +755,208 @@ function renderLin(){
     return '<div class="lin-item"><div class="lin-info"><div class="lin-iname">'+esc(r.name)+'</div><div class="lin-idate">'+r.date.replace(/-/g,'/')+'</div></div><span class="lin-iamt">+'+r.amount+'元</span><button class="pd" onclick="delLinRecord(\''+r.id+'\')">✕</button></div>';
   }).join('');
 }
+
+/* ===== 人員管理 ===== */
 function addPlayer(){
   var inp=document.getElementById('nn'),name=inp.value.trim();
   if(!name)return;
   if(players.find(function(p){return p.name===name;})){toast('名稱重複');return;}
   var id=''+Date.now();
-  players.push({id,name,selected:true});gc[id]=0;
-  inp.value='';save();renderManage();inp.focus();
+  var gid=document.getElementById('ng').value||null;
+  players.push({id:id,name:name,selected:true,groupId:gid});
+  gc[id]=0;
+  inp.value='';
+  save();renderManage();inp.focus();
 }
 function delP(id){players=players.filter(function(p){return p.id!==id;});delete gc[id];save();renderManage();}
 function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.selected=v;save();renderManage();}
-function toggleAll(v){players.forEach(function(p){p.selected=v;});save();renderManage();}
-function renderManage(){
-  var list=document.getElementById('pl'),sc=document.getElementById('sc'),ca=document.getElementById('ca');
-  if(!players.length){list.innerHTML='<div class="eh">尚未新增任何球員</div>';sc.textContent='';ca.checked=ca.indeterminate=false;return;}
-  var sel=players.filter(function(p){return p.selected;}).length;
-  sc.textContent='已選 '+sel+' / '+players.length;
-  ca.checked=sel===players.length;ca.indeterminate=sel>0&&sel<players.length;
-  list.innerHTML=players.map(function(p){
-    var chk=p.selected?'checked':'';
-    return '<div class="pi"><input type="checkbox" class="pck" '+chk+' onchange="togP(\''+p.id+'\',this.checked)"/><span class="pn">'+esc(p.name)+'</span><button class="pd" onclick="delP(\''+p.id+'\')">✕</button></div>';
+
+function renderPlayerItem(p){
+  var chk=p.selected?'checked':'';
+  return '<div class="pi" data-pid="'+p.id+'">'
+    +'<input type="checkbox" class="pck" '+chk+' onchange="togP(\''+p.id+'\',this.checked)"/>'
+    +'<span class="pn">'+esc(p.name)+'</span>'
+    +'<button class="pd" onclick="delP(\''+p.id+'\')">✕</button>'
+    +'</div>';
+}
+
+function updateGroupSelect(){
+  var sel=document.getElementById('ng');
+  if(!sel)return;
+  var prev=sel.value;
+  sel.innerHTML='<option value="">未分組</option>'+groups.map(function(g){
+    return '<option value="'+g.id+'">'+esc(g.name)+'</option>';
   }).join('');
+  if(prev&&sel.querySelector('option[value="'+prev+'"]'))sel.value=prev;
 }
+
+var ungroupedOpen=false;
+function toggleUngrouped(){ungroupedOpen=!ungroupedOpen;renderManage();}
+
+function toggleGroup(id){
+  var g=groups.find(function(g){return g.id===id;});
+  if(g)g.collapsed=!g.collapsed;
+  renderManage();
+}
+
+function renderManage(){
+  var pl=document.getElementById('pl');
+  if(!pl)return;
+  var html='';
+
+  groups.forEach(function(g){
+    var members=players.filter(function(p){return p.groupId===g.id;});
+    var collapsed=g.collapsed!==false;
+    html+='<div class="grp-sec">'
+      +'<div class="grp-hdr" onclick="toggleGroup(\''+g.id+'\')">'
+      +'<span class="grp-hdr-name">'+esc(g.name)+'</span>'
+      +'<span class="grp-hdr-cnt">'+members.length+' 人</span>'
+      +'<span class="grp-hdr-arr'+(collapsed?'':' open')+'">▼</span>'
+      +'</div>';
+    if(!collapsed){
+      html+='<div class="grp-body">';
+      if(members.length){
+        members.forEach(function(p){html+=renderPlayerItem(p);});
+      }else{
+        html+='<div class="eh" style="padding:14px 0">此群組尚無成員</div>';
+      }
+      html+='</div>';
+    }
+    html+='</div>';
+  });
+
+  var ungrouped=players.filter(function(p){return !p.groupId;});
+  if(!groups.length){
+    if(players.length){
+      html+='<div class="card">';
+      players.forEach(function(p){html+=renderPlayerItem(p);});
+      html+='</div>';
+    }else{
+      html='<div class="card"><div class="eh">尚未新增任何球員</div></div>';
+    }
+  }else if(ungrouped.length){
+    html+='<div class="grp-sec">'
+      +'<div class="grp-hdr" onclick="toggleUngrouped()">'
+      +'<span class="grp-hdr-name" style="color:var(--m)">未分組</span>'
+      +'<span class="grp-hdr-cnt">'+ungrouped.length+' 人</span>'
+      +'<span class="grp-hdr-arr'+(ungroupedOpen?' open':'')+'" >▼</span>'
+      +'</div>';
+    if(ungroupedOpen){
+      html+='<div class="grp-body">';
+      ungrouped.forEach(function(p){html+=renderPlayerItem(p);});
+      html+='</div>';
+    }
+    html+='</div>';
+  }
+
+  pl.innerHTML=html;
+  attachLongPress();
+  updateGroupSelect();
+}
+
+/* ── 長按移動 ── */
+var lpTimer=null;
+function attachLongPress(){
+  document.querySelectorAll('#pl .pi[data-pid]').forEach(function(el){
+    var pid=el.dataset.pid;
+    function startLp(e){
+      if(e.target.tagName==='INPUT'||e.target.tagName==='BUTTON')return;
+      lpTimer=setTimeout(function(){showMoveSheet(pid);},500);
+    }
+    function cancelLp(){clearTimeout(lpTimer);}
+    el.addEventListener('touchstart',startLp,{passive:true});
+    el.addEventListener('touchend',cancelLp);
+    el.addEventListener('touchcancel',cancelLp);
+    el.addEventListener('touchmove',cancelLp);
+    el.addEventListener('mousedown',startLp);
+    el.addEventListener('mouseup',cancelLp);
+    el.addEventListener('mouseleave',cancelLp);
+  });
+}
+
+var moveTargetId=null;
+function showMoveSheet(pid){
+  moveTargetId=pid;
+  var p=players.find(function(x){return x.id===pid;});
+  if(!p)return;
+  var html='';
+  if(p.groupId){
+    html+='<div class="bsht-item" onclick="movePlayer(\'\')">📁 未分組</div>';
+  }
+  groups.forEach(function(g){
+    if(g.id!==p.groupId){
+      html+='<div class="bsht-item" onclick="movePlayer(\''+g.id+'\')">📁 '+esc(g.name)+'</div>';
+    }
+  });
+  if(!html){html='<div class="eh" style="padding:16px 0">沒有其他群組可移動</div>';}
+  document.getElementById('bsht-list').innerHTML=html;
+  document.getElementById('bsht').classList.add('show');
+}
+function hideMoveSheet(){document.getElementById('bsht').classList.remove('show');moveTargetId=null;}
+function movePlayer(gid){
+  var p=players.find(function(x){return x.id===moveTargetId;});
+  if(p){p.groupId=gid||null;save();renderManage();}
+  hideMoveSheet();
+}
+
+/* ── 群組管理 Modal ── */
+function showGroupModal(){renderGroupModal();document.getElementById('gm').classList.add('show');}
+function hideGroupModal(){document.getElementById('gm').classList.remove('show');renderManage();}
+
+function renderGroupModal(){
+  var html='';
+  if(!groups.length){
+    html='<div class="eh" style="padding:12px 0">尚無群組，請新增</div>';
+  }else{
+    groups.forEach(function(g){
+      var cnt=players.filter(function(p){return p.groupId===g.id;}).length;
+      html+='<div class="gm-item" id="gmi-'+g.id+'">'
+        +'<span class="gm-name">'+esc(g.name)
+        +'<span style="font-size:.72rem;color:var(--m);margin-left:6px">'+cnt+'人</span></span>'
+        +'<button class="gm-btn edit" onclick="editGroup(\''+g.id+'\')">改名</button>'
+        +'<button class="gm-btn del" onclick="delGroup(\''+g.id+'\')">刪除</button>'
+        +'</div>';
+    });
+  }
+  document.getElementById('gm-list').innerHTML=html;
+}
+function addGroup(){
+  var inp=document.getElementById('gm-inp'),name=inp.value.trim();
+  if(!name)return;
+  if(groups.find(function(g){return g.name===name;})){toast('群組名稱重複');return;}
+  groups.push({id:''+Date.now(),name:name,collapsed:true});
+  inp.value='';
+  save();renderGroupModal();updateGroupSelect();
+}
+function editGroup(id){
+  var g=groups.find(function(g){return g.id===id;});
+  if(!g)return;
+  var el=document.getElementById('gmi-'+id);
+  el.innerHTML='<input class="gm-edit-inp" id="gm-edit-'+id+'" value="'+esc(g.name)+'" maxlength="20"'
+    +' onkeydown="if(event.key===\'Enter\')saveGroupName(\''+id+'\')">'
+    +'<button class="gm-btn ok" onclick="saveGroupName(\''+id+'\')">確定</button>'
+    +'<button class="gm-btn edit" onclick="renderGroupModal()">取消</button>';
+  var inp=document.getElementById('gm-edit-'+id);
+  if(inp){inp.focus();inp.select();}
+}
+function saveGroupName(id){
+  var inp=document.getElementById('gm-edit-'+id);
+  if(!inp)return;
+  var name=inp.value.trim();
+  if(!name)return;
+  if(groups.find(function(g){return g.name===name&&g.id!==id;})){toast('群組名稱重複');return;}
+  var g=groups.find(function(g){return g.id===id;});
+  if(g){g.name=name;save();renderGroupModal();}
+}
+function delGroup(id){
+  players.forEach(function(p){if(p.groupId===id)p.groupId=null;});
+  groups=groups.filter(function(g){return g.id!==id;});
+  save();renderGroupModal();
+}
+
+/* ===== 上場計數 ===== */
 function startGame(){if(!players.filter(function(p){return p.selected;}).length){toast('請先勾選球員');return;}switchTab('game');}
-function getCols(n){
-  return window.innerWidth>window.innerHeight?Math.min(n,4):Math.min(n,2);
-}
+function getCols(n){return window.innerWidth>window.innerHeight?Math.min(n,4):Math.min(n,2);}
 function renderGame(){
   var active=players.filter(function(p){return p.selected;}),grid=document.getElementById('grid'),bar=document.getElementById('bar');
   if(!active.length){grid.innerHTML='<div class="eh" style="grid-column:1/-1">請先勾選球員</div>';bar.innerHTML='';grid.style.gridTemplateColumns='';return;}
@@ -567,14 +986,10 @@ function updateBar(){
 function showReset(){document.getElementById('rm').classList.add('show');}
 function hideReset(){document.getElementById('rm').classList.remove('show');}
 function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideReset();renderGame();toast('已重置');}
+
 var tt;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2200);}
 window.addEventListener('resize',function(){if(tab==='game')renderGame();});
-loadLocal();loadBillLocal();
-var _jf=localStorage.getItem('bill_ji_fee');
-if(_jf){var _jfi=document.getElementById('ji-fee-input');if(_jfi)_jfi.value=_jf;}
-renderManage();pull();
-setInterval(pull,30000);
 </script>
 </body>
 </html>
