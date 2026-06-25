@@ -169,6 +169,12 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .apm-inp:focus{border-color:var(--p)}
 .apm-label{font-size:.82rem;color:var(--m);display:block;margin-bottom:5px;font-weight:500}
 
+/* Animations */
+@keyframes roundIn{from{transform:translateY(24px);opacity:0}to{transform:translateY(0);opacity:1}}
+@keyframes numUp{0%{transform:translateY(55%);opacity:0}60%{opacity:1}100%{transform:translateY(0);opacity:1}}
+.round-enter{animation:roundIn .3s cubic-bezier(.22,1,.36,1) both}
+.num-up{display:inline-block;animation:numUp .22s cubic-bezier(.22,1,.36,1) both}
+
 /* Scheduling view */
 #vs.view.active{overflow:hidden;padding:0;display:flex;flex-direction:column}
 .vs-hdr{flex-shrink:0;padding:10px 14px;background:var(--c);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:10px}
@@ -256,7 +262,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div class="rst"><button class="btn bo" style="font-size:.8rem;padding:7px 13px" onclick="showReset()">重置今日次數</button></div>
 </div>
 <div class="fab" id="fab-manage"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
-<div class="fab" id="fab-sched" style="display:none"><button class="btn bs" style="max-width:320px;width:100%" onclick="nextRound()">下一輪 ▶</button></div>
+<div class="fab" id="fab-sched" style="display:none"><button class="btn bs" style="max-width:320px;width:100%" onclick="nextRoundBtn()">下一輪 ▶</button></div>
 
 <!-- 記帳頁 -->
 <div id="vb" class="view">
@@ -1204,7 +1210,16 @@ function renderGame(){
 function adj(id,d){
   gc[id]=Math.max(0,(gc[id]||0)+d);save();
   var el=document.getElementById('c'+id);
-  if(el){el.textContent=gc[id];el.style.transform='scale(1.3)';setTimeout(function(){el.style.transform='scale(1)';},160);}
+  if(el){
+    el.textContent=gc[id];
+    if(d>0){
+      el.classList.remove('num-up');void el.offsetWidth;el.classList.add('num-up');
+    }else{
+      el.style.transition='transform .12s ease';
+      el.style.transform='scale(.8)';
+      setTimeout(function(){el.style.transform='scale(1)';},120);
+    }
+  }
   updateBar();
 }
 function updateBar(){
@@ -1364,14 +1379,42 @@ function computeNext(){
   return generateRound(sched.attending,tent,tentHist,sched.genderBalance);
 }
 
+function nextRoundBtn(){
+  if(!sched.active||!sched.current)return;
+  var curCard=document.querySelector('.round-current');
+  var nxtCard=document.querySelector('.round-next');
+  if(curCard||nxtCard){
+    [curCard,nxtCard].forEach(function(el){
+      if(!el)return;
+      el.style.transition='transform .18s ease,opacity .18s ease';
+      el.style.transform='translateY(-22px)';
+      el.style.opacity='0';
+    });
+    setTimeout(nextRound,170);
+  }else{
+    nextRound();
+  }
+}
+
 function nextRound(){
   if(!sched.active||!sched.current)return;
   var cur=sched.current;
-  [cur.t1[0],cur.t1[1],cur.t2[0],cur.t2[1]].forEach(function(p){sched.counts[p.id]=(sched.counts[p.id]||0)+1;});
+  var justPlayed=[cur.t1[0].id,cur.t1[1].id,cur.t2[0].id,cur.t2[1].id];
+  justPlayed.forEach(function(id){sched.counts[id]=(sched.counts[id]||0)+1;});
   sched.history.push({t1:[cur.t1[0].id,cur.t1[1].id],t2:[cur.t2[0].id,cur.t2[1].id]});
   sched.current=sched.next;
   sched.next=computeNext();
   renderScheduling();
+  /* animate new cards in */
+  ['.round-current','.round-next'].forEach(function(sel){
+    var el=document.querySelector(sel);
+    if(el)el.classList.add('round-enter');
+  });
+  /* roll-up chips for players who just played */
+  justPlayed.forEach(function(id){
+    var chip=document.querySelector('.sched-player-chip[data-pid="'+id+'"] .sched-chip-cnt');
+    if(chip){chip.classList.remove('num-up');void chip.offsetWidth;chip.classList.add('num-up');}
+  });
   document.getElementById('fab-sched').style.display=(sched.active&&sched.current)?'':'none';
 }
 
@@ -1425,7 +1468,7 @@ function renderScheduling(){
       +'<div style="display:flex;flex-wrap:wrap;gap:6px">';
     attending.forEach(function(p){
       var cnt=sched.counts[p.id]||0;
-      body+='<div class="sched-player-chip">'
+      body+='<div class="sched-player-chip" data-pid="'+p.id+'">'
         +'<span class="sched-chip-name">'+esc(p.name)+'</span>'
         +'<span class="sched-chip-meta">Lv.'+(p.level||'?')+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
         +'<span class="sched-chip-cnt">'+cnt+'</span>'
@@ -1438,14 +1481,14 @@ function renderScheduling(){
 
   /* current round */
   if(sched.active&&sched.current){
-    body+='<div class="card" style="border:2px solid var(--p);margin-bottom:10px">'
+    body+='<div class="card round-current" style="border:2px solid var(--p);margin-bottom:10px">'
       +'<div style="font-size:.78rem;font-weight:700;color:var(--p);margin-bottom:10px">本輪</div>'
       +renderRoundCard(sched.current)+'</div>';
   }
 
   /* next round preview */
   if(sched.active&&sched.next){
-    body+='<div class="card" style="opacity:.65;margin-bottom:10px">'
+    body+='<div class="card round-next" style="opacity:.65;margin-bottom:10px">'
       +'<div style="font-size:.78rem;font-weight:700;color:var(--m);margin-bottom:10px">下輪（預覽）</div>'
       +renderRoundCard(sched.next)+'</div>';
   }
