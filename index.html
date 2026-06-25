@@ -22,7 +22,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 @keyframes pu{0%,100%{opacity:1}50%{opacity:.35}}
 .view{display:none;flex:1;overflow:hidden}
 .view.active{display:flex;flex-direction:column}
-#vm.view.active{overflow-y:auto;padding:12px 12px 80px}
+#vm.view.active{overflow-y:auto;padding:12px 12px 130px}
 .card{background:var(--c);border-radius:var(--r);padding:13px;margin-bottom:10px;box-shadow:0 1px 4px rgba(0,0,0,.06)}
 .btn{display:inline-flex;align-items:center;justify-content:center;border:none;border-radius:8px;padding:11px 16px;font-size:.88rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;transition:opacity .12s,transform .1s}
 .btn:active{transform:scale(.94);opacity:.75}
@@ -140,6 +140,46 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 .bsht-item:active{background:var(--bg)}
 .bsht-cancel{display:block;width:100%;background:var(--bg);border:none;border-radius:10px;padding:13px;font-size:.95rem;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent;margin-top:8px}
 
+/* Desktop manage layout */
+@media(min-width:680px){
+  #vm.view.active{overflow:hidden;padding:0}
+  #pl{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+  .mgr-wrap{flex:1;display:flex;overflow:hidden;min-height:0}
+  .mgr-left{width:220px;flex-shrink:0;overflow-y:auto;padding:12px;border-right:1px solid var(--b);display:flex;flex-direction:column;gap:8px;background:var(--bg)}
+  .mgr-right{flex:1;overflow-y:auto;padding:12px 12px 80px;background:var(--bg)}
+  .mgr-right-inner{display:flex;flex-direction:column;gap:0}
+}
+@media(max-width:679px){
+  #vm.view.active{overflow-y:auto;padding:0}
+  #pl{display:block;overflow:visible;flex:none;min-height:auto}
+  .mgr-wrap{display:block}
+  .mgr-left{display:none}
+  .mgr-right{padding:0}
+}
+.mgr-nav-item{background:var(--c);border-radius:10px;padding:12px 14px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.06);-webkit-tap-highlight-color:transparent;user-select:none;transition:background .12s}
+.mgr-nav-item:active{opacity:.8}
+.mgr-nav-item.sel{background:var(--p)}
+.mgr-nav-item.sel .mgr-nav-name{color:#fff}
+.mgr-nav-item.sel .mgr-nav-cnt{background:rgba(255,255,255,.25);color:#fff}
+.mgr-nav-name{font-size:.9rem;font-weight:600;color:var(--t)}
+.mgr-nav-cnt{font-size:.72rem;background:var(--bg);border-radius:10px;padding:2px 8px;color:var(--m);flex-shrink:0}
+
+/* Add player modal inputs */
+.apm-inp{width:100%;padding:10px 12px;border:2px solid var(--b);border-radius:8px;font-size:1rem;outline:none;-webkit-appearance:none;display:block}
+.apm-inp:focus{border-color:var(--p)}
+.apm-label{font-size:.82rem;color:var(--m);display:block;margin-bottom:5px;font-weight:500}
+
+/* Scheduling view */
+#vs.view.active{overflow-y:auto;padding:12px 12px 90px;display:flex;flex-direction:column;gap:0}
+.sched-team{flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center}
+.sched-team-name{font-size:.95rem;font-weight:600;color:var(--t);line-height:1.4}
+.sched-team-meta{font-size:.72rem;color:var(--m)}
+.sched-team-sum{font-size:.78rem;color:var(--p);font-weight:700;margin-top:5px}
+.sched-player-chip{background:var(--bg);border-radius:10px;padding:7px 10px;display:flex;flex-direction:column;align-items:center;gap:1px;min-width:56px}
+.sched-chip-name{font-size:.82rem;font-weight:600;color:var(--t)}
+.sched-chip-meta{font-size:.68rem;color:var(--m)}
+.sched-chip-cnt{font-size:1.05rem;font-weight:800;color:var(--p)}
+
 /* Login */
 .login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;background:var(--bg)}
 .login-card{background:#fff;border-radius:16px;padding:32px 24px;width:100%;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center}
@@ -189,6 +229,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <h1>🏸 羽球團</h1>
 <div class="tabs">
 <button class="tab-btn active" onclick="switchTab('manage')">人員</button>
+<button class="tab-btn" onclick="switchTab('schedule')">排點</button>
 <button class="tab-btn" onclick="switchTab('game')">上場</button>
 <button class="tab-btn" onclick="switchTab('bill')">記帳</button>
 </div>
@@ -198,17 +239,11 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 
 <!-- 人員頁 -->
 <div id="vm" class="view active">
-<div class="card">
-  <div class="add-row">
-    <input id="nn" type="text" placeholder="輸入球員姓名..." maxlength="20" onkeydown="if(event.key==='Enter')addPlayer()"/>
-    <button class="btn bp" onclick="addPlayer()">新增</button>
-  </div>
-  <div class="ng-row">
-    <select id="ng" class="ng-sel"><option value="">未分組</option></select>
-    <button class="btn bo" style="font-size:.82rem;padding:8px 12px;flex-shrink:0" onclick="showGroupModal()">管理群組</button>
-  </div>
-</div>
 <div id="pl"></div>
+</div>
+
+<!-- 排點頁 -->
+<div id="vs" class="view">
 </div>
 
 <!-- 上場頁 -->
@@ -217,7 +252,8 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 <div class="gg" id="grid"></div>
 <div class="rst"><button class="btn bo" style="font-size:.8rem;padding:7px 13px" onclick="showReset()">重置今日次數</button></div>
 </div>
-<div class="fab" id="fab"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button></div>
+<div class="fab" id="fab-manage"><div style="display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px"><button class="btn bs" onclick="startGame()">▶ 開始今日比賽</button><button class="btn bp" onclick="goScheduling()">🎯 自動排點</button></div></div>
+<div class="fab" id="fab-sched" style="display:none"><button class="btn bs" style="max-width:320px;width:100%" onclick="nextRound()">下一輪 ▶</button></div>
 
 <!-- 記帳頁 -->
 <div id="vb" class="view">
@@ -309,6 +345,40 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
 </div>
 </div>
 
+<!-- 新增球員 Modal -->
+<div class="mo" id="apm" onclick="hideAddPlayerModal()">
+<div class="mb" onclick="event.stopPropagation()" style="text-align:left;max-width:360px;width:100%">
+  <h2 style="margin-bottom:18px;text-align:center">新增球員</h2>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div>
+      <label class="apm-label">姓名</label>
+      <input id="apm-name" class="apm-inp" type="text" placeholder="球員姓名" maxlength="20" onkeydown="if(event.key==='Enter')document.getElementById('apm-level').focus()"/>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1">
+        <label class="apm-label">級數（1–18）</label>
+        <input id="apm-level" class="apm-inp" type="number" min="1" max="18" placeholder="例：6"/>
+      </div>
+      <div style="flex:1">
+        <label class="apm-label">性別</label>
+        <div style="display:flex;gap:6px">
+          <button id="apm-m" class="btn bo" style="flex:1;padding:10px 0" onclick="setApmGender('M')">♂ 男</button>
+          <button id="apm-f" class="btn bo" style="flex:1;padding:10px 0" onclick="setApmGender('F')">♀ 女</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label class="apm-label">群組（可不選）</label>
+      <select id="apm-group" class="ng-sel" style="width:100%"><option value="">未分組</option></select>
+    </div>
+  </div>
+  <div class="ma" style="margin-top:20px">
+    <button class="btn bo" onclick="hideAddPlayerModal()">取消</button>
+    <button class="btn bp" onclick="addPlayerFromModal()">新增</button>
+  </div>
+</div>
+</div>
+
 <!-- 重置 Modal -->
 <div class="mo" id="rm">
 <div class="mb">
@@ -340,6 +410,40 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
   <div class="bsht-title">移動到群組</div>
   <div id="bsht-list"></div>
   <button class="bsht-cancel" onclick="hideMoveSheet()">取消</button>
+</div>
+</div>
+
+<!-- 編輯球員 Modal -->
+<div class="mo" id="pesh" onclick="hidePeSheet()">
+<div class="mb" onclick="event.stopPropagation()" style="text-align:left;max-width:360px;width:100%">
+  <h2 style="margin-bottom:18px;text-align:center">編輯球員</h2>
+  <div style="display:flex;flex-direction:column;gap:14px">
+    <div>
+      <label class="apm-label">姓名</label>
+      <input id="pesh-name" class="apm-inp" type="text" maxlength="20"/>
+    </div>
+    <div style="display:flex;gap:10px">
+      <div style="flex:1">
+        <label class="apm-label">級數（1–18）</label>
+        <input id="pesh-level" class="apm-inp" type="number" min="1" max="18" placeholder="例：6"/>
+      </div>
+      <div style="flex:1">
+        <label class="apm-label">性別</label>
+        <div style="display:flex;gap:6px">
+          <button id="pesh-m" class="btn bo" style="flex:1;padding:10px 0" onclick="setPeGender('M')">♂ 男</button>
+          <button id="pesh-f" class="btn bo" style="flex:1;padding:10px 0" onclick="setPeGender('F')">♀ 女</button>
+        </div>
+      </div>
+    </div>
+    <div>
+      <label class="apm-label">群組</label>
+      <select id="pesh-group" class="ng-sel" style="width:100%"><option value="">未分組</option></select>
+    </div>
+  </div>
+  <div class="ma" style="margin-top:20px">
+    <button class="btn bo" onclick="hidePeSheet()">取消</button>
+    <button class="btn bp" onclick="savePeSheet()">儲存</button>
+  </div>
 </div>
 </div>
 
@@ -595,13 +699,17 @@ function saveBillLocal(){
 }
 function switchTab(t){
   tab=t;
-  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===(t==='manage'?0:t==='game'?1:2));});
+  var tabOrder={manage:0,schedule:1,game:2,bill:3};
+  document.querySelectorAll('.tab-btn').forEach(function(b,i){b.classList.toggle('active',i===tabOrder[t]);});
   document.getElementById('vm').classList.toggle('active',t==='manage');
+  document.getElementById('vs').classList.toggle('active',t==='schedule');
   document.getElementById('vg').classList.toggle('active',t==='game');
   document.getElementById('vb').classList.toggle('active',t==='bill');
-  document.getElementById('fab').style.display=t==='manage'?'':'none';
+  document.getElementById('fab-manage').style.display=t==='manage'?'':'none';
+  document.getElementById('fab-sched').style.display=(t==='schedule'&&sched.active&&sched.current)?'':'none';
   if(t==='game')renderGame();
   if(t==='bill')renderBill();
+  if(t==='schedule')renderScheduling();
 }
 function switchBill(t){
   billTab=t;
@@ -757,102 +865,183 @@ function renderLin(){
 }
 
 /* ===== 人員管理 ===== */
-function addPlayer(){
-  var inp=document.getElementById('nn'),name=inp.value.trim();
-  if(!name)return;
-  if(players.find(function(p){return p.name===name;})){toast('名稱重複');return;}
-  var id=''+Date.now();
-  var gid=document.getElementById('ng').value||null;
-  players.push({id:id,name:name,selected:true,groupId:gid});
-  gc[id]=0;
-  inp.value='';
-  save();renderManage();inp.focus();
-}
+var ungroupedOpen=false;
+var mgSelGroup='__ung';
+
 function delP(id){players=players.filter(function(p){return p.id!==id;});delete gc[id];save();renderManage();}
-function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.selected=v;save();renderManage();}
+function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.selected=v;save();}
 
 function renderPlayerItem(p){
   var chk=p.selected?'checked':'';
+  var hasInfo=p.level&&p.gender;
+  var badge=hasInfo
+    ?'<span style="font-size:.7rem;color:var(--m);background:var(--bg);border-radius:8px;padding:2px 7px;flex-shrink:0">Lv.'+p.level+' '+(p.gender==='M'?'♂':'♀')+'</span>'
+    :'<span style="font-size:.7rem;color:var(--d);background:#fef2f2;border-radius:8px;padding:2px 7px;flex-shrink:0">未設定</span>';
   return '<div class="pi" data-pid="'+p.id+'">'
     +'<input type="checkbox" class="pck" '+chk+' onchange="togP(\''+p.id+'\',this.checked)"/>'
     +'<span class="pn">'+esc(p.name)+'</span>'
+    +badge
+    +'<button class="pd" style="color:var(--p);font-size:1rem" onclick="showPeSheet(\''+p.id+'\')">✎</button>'
     +'<button class="pd" onclick="delP(\''+p.id+'\')">✕</button>'
     +'</div>';
 }
 
-function updateGroupSelect(){
-  var sel=document.getElementById('ng');
-  if(!sel)return;
-  var prev=sel.value;
+/* ── 新增球員 Modal ── */
+var apmGender=null;
+function showAddPlayerModal(){
+  apmGender=null;
+  updateApmGenderBtns();
+  document.getElementById('apm-name').value='';
+  document.getElementById('apm-level').value='';
+  var sel=document.getElementById('apm-group');
   sel.innerHTML='<option value="">未分組</option>'+groups.map(function(g){
     return '<option value="'+g.id+'">'+esc(g.name)+'</option>';
   }).join('');
-  if(prev&&sel.querySelector('option[value="'+prev+'"]'))sel.value=prev;
+  var isDesk=window.innerWidth>=680;
+  if(isDesk&&mgSelGroup&&mgSelGroup!=='__ung')sel.value=mgSelGroup;
+  document.getElementById('apm').classList.add('show');
+  setTimeout(function(){document.getElementById('apm-name').focus();},80);
+}
+function hideAddPlayerModal(){document.getElementById('apm').classList.remove('show');}
+function setApmGender(g){apmGender=g;updateApmGenderBtns();}
+function updateApmGenderBtns(){
+  document.getElementById('apm-m').className='btn '+(apmGender==='M'?'bp':'bo');
+  document.getElementById('apm-f').className='btn '+(apmGender==='F'?'bp':'bo');
+}
+function addPlayerFromModal(){
+  var name=document.getElementById('apm-name').value.trim();
+  if(!name){toast('請輸入球員姓名');return;}
+  if(players.find(function(p){return p.name===name;})){toast('名稱重複');return;}
+  var lvlStr=document.getElementById('apm-level').value;
+  var lvl=lvlStr?parseInt(lvlStr):null;
+  if(lvlStr&&(isNaN(lvl)||lvl<1||lvl>18)){toast('級數請填 1–18');return;}
+  var gid=document.getElementById('apm-group').value||null;
+  var id=''+Date.now();
+  players.push({id:id,name:name,selected:true,isJi:false,groupId:gid,
+    level:lvl||undefined,gender:apmGender||undefined});
+  gc[id]=0;
+  hideAddPlayerModal();
+  save();
+  renderManage();
 }
 
-var ungroupedOpen=false;
+/* ── 群組展開（手機） ── */
 function toggleUngrouped(){ungroupedOpen=!ungroupedOpen;renderManage();}
-
 function toggleGroup(id){
   var g=groups.find(function(g){return g.id===id;});
   if(g)g.collapsed=!g.collapsed;
   renderManage();
 }
 
+/* ── 電腦版群組選擇 ── */
+function setMgSelGroup(id){mgSelGroup=id;renderManage();}
+
+/* ── 主渲染 ── */
 function renderManage(){
   var pl=document.getElementById('pl');
   if(!pl)return;
-  var html='';
+  if(window.innerWidth>=680)renderManageDesktop(pl);
+  else renderManageMobile(pl);
+  attachLongPress();
+}
 
-  groups.forEach(function(g){
-    var members=players.filter(function(p){return p.groupId===g.id;});
-    var collapsed=g.collapsed!==false;
-    html+='<div class="grp-sec">'
-      +'<div class="grp-hdr" onclick="toggleGroup(\''+g.id+'\')">'
-      +'<span class="grp-hdr-name">'+esc(g.name)+'</span>'
-      +'<span class="grp-hdr-cnt">'+members.length+' 人</span>'
-      +'<span class="grp-hdr-arr'+(collapsed?'':' open')+'">▼</span>'
-      +'</div>';
-    if(!collapsed){
-      html+='<div class="grp-body">';
-      if(members.length){
-        members.forEach(function(p){html+=renderPlayerItem(p);});
-      }else{
-        html+='<div class="eh" style="padding:14px 0">此群組尚無成員</div>';
+function renderManageMobile(pl){
+  var html='<div style="padding:12px 12px 0"><button class="btn bp" style="width:100%;padding:12px" onclick="showAddPlayerModal()">＋ 新增球員</button></div>'
+    +'<div style="padding:12px 12px 130px">';
+
+  if(!players.length){
+    html+='<div class="card"><div class="eh">點上方按鈕新增第一位球員</div></div>';
+  }else if(!groups.length){
+    html+='<div class="card">';
+    players.forEach(function(p){html+=renderPlayerItem(p);});
+    html+='</div>';
+  }else{
+    groups.forEach(function(g){
+      var members=players.filter(function(p){return p.groupId===g.id;});
+      var collapsed=g.collapsed!==false;
+      html+='<div class="grp-sec">'
+        +'<div class="grp-hdr" onclick="toggleGroup(\''+g.id+'\')">'
+        +'<span class="grp-hdr-name">'+esc(g.name)+'</span>'
+        +'<span class="grp-hdr-cnt">'+members.length+' 人</span>'
+        +'<span class="grp-hdr-arr'+(collapsed?'':' open')+'">▼</span>'
+        +'</div>';
+      if(!collapsed){
+        html+='<div class="grp-body">';
+        if(members.length)members.forEach(function(p){html+=renderPlayerItem(p);});
+        else html+='<div class="eh" style="padding:14px 0">此群組尚無成員</div>';
+        html+='</div>';
+      }
+      html+='</div>';
+    });
+    var ung=players.filter(function(p){return !p.groupId;});
+    if(ung.length){
+      html+='<div class="grp-sec">'
+        +'<div class="grp-hdr" onclick="toggleUngrouped()">'
+        +'<span class="grp-hdr-name" style="color:var(--m)">未分組</span>'
+        +'<span class="grp-hdr-cnt">'+ung.length+' 人</span>'
+        +'<span class="grp-hdr-arr'+(ungroupedOpen?' open':'')+'">▼</span>'
+        +'</div>';
+      if(ungroupedOpen){
+        html+='<div class="grp-body">';
+        ung.forEach(function(p){html+=renderPlayerItem(p);});
+        html+='</div>';
       }
       html+='</div>';
     }
-    html+='</div>';
-  });
+  }
+  html+='</div>';
+  pl.innerHTML=html;
+}
 
-  var ungrouped=players.filter(function(p){return !p.groupId;});
-  if(!groups.length){
-    if(players.length){
-      html+='<div class="card">';
-      players.forEach(function(p){html+=renderPlayerItem(p);});
-      html+='</div>';
-    }else{
-      html='<div class="card"><div class="eh">尚未新增任何球員</div></div>';
-    }
-  }else if(ungrouped.length){
-    html+='<div class="grp-sec">'
-      +'<div class="grp-hdr" onclick="toggleUngrouped()">'
-      +'<span class="grp-hdr-name" style="color:var(--m)">未分組</span>'
-      +'<span class="grp-hdr-cnt">'+ungrouped.length+' 人</span>'
-      +'<span class="grp-hdr-arr'+(ungroupedOpen?' open':'')+'" >▼</span>'
+function renderManageDesktop(pl){
+  /* safety: selected group deleted */
+  if(mgSelGroup!=='__ung'&&!groups.find(function(g){return g.id===mgSelGroup;}))mgSelGroup='__ung';
+
+  /* ── Left: group nav ── */
+  var leftHtml='';
+  groups.forEach(function(g){
+    var cnt=players.filter(function(p){return p.groupId===g.id;}).length;
+    var sel=mgSelGroup===g.id;
+    leftHtml+='<div class="mgr-nav-item'+(sel?' sel':'')+'" onclick="setMgSelGroup(\''+g.id+'\')">'
+      +'<span class="mgr-nav-name">'+esc(g.name)+'</span>'
+      +'<span class="mgr-nav-cnt">'+cnt+'</span>'
       +'</div>';
-    if(ungroupedOpen){
-      html+='<div class="grp-body">';
-      ungrouped.forEach(function(p){html+=renderPlayerItem(p);});
-      html+='</div>';
-    }
-    html+='</div>';
+  });
+  var ungCnt=players.filter(function(p){return !p.groupId;}).length;
+  var ungSel=mgSelGroup==='__ung';
+  leftHtml+='<div class="mgr-nav-item'+(ungSel?' sel':'')+'" onclick="setMgSelGroup(\'__ung\')">'
+    +'<span class="mgr-nav-name" style="'+(ungSel?'':'color:var(--m)')+'">未分組</span>'
+    +'<span class="mgr-nav-cnt">'+ungCnt+'</span>'
+    +'</div>';
+  leftHtml+='<button class="btn bo" style="width:100%;font-size:.8rem;padding:8px;margin-top:4px" onclick="showGroupModal()">管理群組</button>';
+
+  /* ── Right: members ── */
+  var selPlayers=mgSelGroup==='__ung'
+    ?players.filter(function(p){return !p.groupId;})
+    :players.filter(function(p){return p.groupId===mgSelGroup;});
+  var curName=mgSelGroup==='__ung'?'未分組'
+    :(groups.find(function(g){return g.id===mgSelGroup;})||{name:'─'}).name;
+
+  var rightHtml='<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+    +'<span style="font-size:.88rem;font-weight:700;color:var(--t)">'+esc(curName)+'<span style="font-weight:400;color:var(--m);margin-left:6px">'+selPlayers.length+' 人</span></span>'
+    +'<button class="btn bp" style="padding:8px 16px;font-size:.88rem" onclick="showAddPlayerModal()">＋ 新增球員</button>'
+    +'</div>';
+
+  if(selPlayers.length){
+    rightHtml+='<div class="card">';
+    selPlayers.forEach(function(p){rightHtml+=renderPlayerItem(p);});
+    rightHtml+='</div>';
+  }else{
+    rightHtml+='<div class="card"><div class="eh">此群組尚無成員</div></div>';
   }
 
-  pl.innerHTML=html;
-  attachLongPress();
-  updateGroupSelect();
+  pl.innerHTML='<div class="mgr-wrap">'
+    +'<div class="mgr-left">'+leftHtml+'</div>'
+    +'<div class="mgr-right">'+rightHtml+'</div>'
+    +'</div>';
 }
+
+function updateGroupSelect(){/* replaced by apm modal */}
 
 /* ── 長按移動 ── */
 var lpTimer=null;
@@ -989,7 +1178,236 @@ function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideRese
 
 var tt;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2200);}
-window.addEventListener('resize',function(){if(tab==='game')renderGame();});
+window.addEventListener('resize',function(){
+  if(tab==='game')renderGame();
+  if(tab==='manage')renderManage();
+});
+
+/* ===== 球員編輯 Bottom Sheet ===== */
+var peTargetId=null,peGender=null;
+function showPeSheet(pid){
+  peTargetId=pid;
+  var p=players.find(function(x){return x.id===pid;});
+  if(!p)return;
+  document.getElementById('pesh-name').value=p.name;
+  document.getElementById('pesh-level').value=p.level||'';
+  peGender=p.gender||null;
+  updatePeGenderBtns();
+  var sel=document.getElementById('pesh-group');
+  sel.innerHTML='<option value="">未分組</option>'+groups.map(function(g){
+    return '<option value="'+g.id+'">'+esc(g.name)+'</option>';
+  }).join('');
+  sel.value=p.groupId||'';
+  document.getElementById('pesh').classList.add('show');
+}
+function hidePeSheet(){document.getElementById('pesh').classList.remove('show');peTargetId=null;}
+function setPeGender(g){peGender=g;updatePeGenderBtns();}
+function updatePeGenderBtns(){
+  document.getElementById('pesh-m').className='btn '+(peGender==='M'?'bp':'bo');
+  document.getElementById('pesh-f').className='btn '+(peGender==='F'?'bp':'bo');
+}
+function savePeSheet(){
+  var p=players.find(function(x){return x.id===peTargetId;});
+  if(!p)return;
+  var name=document.getElementById('pesh-name').value.trim();
+  if(!name){toast('請輸入姓名');return;}
+  if(players.find(function(x){return x.name===name&&x.id!==peTargetId;})){toast('名稱重複');return;}
+  var lvlStr=document.getElementById('pesh-level').value;
+  var lvl=lvlStr?parseInt(lvlStr):null;
+  if(lvlStr&&(isNaN(lvl)||lvl<1||lvl>18)){toast('級數請填 1–18');return;}
+  p.name=name;
+  p.level=lvl||undefined;
+  p.gender=peGender||undefined;
+  p.groupId=document.getElementById('pesh-group').value||null;
+  hidePeSheet();save();renderManage();
+}
+
+/* ===== 排點 ===== */
+var sched={active:false,genderBalance:false,counts:{},history:[],current:null,next:null,attending:[]};
+
+function goScheduling(){
+  var sel=players.filter(function(p){return p.selected;});
+  if(sel.length<4){toast('請至少勾選 4 位球員');return;}
+  switchTab('schedule');
+}
+
+function combinations(arr,k){
+  var res=[];
+  function go(s,cur){
+    if(cur.length===k){res.push(cur.slice());return;}
+    for(var i=s;i<arr.length;i++){cur.push(arr[i]);go(i+1,cur);cur.pop();}
+  }
+  go(0,[]);return res;
+}
+
+function getValidGroups(attending,genderBalance){
+  var combos=combinations(attending,4);
+  if(!genderBalance)return combos;
+  return combos.filter(function(g){
+    var m=g.filter(function(p){return p.gender==='M';}).length;
+    return m===0||m===2||m===4;
+  });
+}
+
+function bestSplit(group){
+  var splits=[[[0,1],[2,3]],[[0,2],[1,3]],[[0,3],[1,2]]];
+  var best=null;
+  splits.forEach(function(s){
+    var t1=[group[s[0][0]],group[s[0][1]]];
+    var t2=[group[s[1][0]],group[s[1][1]]];
+    var l1=t1.reduce(function(a,p){return a+(p.level||1);},0);
+    var l2=t2.reduce(function(a,p){return a+(p.level||1);},0);
+    var diff=Math.abs(l1-l2);
+    if(best===null||diff<best.diff)best={t1:t1,t2:t2,l1:l1,l2:l2,diff:diff};
+  });
+  return best;
+}
+
+function scoreGroup(group,split,counts,history,attending){
+  /* Priority 1: minimize overall count range AFTER this round across all attending players.
+     This ensures low-count players are selected, not penalized for raising group-internal range. */
+  var inGroup={};
+  group.forEach(function(p){inGroup[p.id]=true;});
+  var afterCounts=attending.map(function(p){return (counts[p.id]||0)+(inGroup[p.id]?1:0);});
+  var overallRange=Math.max.apply(null,afterCounts)-Math.min.apply(null,afterCounts);
+
+  /* Priority 2: level diff between teams */
+  var levelDiff=split.diff;
+
+  /* Priority 3: avoid repeating same partner pairs */
+  var pairRepeats=0;
+  var newPairs=[[split.t1[0].id,split.t1[1].id],[split.t2[0].id,split.t2[1].id]];
+  history.forEach(function(r){
+    [r.t1,r.t2].forEach(function(pair){
+      newPairs.forEach(function(np){
+        if((pair[0]===np[0]&&pair[1]===np[1])||(pair[0]===np[1]&&pair[1]===np[0]))pairRepeats++;
+      });
+    });
+  });
+
+  return overallRange*1000+levelDiff*10+pairRepeats;
+}
+
+function generateRound(attending,counts,history,genderBalance){
+  var groups=getValidGroups(attending,genderBalance);
+  if(!groups.length)return null;
+  var bestScore=Infinity,bestResult=null;
+  groups.forEach(function(group){
+    var split=bestSplit(group);
+    var score=scoreGroup(group,split,counts,history,attending);
+    if(score<bestScore){bestScore=score;bestResult={t1:split.t1,t2:split.t2,l1:split.l1,l2:split.l2};}
+  });
+  return bestResult;
+}
+
+function startScheduling(){
+  var sel=players.filter(function(p){return p.selected;});
+  if(sel.length<4){toast('請至少勾選 4 位球員');return;}
+  var missing=sel.filter(function(p){return !p.level||!p.gender;});
+  if(missing.length){toast('有球員尚未設定級數或性別');return;}
+  sched.genderBalance=document.getElementById('sched-gender').checked;
+  sched.active=true;
+  sched.attending=sel.slice();
+  sched.counts={};sched.history=[];
+  sel.forEach(function(p){sched.counts[p.id]=0;});
+  sched.current=generateRound(sched.attending,sched.counts,sched.history,sched.genderBalance);
+  sched.next=computeNext();
+  renderScheduling();
+  document.getElementById('fab-sched').style.display=(sched.active&&sched.current)?'':'none';
+}
+
+function computeNext(){
+  if(!sched.current)return null;
+  var tent=Object.assign({},sched.counts);
+  [sched.current.t1[0],sched.current.t1[1],sched.current.t2[0],sched.current.t2[1]].forEach(function(p){tent[p.id]=(tent[p.id]||0)+1;});
+  var tentHist=sched.history.concat([{t1:[sched.current.t1[0].id,sched.current.t1[1].id],t2:[sched.current.t2[0].id,sched.current.t2[1].id]}]);
+  return generateRound(sched.attending,tent,tentHist,sched.genderBalance);
+}
+
+function nextRound(){
+  if(!sched.active||!sched.current)return;
+  var cur=sched.current;
+  [cur.t1[0],cur.t1[1],cur.t2[0],cur.t2[1]].forEach(function(p){sched.counts[p.id]=(sched.counts[p.id]||0)+1;});
+  sched.history.push({t1:[cur.t1[0].id,cur.t1[1].id],t2:[cur.t2[0].id,cur.t2[1].id]});
+  sched.current=sched.next;
+  sched.next=computeNext();
+  renderScheduling();
+  document.getElementById('fab-sched').style.display=(sched.active&&sched.current)?'':'none';
+}
+
+function endScheduling(){
+  sched.active=false;sched.current=null;sched.next=null;sched.history=[];sched.counts={};sched.attending=[];
+  document.getElementById('fab-sched').style.display='none';
+  renderScheduling();
+}
+
+function renderRoundCard(round){
+  function teamHtml(team,lsum){
+    return '<div class="sched-team">'
+      +team.map(function(p){return '<div class="sched-team-name">'+esc(p.name)+'</div>'
+        +'<div class="sched-team-meta">Lv.'+p.level+' '+(p.gender==='M'?'♂':'♀')+'</div>';}).join('')
+      +'<div class="sched-team-sum">Σ '+lsum+'</div>'
+      +'</div>';
+  }
+  return '<div style="display:flex;gap:8px;align-items:stretch">'
+    +teamHtml(round.t1,round.l1)
+    +'<div style="display:flex;align-items:center;padding:0 4px;font-size:1.1rem;font-weight:800;color:var(--m)">vs</div>'
+    +teamHtml(round.t2,round.l2)
+    +'</div>';
+}
+
+function renderScheduling(){
+  var el=document.getElementById('vs');
+  if(!el)return;
+  var attending=sched.active?sched.attending:players.filter(function(p){return p.selected;});
+  var html='';
+
+  /* gender checkbox card */
+  html+='<div class="card"><label style="display:flex;align-items:center;gap:10px;cursor:pointer">'
+    +'<input type="checkbox" id="sched-gender" style="width:18px;height:18px;accent-color:var(--p)"'+(sched.genderBalance?' checked':'')+(sched.active?' disabled':'')+'>'
+    +'<span style="font-size:.9rem;font-weight:500">性別平衡（2男2女 / 4男 / 4女）</span></label></div>';
+
+  /* attending players */
+  if(attending.length){
+    html+='<div class="card"><div class="sum-section-title" style="margin-bottom:8px">出席球員（'+attending.length+'人）</div>'
+      +'<div style="display:flex;flex-wrap:wrap;gap:6px">';
+    attending.forEach(function(p){
+      var cnt=sched.counts[p.id]||0;
+      html+='<div class="sched-player-chip">'
+        +'<span class="sched-chip-name">'+esc(p.name)+'</span>'
+        +'<span class="sched-chip-meta">Lv.'+(p.level||'?')+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
+        +'<span class="sched-chip-cnt">'+cnt+'</span>'
+        +'</div>';
+    });
+    html+='</div></div>';
+  }else{
+    html+='<div class="card"><div class="eh">請先在人員頁勾選出席球員</div></div>';
+  }
+
+  /* current round */
+  if(sched.active&&sched.current){
+    html+='<div class="card" style="border:2px solid var(--p);margin-bottom:10px">'
+      +'<div style="font-size:.78rem;font-weight:700;color:var(--p);margin-bottom:10px">本輪</div>'
+      +renderRoundCard(sched.current)+'</div>';
+  }
+
+  /* next round preview */
+  if(sched.active&&sched.next){
+    html+='<div class="card" style="opacity:.65;margin-bottom:10px">'
+      +'<div style="font-size:.78rem;font-weight:700;color:var(--m);margin-bottom:10px">下輪（預覽）</div>'
+      +renderRoundCard(sched.next)+'</div>';
+  }
+
+  /* action button */
+  if(!sched.active){
+    var disabled=attending.length<4?' disabled':'';
+    html+='<button class="btn bp" style="width:100%;padding:14px;font-size:1rem"'+disabled+' onclick="startScheduling()">開始排點</button>';
+  }else{
+    html+='<button class="btn bd" style="width:100%;padding:14px;font-size:1rem" onclick="endScheduling()">結束排點</button>';
+  }
+
+  el.innerHTML=html;
+}
 </script>
 </body>
 </html>
