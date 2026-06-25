@@ -212,7 +212,7 @@ header h1{font-size:.95rem;font-weight:700;white-space:nowrap}
     <div class="login-logo">🏸</div>
     <div class="login-title">羽球團</div>
     <div class="login-sub">登入後開始管理你的球隊</div>
-    <input id="login-phone" class="login-inp" type="tel" placeholder="手機號碼（如 0912345678）" maxlength="15" onkeydown="if(event.key==='Enter')loginPhone()"/>
+    <input id="login-phone" class="login-inp" type="tel" placeholder="手機號碼（如 0912345678）" maxlength="15" autocomplete="tel" onkeydown="if(event.key==='Enter')loginPhone()"/>
     <button class="login-btn login-btn-phone" onclick="loginPhone()">手機號碼登入 / 註冊</button>
     <div class="login-err" id="login-err"></div>
     <div class="login-divider">或</div>
