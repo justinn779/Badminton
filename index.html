@@ -1675,7 +1675,7 @@ function scoreGroup(group,split,counts,history,attending){
     });
   });
 
-  return overallRange*1000+levelDiff*10+pairRepeats;
+  return overallRange*1000+levelDiff*2+pairRepeats*5;
 }
 
 function generateRound(attending,counts,history,genderBalance){
