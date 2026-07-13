@@ -479,6 +479,24 @@ body.dark .gb-badge{background:#1e3a5f}
 </div>
 
 <!-- 結束比賽確認 Modal -->
+<div class="mo" id="score-mo">
+<div class="mb" style="max-width:340px" onclick="event.stopPropagation()">
+  <h2 style="margin-bottom:14px">填入比賽結果</h2>
+  <div style="display:flex;gap:8px;margin-bottom:14px">
+    <button id="score-t1-btn" class="btn bo" style="flex:1;font-size:.82rem;white-space:normal;line-height:1.3" onclick="selectScoreWinner(1)"></button>
+    <button id="score-t2-btn" class="btn bo" style="flex:1;font-size:.82rem;white-space:normal;line-height:1.3" onclick="selectScoreWinner(2)"></button>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px;justify-content:center;margin-bottom:18px">
+    <input id="score-s1" type="number" min="0" max="99" value="21" style="width:64px;padding:10px;border:2px solid var(--b);border-radius:8px;font-size:1.3rem;text-align:center;outline:none;background:var(--c);color:var(--t)"/>
+    <span style="font-size:1.2rem;font-weight:800;color:var(--m)">:</span>
+    <input id="score-s2" type="number" min="0" max="99" value="18" style="width:64px;padding:10px;border:2px solid var(--b);border-radius:8px;font-size:1.3rem;text-align:center;outline:none;background:var(--c);color:var(--t)"/>
+  </div>
+  <div class="ma">
+    <button class="btn bo" onclick="skipScore()">略過</button>
+    <button class="btn bp" onclick="confirmScore()">確認</button>
+  </div>
+</div>
+</div>
 <div class="mo" id="end-game-mo" onclick="this.classList.remove('show')">
 <div class="mb" onclick="event.stopPropagation()">
   <h2>確認結束今天的比賽？</h2>
@@ -1102,7 +1120,7 @@ function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.se
 function renderPlayerItem(p){
   var hasInfo=p.level&&p.gender;
   var badge=hasInfo
-    ?'<span style="font-size:.7rem;color:var(--m);background:var(--bg);border-radius:8px;padding:2px 7px;flex-shrink:0">Lv.'+p.level+' '+(p.gender==='M'?'♂':'♀')+'</span>'
+    ?'<span style="font-size:.7rem;color:var(--m);background:var(--bg);border-radius:8px;padding:2px 7px;flex-shrink:0">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':'♀')+'</span>'
     :'<span style="font-size:.7rem;color:var(--m);background:var(--bg);border-radius:8px;padding:2px 7px;flex-shrink:0">待補資料</span>';
   return '<div class="pi" data-pid="'+p.id+'">'
     +'<span class="pn">'+esc(p.name)+'</span>'
@@ -1144,7 +1162,7 @@ function addPlayerFromModal(){
   var gid=document.getElementById('apm-group').value||null;
   var id=''+Date.now();
   players.push({id:id,name:name,selected:true,isJi:false,groupId:gid,
-    level:lvl||undefined,gender:apmGender||undefined});
+    level:lvl||undefined,gender:apmGender||undefined,hiddenRating:(lvl||1)*100});
   gc[id]=0;
   hideAddPlayerModal();
   save();
@@ -1470,7 +1488,7 @@ function renderAttendItem(p){
     +' style="width:18px;height:18px;accent-color:var(--p);pointer-events:none;flex-shrink:0"/>'
     +'<div style="flex:1">'
     +'<div style="font-weight:600;font-size:.92rem">'+esc(p.name)+'</div>'
-    +((p.level||p.gender)?'<div style="font-size:.74rem;color:var(--m)">Lv.'+(p.level||'?')+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</div>':'')
+    +((p.level||p.gender)?'<div style="font-size:.74rem;color:var(--m)">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</div>':'')
     +'</div></div>';
 }
 function toggleAttend(id){
@@ -1599,10 +1617,76 @@ function savePeSheet(){
   if(!lvl){toast('請選擇級數');return;}
   if(!peGender){toast('請選擇性別');return;}
   p.name=name;
-  p.level=lvl||undefined;
+  if(lvl&&lvl!==p.level){p.level=lvl;p.hiddenRating=lvl*100;}
+  else{p.level=lvl||undefined;}
   p.gender=peGender||undefined;
   p.groupId=document.getElementById('pesh-group').value||null;
   hidePeSheet();save();renderManage();
+}
+
+/* ===== 等級輔助 ===== */
+function pRating(p){return p.hiddenRating||(p.level||1)*100;}
+function pLevelStr(p){return (pRating(p)/100).toFixed(2);}
+function updatePlayerLevel(p){p.level=Math.max(1,Math.floor(pRating(p)/100));}
+
+/* ===== 計分 ===== */
+var scoreWinner=0,scoreCurrent=null;
+function showScoreModal(){
+  scoreCurrent=sched.current;
+  var t1n=scoreCurrent.t1.map(function(p){return p.name;}).join(' & ');
+  var t2n=scoreCurrent.t2.map(function(p){return p.name;}).join(' & ');
+  document.getElementById('score-t1-btn').textContent=t1n;
+  document.getElementById('score-t2-btn').textContent=t2n;
+  scoreWinner=0;
+  document.getElementById('score-t1-btn').className='btn bo';
+  document.getElementById('score-t2-btn').className='btn bo';
+  document.getElementById('score-s1').value=21;
+  document.getElementById('score-s2').value=18;
+  document.getElementById('score-mo').classList.add('show');
+}
+function selectScoreWinner(t){
+  scoreWinner=t;
+  document.getElementById('score-t1-btn').className='btn '+(t===1?'bp':'bo');
+  document.getElementById('score-t2-btn').className='btn '+(t===2?'bp':'bo');
+  if(t===1){document.getElementById('score-s1').value=21;document.getElementById('score-s2').value=18;}
+  else{document.getElementById('score-s1').value=18;document.getElementById('score-s2').value=21;}
+}
+function confirmScore(){
+  if(!scoreWinner){toast('請選擇勝方');return;}
+  var s1=parseInt(document.getElementById('score-s1').value)||0;
+  var s2=parseInt(document.getElementById('score-s2').value)||0;
+  if(s1===s2){toast('得分不可相同');return;}
+  var cur=scoreCurrent;
+  var winTeam=scoreWinner===1?cur.t1:cur.t2;
+  var loseTeam=scoreWinner===1?cur.t2:cur.t1;
+  var winScore=scoreWinner===1?s1:s2;
+  var loseScore=scoreWinner===1?s2:s1;
+  applyMatchRating(cur.t1,cur.t2,winTeam,winScore,loseScore);
+  document.getElementById('score-mo').classList.remove('show');
+  advanceRound();
+}
+function skipScore(){
+  document.getElementById('score-mo').classList.remove('show');
+  advanceRound();
+}
+function applyMatchRating(t1,t2,winTeam,winScore,loseScore){
+  var r1=(pRating(t1[0])+pRating(t1[1]))/2;
+  var r2=(pRating(t2[0])+pRating(t2[1]))/2;
+  var E1=1/(1+Math.pow(10,(r2-r1)/400));
+  var isT1Win=(winTeam===t1);
+  var Ew=isT1Win?E1:(1-E1);
+  var marginFactor=1+0.5*(winScore-loseScore)/winScore;
+  var delta=Math.round(18*(1-Ew)*marginFactor*100)/100;
+  var loseTeam=isT1Win?t2:t1;
+  winTeam.forEach(function(p){
+    var rp=players.find(function(x){return x.id===p.id;});
+    if(rp){rp.hiddenRating=Math.max(100,Math.round((pRating(rp)+delta)*100)/100);updatePlayerLevel(rp);}
+  });
+  loseTeam.forEach(function(p){
+    var rp=players.find(function(x){return x.id===p.id;});
+    if(rp){rp.hiddenRating=Math.max(100,Math.round((pRating(rp)-delta)*100)/100);updatePlayerLevel(rp);}
+  });
+  save();
 }
 
 /* ===== 排點 ===== */
@@ -1656,8 +1740,8 @@ function bestSplit(group){
   splits.forEach(function(s){
     var t1=[group[s[0][0]],group[s[0][1]]];
     var t2=[group[s[1][0]],group[s[1][1]]];
-    var l1=t1.reduce(function(a,p){return a+(p.level||1);},0);
-    var l2=t2.reduce(function(a,p){return a+(p.level||1);},0);
+    var l1=t1.reduce(function(a,p){return a+pRating(p)/100;},0);
+    var l2=t2.reduce(function(a,p){return a+pRating(p)/100;},0);
     var diff=Math.abs(l1-l2);
     if(best===null||diff<best.diff)best={t1:t1,t2:t2,l1:l1,l2:l2,diff:diff};
   });
@@ -1712,6 +1796,10 @@ function computeNext(){
 
 function nextRoundBtn(){
   if(!sched.active||!sched.current)return;
+  showScoreModal();
+}
+function advanceRound(){
+  if(!sched.active||!sched.current)return;
   var curCard=document.querySelector('.round-current');
   var nxtCard=document.querySelector('.round-next');
   if(curCard||nxtCard){
@@ -1765,7 +1853,7 @@ function renderRoundCard(round){
   function teamHtml(team,lsum){
     return '<div class="sched-team">'
       +team.map(function(p){return '<div class="sched-team-name">'+esc(p.name)+'</div>'
-        +'<div class="sched-team-meta">Lv.'+p.level+' '+(p.gender==='M'?'♂':'♀')+'</div>';}).join('')
+        +'<div class="sched-team-meta">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':'♀')+'</div>';}).join('')
       +'<div class="sched-team-sum">Σ '+lsum+'</div>'
       +'</div>';
   }
@@ -1806,7 +1894,7 @@ function renderScheduling(){
       var cnt=sched.counts[p.id]||0;
       return '<div class="sched-player-chip" data-pid="'+p.id+'">'
         +'<span class="sched-chip-name">'+esc(p.name)+'</span>'
-        +'<span class="sched-chip-meta">Lv.'+(p.level||'?')+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
+        +'<span class="sched-chip-meta">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
         +'<span class="sched-chip-cnt">'+cnt+'</span>'
         +'</div>';
     };
