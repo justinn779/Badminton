@@ -754,9 +754,11 @@ function loginGoogle() {
     document.getElementById('login-err').textContent = '請透過網頁伺服器（http/https）開啟此頁才能使用 Google 登入，部署到 GitHub Pages 後即可正常使用。';
     return;
   }
-  document.getElementById('login-err').textContent = '導向 Google 登入...';
+  document.getElementById('login-err').textContent = 'Google 登入中...';
   var provider = new firebase.auth.GoogleAuthProvider();
-  auth.signInWithRedirect(provider);
+  auth.signInWithPopup(provider).catch(function(e) {
+    document.getElementById('login-err').textContent = 'Google 登入失敗：' + e.message;
+  });
 }
 
 async function doLogout() {
@@ -803,7 +805,11 @@ function linkGoogle() {
   }
   var provider = new firebase.auth.GoogleAuthProvider();
   hideSettings();
-  currentUser.linkWithRedirect(provider);
+  currentUser.linkWithPopup(provider).then(function(){
+    toast('已成功綁定 Google 帳號');
+  }).catch(function(e){
+    toast('綁定失敗：' + e.message);
+  });
 }
 
 /* ===== Firestore sync ===== */
