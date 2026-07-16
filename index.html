@@ -479,6 +479,15 @@ body.dark .gb-badge{background:#1e3a5f}
 </div>
 
 <!-- 結束比賽確認 Modal -->
+<div class="mo" id="edit-next-mo">
+<div class="mb" style="max-width:360px" onclick="event.stopPropagation()">
+  <h2 style="margin-bottom:14px">調整下一輪</h2>
+  <div id="edit-next-body"></div>
+  <div class="ma" style="margin-top:16px">
+    <button class="btn bp" style="flex:1" onclick="closeEditNext()">完成</button>
+  </div>
+</div>
+</div>
 <div class="mo" id="score-mo">
 <div class="mb" style="max-width:340px" onclick="event.stopPropagation()">
   <h2 style="margin-bottom:14px">填入比賽結果</h2>
@@ -1629,6 +1638,62 @@ function pRating(p){return p.hiddenRating||(p.level||1)*100;}
 function pLevelStr(p){return (pRating(p)/100).toFixed(2);}
 function updatePlayerLevel(p){p.level=Math.max(1,Math.floor(pRating(p)/100));}
 
+/* ===== 換人 ===== */
+var editNextSelected=null;
+function showEditNext(){
+  if(!sched.next)return;
+  editNextSelected=null;
+  renderEditNext();
+  document.getElementById('edit-next-mo').classList.add('show');
+}
+function closeEditNext(){
+  document.getElementById('edit-next-mo').classList.remove('show');
+  renderScheduling();
+}
+function recalcNextSums(){
+  var n=sched.next;if(!n)return;
+  n.l1=Math.round(n.t1.reduce(function(a,p){return a+pRating(p)/100;},0)*100)/100;
+  n.l2=Math.round(n.t2.reduce(function(a,p){return a+pRating(p)/100;},0)*100)/100;
+}
+function renderEditNext(){
+  var n=sched.next;if(!n)return;
+  var inIds=[n.t1[0].id,n.t1[1].id,n.t2[0].id,n.t2[1].id];
+  var bench=sched.attending.filter(function(p){return inIds.indexOf(p.id)===-1;});
+  function pbtn(p){
+    var sel=editNextSelected===p.id;
+    return '<button class="btn '+(sel?'bp':'bo')+'" style="flex:1;min-width:0;font-size:.82rem;padding:8px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="selectEditPlayer(\''+p.id+'\')" title="'+esc(p.name)+'">'+esc(p.name)+'</button>';
+  }
+  var h='<div style="font-size:.75rem;font-weight:700;color:var(--p);margin-bottom:6px">隊伍 1</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px">'+pbtn(n.t1[0])+pbtn(n.t1[1])+'</div>'
+    +'<div style="font-size:.75rem;font-weight:700;color:var(--s);margin-bottom:6px">隊伍 2</div>'
+    +'<div style="display:flex;gap:8px;margin-bottom:12px">'+pbtn(n.t2[0])+pbtn(n.t2[1])+'</div>';
+  if(bench.length){
+    h+='<div style="font-size:.75rem;font-weight:700;color:var(--m);margin-bottom:6px">候補</div>'
+      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+bench.map(pbtn).join('')+'</div>';
+  }
+  document.getElementById('edit-next-body').innerHTML=h;
+}
+function selectEditPlayer(id){
+  var n=sched.next;if(!n)return;
+  if(!editNextSelected){editNextSelected=id;renderEditNext();return;}
+  if(editNextSelected===id){editNextSelected=null;renderEditNext();return;}
+  var slots=[{t:'t1',i:0,p:n.t1[0]},{t:'t1',i:1,p:n.t1[1]},{t:'t2',i:0,p:n.t2[0]},{t:'t2',i:1,p:n.t2[1]}];
+  var s1=slots.find(function(s){return s.p.id===editNextSelected;});
+  var s2=slots.find(function(s){return s.p.id===id;});
+  if(s1&&s2){
+    var tmp=n[s1.t][s1.i];n[s1.t][s1.i]=n[s2.t][s2.i];n[s2.t][s2.i]=tmp;
+  }else if(s1){
+    var bp=sched.attending.find(function(p){return p.id===id;});
+    if(bp)n[s1.t][s1.i]=bp;
+  }else if(s2){
+    var bp2=sched.attending.find(function(p){return p.id===editNextSelected;});
+    if(bp2)n[s2.t][s2.i]=bp2;
+  }
+  recalcNextSums();
+  editNextSelected=null;
+  renderEditNext();
+}
+
 /* ===== 計分 ===== */
 var scoreWinner=0,scoreCurrent=null;
 function showScoreModal(){
@@ -1928,8 +1993,11 @@ function renderScheduling(){
 
   /* next round preview */
   if(sched.active&&sched.next){
-    body+='<div class="card round-next" style="opacity:.65;margin-bottom:10px">'
-      +'<div style="font-size:.78rem;font-weight:700;color:var(--m);margin-bottom:10px">下輪（預覽）</div>'
+    body+='<div class="card round-next" style="opacity:.85;margin-bottom:10px">'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      +'<span style="font-size:.78rem;font-weight:700;color:var(--m)">下輪（預覽）</span>'
+      +'<button class="btn bo" style="padding:5px 13px;font-size:.78rem" onclick="showEditNext()">調整</button>'
+      +'</div>'
       +renderRoundCard(sched.next)+'</div>';
   }
 
