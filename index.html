@@ -190,6 +190,9 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 .sched-chip-name{font-size:.95rem;font-weight:600;color:var(--t)}
 .sched-chip-meta{font-size:.73rem;color:var(--m)}
 .sched-chip-cnt{font-size:1.15rem;font-weight:800;color:var(--p)}
+.sched-chip-adj{display:flex;align-items:center;gap:5px}
+.sched-chip-adj-btn{background:none;border:1.5px solid var(--b);border-radius:5px;color:var(--m);font-size:.9rem;font-weight:700;cursor:pointer;padding:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;line-height:1}
+.sched-chip-adj-btn:active{background:var(--b)}
 
 /* Login */
 .login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;background:var(--bg)}
@@ -1638,6 +1641,12 @@ function pRating(p){return p.hiddenRating||(p.level||1)*100;}
 function pLevelStr(p){return (pRating(p)/100).toFixed(2);}
 function updatePlayerLevel(p){p.level=Math.max(1,Math.floor(pRating(p)/100));}
 
+function adjSchedCount(id,d){
+  sched.counts[id]=Math.max(0,(sched.counts[id]||0)+d);
+  var el=document.querySelector('.sched-player-chip[data-pid="'+id+'"] .sched-chip-cnt');
+  if(el)el.textContent=sched.counts[id];
+}
+
 /* ===== 換人 ===== */
 var editNextSelected=null;
 function showEditNext(){
@@ -1960,7 +1969,11 @@ function renderScheduling(){
       return '<div class="sched-player-chip" data-pid="'+p.id+'">'
         +'<span class="sched-chip-name">'+esc(p.name)+'</span>'
         +'<span class="sched-chip-meta">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
+        +'<div class="sched-chip-adj">'
+        +'<button class="sched-chip-adj-btn" onclick="event.stopPropagation();adjSchedCount(\''+p.id+'\',-1)">−</button>'
         +'<span class="sched-chip-cnt">'+cnt+'</span>'
+        +'<button class="sched-chip-adj-btn" onclick="event.stopPropagation();adjSchedCount(\''+p.id+'\',1)">+</button>'
+        +'</div>'
         +'</div>';
     };
     body+='<div class="card"><div class="sum-section-title" style="margin-bottom:8px">出席球員（'+n+'人）</div>';
