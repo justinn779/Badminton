@@ -1943,7 +1943,7 @@ function renderRoundCard(round){
     return '<div class="sched-team">'
       +team.map(function(p){return '<div class="sched-team-name">'+esc(p.name)+'</div>'
         +'<div class="sched-team-meta">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':'♀')+'</div>';}).join('')
-      +'<div class="sched-team-sum">Σ '+lsum+'</div>'
+      +'<div class="sched-team-sum">Σ '+parseFloat(lsum).toFixed(2)+'</div>'
       +'</div>';
   }
   return '<div style="display:flex;gap:8px;align-items:stretch">'
