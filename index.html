@@ -394,12 +394,15 @@ body.dark .gb-badge{background:#1e3a5f}
 </div>
 </div>
 
-<!-- 戰績頁 -->
-<div id="vr" class="view">
-  <div style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-size:1.1rem;font-weight:700">比賽紀錄</div>
+<!-- 比賽紀錄 Modal -->
+<div class="mo" id="history-mo" onclick="this.classList.remove('show')">
+<div class="mb" onclick="event.stopPropagation()" style="max-width:420px;width:100%;max-height:80vh;display:flex;flex-direction:column">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-shrink:0">
+    <h2 style="margin:0">比賽紀錄</h2>
+    <button style="background:none;border:none;font-size:1.4rem;cursor:pointer;color:var(--m);line-height:1" onclick="document.getElementById('history-mo').classList.remove('show')">×</button>
   </div>
-  <div id="vr-list" style="padding:12px 16px"></div>
+  <div id="vr-list" style="overflow-y:auto;flex:1"></div>
+</div>
 </div>
 
 <!-- 編輯戰績 Modal -->
@@ -726,10 +729,6 @@ body.dark .gb-badge{background:#1e3a5f}
     <span class="bnav-icon">💰</span>
     <span class="bnav-label">記帳</span>
   </button>
-  <button class="bnav-btn" id="bnav-record" onclick="switchTab('record')">
-    <span class="bnav-icon">📋</span>
-    <span class="bnav-label">紀錄</span>
-  </button>
 </div>
 
 <div class="toast" id="toast"></div>
@@ -991,18 +990,17 @@ function saveBillLocal(){
 }
 function switchTab(t){
   tab=t;
-  ['game','manage','bill','record'].forEach(function(x){
+  ['game','manage','bill'].forEach(function(x){
     var btn=document.getElementById('bnav-'+x);
     if(btn)btn.classList.toggle('active',x===t);
   });
   document.getElementById('vg').classList.toggle('active',t==='game');
   document.getElementById('vm').classList.toggle('active',t==='manage');
   document.getElementById('vb').classList.toggle('active',t==='bill');
-  document.getElementById('vr').classList.toggle('active',t==='record');
+
   document.getElementById('fab-sched').style.display=(t==='game'&&gameMode==='schedule'&&sched.active&&sched.current)?'':'none';
   if(t==='game')renderGameTab();
   if(t==='bill')renderBill();
-  if(t==='record')renderHistory();
 }
 function switchBill(t){
   billTab=t;
@@ -1459,6 +1457,7 @@ function renderGameIdle(){
     +'<div style="font-size:1.15rem;font-weight:800;color:var(--t)">今日比賽</div>'
     +'<div style="font-size:.85rem;color:var(--m);line-height:1.6;margin-bottom:4px">選擇出席球員，開始安排今天的比賽</div>'
     +'<button class="btn bs" style="margin-top:8px;padding:14px 40px;font-size:1rem;border-radius:28px" onclick="startGame()">▶ 開始比賽</button>'
+    +'<button onclick="showHistory()" style="background:none;border:none;font-size:.8rem;color:var(--m);cursor:pointer;margin-top:16px;text-decoration:underline">比賽紀錄</button>'
     +'</div>';
 }
 
@@ -1808,6 +1807,10 @@ function applyMatchRatingK(t1,t2,winTeam,winScore,loseScore,K){
 
 /* ===== 戰績 ===== */
 var editHistoryId=null;
+function showHistory(){
+  renderHistory();
+  document.getElementById('history-mo').classList.add('show');
+}
 function renderHistory(){
   var el=document.getElementById('vr-list');
   if(!matchHistory.length){el.innerHTML='<div class="eh">尚無比賽紀錄</div>';return;}
