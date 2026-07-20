@@ -495,10 +495,6 @@ body.dark .gb-badge{background:#1e3a5f}
     <span style="font-size:1.3rem">🎯</span>
     <div><div style="font-weight:600">自動排點</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">系統自動安排每輪出賽名單</div></div>
   </div>
-  <div class="bsht-item" onclick="hideModeSheet();goManual()">
-    <span style="font-size:1.3rem">📋</span>
-    <div><div style="font-weight:600">手動計算</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">自行決定出賽，手動累計次數</div></div>
-  </div>
   <button class="bsht-cancel" onclick="hideModeSheet()">取消</button>
 </div>
 </div>
@@ -1453,7 +1449,6 @@ function delGroup(id){
 function renderGameTab(){
   if(gameMode===null)renderGameIdle();
   else if(gameMode==='schedule')renderScheduling();
-  else if(gameMode==='manual')renderGameManual();
 }
 
 function renderGameIdle(){
@@ -1467,39 +1462,6 @@ function renderGameIdle(){
     +'</div>';
 }
 
-function renderGameManual(){
-  var el=document.getElementById('vg');
-  if(!el)return;
-  el.innerHTML='<div class="vs-hdr">'
-    +'<span class="vs-hdr-title">手動計算</span>'
-    +'<button class="btn bd" style="padding:8px 16px;font-size:.85rem" onclick="endGame()">結束比賽</button>'
-    +'</div>'
-    +'<div class="sb" id="bar" style="margin:6px 6px 0"></div>'
-    +'<div class="gg" id="grid" style="flex:1;margin:6px;overflow:hidden"></div>'
-    +'<div style="flex-shrink:0;height:70px"></div>';
-  renderManualCounts();
-}
-
-function renderManualCounts(){
-  var active=players.filter(function(p){return p.selected;});
-  var grid=document.getElementById('grid'),bar=document.getElementById('bar');
-  if(!grid||!bar)return;
-  if(!active.length){
-    grid.innerHTML='<div class="eh" style="grid-column:1/-1">尚無出席球員</div>';
-    bar.innerHTML='';grid.style.gridTemplateColumns='';return;
-  }
-  var total=active.reduce(function(s,p){return s+(gc[p.id]||0);},0);
-  bar.innerHTML='<span>人數 <strong>'+active.length+'</strong></span><span>總計 <strong>'+total+'</strong></span>';
-  grid.style.gridTemplateColumns='repeat('+getCols(active.length)+',1fr)';
-  grid.innerHTML=active.map(function(p){
-    var cnt=gc[p.id]||0;
-    return '<div class="gc" onclick="adj(\''+p.id+'\',1)">'
-      +'<button class="cm" onclick="event.stopPropagation();adj(\''+p.id+'\',-1)">−</button>'
-      +'<div class="gn">'+esc(p.name)+'</div>'
-      +'<div class="gct" id="c'+p.id+'">'+cnt+'</div>'
-      +'</div>';
-  }).join('');
-}
 
 /* ===== 上場計數 ===== */
 function startGame(){
@@ -1601,7 +1563,7 @@ function updateBar(){
 }
 function showReset(){document.getElementById('rm').classList.add('show');}
 function hideReset(){document.getElementById('rm').classList.remove('show');}
-function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideReset();renderManualCounts();toast('已重置');}
+function resetCounts(){players.forEach(function(p){gc[p.id]=0;});save();hideReset();toast('已重置');}
 
 function showLevelChart(){document.getElementById('lc-mo').classList.add('show');}
 function hideLevelChart(){document.getElementById('lc-mo').classList.remove('show');}
@@ -1618,7 +1580,6 @@ function tipToggle(el){
 var tt;
 function toast(msg){var t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');clearTimeout(tt);tt=setTimeout(function(){t.classList.remove('show');},2200);}
 window.addEventListener('resize',function(){
-  if(tab==='game'&&gameMode==='manual')renderManualCounts();
   if(tab==='manage')renderManage();
 });
 
@@ -1790,6 +1751,8 @@ function confirmScore(){
     round:dayRound,
     t1:cur.t1.map(function(p){return p.name;}),
     t2:cur.t2.map(function(p){return p.name;}),
+    t1ids:cur.t1.map(function(p){return p.id;}),
+    t2ids:cur.t2.map(function(p){return p.id;}),
     s1:s1,s2:s2,
     winner:scoreWinner
   };
@@ -1809,6 +1772,8 @@ function skipScore(){
       round:dayRound,
       t1:cur.t1.map(function(p){return p.name;}),
       t2:cur.t2.map(function(p){return p.name;}),
+      t1ids:cur.t1.map(function(p){return p.id;}),
+      t2ids:cur.t2.map(function(p){return p.id;}),
       s1:null,s2:null,
       winner:null
     };
@@ -1819,13 +1784,16 @@ function skipScore(){
   advanceRound();
 }
 function applyMatchRating(t1,t2,winTeam,winScore,loseScore){
+  applyMatchRatingK(t1,t2,winTeam,winScore,loseScore,18);
+}
+function applyMatchRatingK(t1,t2,winTeam,winScore,loseScore,K){
   var r1=(pRating(t1[0])+pRating(t1[1]))/2;
   var r2=(pRating(t2[0])+pRating(t2[1]))/2;
   var E1=1/(1+Math.pow(10,(r2-r1)/400));
   var isT1Win=(winTeam===t1);
   var Ew=isT1Win?E1:(1-E1);
   var marginFactor=1+0.5*(winScore-loseScore)/winScore;
-  var delta=Math.round(18*(1-Ew)*marginFactor*100)/100;
+  var delta=Math.round(K*(1-Ew)*marginFactor*100)/100;
   var loseTeam=isT1Win?t2:t1;
   winTeam.forEach(function(p){
     var rp=players.find(function(x){return x.id===p.id;});
@@ -1911,8 +1879,23 @@ function saveHistoryEdit(){
   var s1=parseInt(document.getElementById('eh-s1').value)||0;
   var s2=parseInt(document.getElementById('eh-s2').value)||0;
   if(d)r.date=d;
-  r.s1=s1;r.s2=s2;
+  var prevWinner=r.winner;
   if(ehWinner)r.winner=ehWinner;
+  r.s1=s1;r.s2=s2;
+  // Apply ELO if player IDs are stored and winner is set
+  if(r.winner&&r.t1ids&&r.t2ids&&s1!==s2){
+    var t1ps=r.t1ids.map(function(id){return players.find(function(p){return p.id===id;});}).filter(Boolean);
+    var t2ps=r.t2ids.map(function(id){return players.find(function(p){return p.id===id;});}).filter(Boolean);
+    if(t1ps.length===2&&t2ps.length===2){
+      var winTeam=r.winner===1?t1ps:t2ps;
+      var loseTeam=r.winner===1?t2ps:t1ps;
+      var winScore=r.winner===1?s1:s2;
+      var loseScore=r.winner===1?s2:s1;
+      // If editing a previously scored record, use reduced K to avoid double-counting
+      var kFactor=prevWinner?6:18;
+      applyMatchRatingK(t1ps,t2ps,winTeam,winScore,loseScore,kFactor);
+    }
+  }
   clearTimeout(st);st=setTimeout(fsSave,1200);
   document.getElementById('edit-history-mo').classList.remove('show');
   renderHistory();
@@ -1952,10 +1935,6 @@ function goScheduling(gb){
   sched.next=computeNext();
   switchTab('game');
   document.getElementById('fab-sched').style.display=sched.current?'':'none';
-}
-function goManual(){
-  gameMode='manual';
-  switchTab('game');
 }
 
 function combinations(arr,k){
