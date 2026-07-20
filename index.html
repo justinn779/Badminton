@@ -474,33 +474,6 @@ body.dark .gb-badge{background:#1e3a5f}
 </div>
 </div>
 
-<!-- 性別平衡 Bottom Sheet -->
-<div class="bsht" id="gender-bsht" onclick="hideGenderSheet()">
-<div class="bsht-body" onclick="event.stopPropagation()">
-  <div class="bsht-title">是否啟用性別平衡？</div>
-  <div class="bsht-item" onclick="hideGenderSheet();goScheduling(true)">
-    <span style="font-size:1.3rem">⚖️</span>
-    <div><div style="font-weight:600">啟用性別平衡</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">每局組合限 2男2女、4男 或 4女</div></div>
-  </div>
-  <div class="bsht-item" onclick="hideGenderSheet();goScheduling(false)">
-    <span style="font-size:1.3rem">🎯</span>
-    <div><div style="font-weight:600">不限制</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">自由組合，不考慮性別</div></div>
-  </div>
-  <button class="bsht-cancel" onclick="hideGenderSheet()">取消</button>
-</div>
-</div>
-
-<!-- 選擇比賽模式 Bottom Sheet -->
-<div class="bsht" id="mode-bsht" onclick="hideModeSheet()">
-<div class="bsht-body" onclick="event.stopPropagation()">
-  <div class="bsht-title">選擇今日比賽模式</div>
-  <div class="bsht-item" onclick="hideModeSheet();showGenderSheet()">
-    <span style="font-size:1.3rem">🎯</span>
-    <div><div style="font-weight:600">自動排點</div><div style="font-size:.78rem;color:var(--m);margin-top:2px">系統自動安排每輪出賽名單</div></div>
-  </div>
-  <button class="bsht-cancel" onclick="hideModeSheet()">取消</button>
-</div>
-</div>
 
 <!-- 結束比賽確認 Modal -->
 <div class="mo" id="edit-next-mo">
@@ -700,7 +673,12 @@ body.dark .gb-badge{background:#1e3a5f}
 <div class="bsht" id="attend-bsht" onclick="hideAttendSheet()">
 <div class="bsht-body" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <div class="bsht-title" style="margin-bottom:0">選擇今日出席球員</div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="bsht-title" style="margin-bottom:0">選擇今日出席球員</div>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--m);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="gender-balance-chk" style="cursor:pointer"> 性別平衡
+      </label>
+    </div>
     <div style="display:flex;align-items:center;gap:4px">
       <button onclick="showAddPlayerModal()" style="background:none;border:1px solid var(--p);color:var(--p);font-size:.82rem;font-weight:600;cursor:pointer;padding:4px 10px;border-radius:8px">＋ 新增人員</button>
       <button onclick="selectAllAttend()" style="background:none;border:none;color:var(--p);font-size:.85rem;font-weight:600;cursor:pointer;padding:4px 8px">全選</button>
@@ -1470,7 +1448,6 @@ function startGame(){
   renderAttendSheet();
   document.getElementById('attend-bsht').classList.add('show');
 }
-function hideModeSheet(){document.getElementById('mode-bsht').classList.remove('show');}
 
 /* ── 今日出席選擇 ── */
 var attendSelIds={};
@@ -1518,8 +1495,9 @@ function confirmAttend(){
   var sel=players.filter(function(p){return attendSelIds[p.id];});
   if(!sel.length){toast('請至少選擇一位球員');return;}
   players.forEach(function(p){p.selected=!!attendSelIds[p.id];});
+  var gb=document.getElementById('gender-balance-chk').checked;
   hideAttendSheet();
-  document.getElementById('mode-bsht').classList.add('show');
+  goScheduling(gb);
 }
 function hideAttendSheet(){document.getElementById('attend-bsht').classList.remove('show');}
 function getCols(n){return window.innerWidth>window.innerHeight?Math.min(n,4):Math.min(n,2);}
@@ -1920,8 +1898,6 @@ function clearHistoryConfirm(){
 /* ===== 排點 ===== */
 var sched={active:false,genderBalance:false,counts:{},history:[],current:null,next:null,attending:[]};
 
-function showGenderSheet(){document.getElementById('gender-bsht').classList.add('show');}
-function hideGenderSheet(){document.getElementById('gender-bsht').classList.remove('show');}
 
 function goScheduling(gb){
   var sel=players.filter(function(p){return p.selected;});
