@@ -397,8 +397,7 @@ body.dark .gb-badge{background:#1e3a5f}
 <!-- 戰績頁 -->
 <div id="vr" class="view">
   <div style="padding:16px 16px 0;display:flex;align-items:center;justify-content:space-between">
-    <div style="font-size:1.1rem;font-weight:700">歷史戰績</div>
-    <button class="btn bo" style="font-size:.78rem;padding:5px 12px" onclick="clearHistoryConfirm()">清除全部</button>
+    <div style="font-size:1.1rem;font-weight:700">比賽紀錄</div>
   </div>
   <div id="vr-list" style="padding:12px 16px"></div>
 </div>
@@ -406,7 +405,7 @@ body.dark .gb-badge{background:#1e3a5f}
 <!-- 編輯戰績 Modal -->
 <div class="mo" id="edit-history-mo" onclick="this.classList.remove('show')">
 <div class="mb" onclick="event.stopPropagation()" style="max-width:360px;width:100%">
-  <h2 style="margin-bottom:16px;text-align:center">編輯戰績</h2>
+  <h2 style="margin-bottom:16px;text-align:center">編輯紀錄</h2>
   <div id="edit-history-body" style="display:flex;flex-direction:column;gap:14px"></div>
   <div class="ma" style="margin-top:18px">
     <button class="btn bo" onclick="document.getElementById('edit-history-mo').classList.remove('show')">取消</button>
@@ -733,7 +732,7 @@ body.dark .gb-badge{background:#1e3a5f}
   </button>
   <button class="bnav-btn" id="bnav-record" onclick="switchTab('record')">
     <span class="bnav-icon">📋</span>
-    <span class="bnav-label">戰績</span>
+    <span class="bnav-label">紀錄</span>
   </button>
 </div>
 
@@ -1783,10 +1782,12 @@ function confirmScore(){
   var winScore=scoreWinner===1?s1:s2;
   var loseScore=scoreWinner===1?s2:s1;
   applyMatchRating(cur.t1,cur.t2,winTeam,winScore,loseScore);
+  var today=new Date().toLocaleDateString('zh-TW');
+  var dayRound=matchHistory.filter(function(x){return x.date===today;}).length+1;
   var rec={
     id:'mh'+Date.now(),
-    date:new Date().toLocaleDateString('zh-TW'),
-    round:sched.history?sched.history.length+1:1,
+    date:today,
+    round:dayRound,
     t1:cur.t1.map(function(p){return p.name;}),
     t2:cur.t2.map(function(p){return p.name;}),
     s1:s1,s2:s2,
@@ -1798,6 +1799,22 @@ function confirmScore(){
   advanceRound();
 }
 function skipScore(){
+  var cur=scoreCurrent;
+  if(cur){
+    var today=new Date().toLocaleDateString('zh-TW');
+    var dayRound=matchHistory.filter(function(x){return x.date===today;}).length+1;
+    var rec={
+      id:'mh'+Date.now(),
+      date:today,
+      round:dayRound,
+      t1:cur.t1.map(function(p){return p.name;}),
+      t2:cur.t2.map(function(p){return p.name;}),
+      s1:null,s2:null,
+      winner:null
+    };
+    matchHistory.unshift(rec);
+    clearTimeout(st);st=setTimeout(fsSave,1200);
+  }
   document.getElementById('score-mo').classList.remove('show');
   advanceRound();
 }
@@ -1825,27 +1842,34 @@ function applyMatchRating(t1,t2,winTeam,winScore,loseScore){
 var editHistoryId=null;
 function renderHistory(){
   var el=document.getElementById('vr-list');
-  if(!matchHistory.length){el.innerHTML='<div class="eh">尚無戰績紀錄</div>';return;}
+  if(!matchHistory.length){el.innerHTML='<div class="eh">尚無比賽紀錄</div>';return;}
   el.innerHTML=matchHistory.map(function(r){
     var w1=r.winner===1?'🏆 ':'';
     var w2=r.winner===2?'🏆 ':'';
+    var isPending=r.winner===null;
+    var scoreBlock=isPending
+      ?'<div style="font-size:1rem;color:var(--m);padding:8px 0">待補計分</div>'
+      :'<div style="display:flex;align-items:center;gap:10px">'
+        +'<div style="flex:1;text-align:center">'
+        +'<div style="font-size:2rem;font-weight:800;color:'+(r.winner===1?'var(--p,#0af)':'var(--t)')+'">'+r.s1+'</div>'
+        +'</div>'
+        +'<div style="font-size:1.1rem;font-weight:800;color:var(--m)">:</div>'
+        +'<div style="flex:1;text-align:center">'
+        +'<div style="font-size:2rem;font-weight:800;color:'+(r.winner===2?'var(--p,#0af)':'var(--t)')+'">'+r.s2+'</div>'
+        +'</div></div>';
     return '<div class="card" style="margin-bottom:10px;padding:12px 14px">'
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">'
-      +'<span style="font-size:.8rem;color:var(--m)">'+esc(r.date)+'</span>'
+      +'<span style="font-size:.8rem;color:var(--m)">'+esc(r.date)+'　第 '+r.round+' 場</span>'
       +'<div style="display:flex;gap:8px">'
       +'<button class="btn bo" style="font-size:.75rem;padding:3px 10px" onclick="editHistory(\''+r.id+'\')">編輯</button>'
       +'<button class="btn" style="font-size:.75rem;padding:3px 10px;background:var(--danger,#e53);color:#fff;border:none" onclick="deleteHistory(\''+r.id+'\')">刪除</button>'
       +'</div></div>'
       +'<div style="display:flex;align-items:center;gap:10px">'
-      +'<div style="flex:1;text-align:center">'
-      +'<div style="font-size:.82rem;font-weight:600;margin-bottom:4px">'+w1+r.t1.map(esc).join(' / ')+'</div>'
-      +'<div style="font-size:2rem;font-weight:800;color:'+(r.winner===1?'var(--p,#0af)':'var(--t)')+'">'+r.s1+'</div>'
+      +'<div style="flex:1;text-align:center;font-size:.82rem;font-weight:600">'+w1+r.t1.map(esc).join(' / ')+'</div>'
+      +'<div style="font-size:.9rem;font-weight:800;color:var(--m)">vs</div>'
+      +'<div style="flex:1;text-align:center;font-size:.82rem;font-weight:600">'+w2+r.t2.map(esc).join(' / ')+'</div>'
       +'</div>'
-      +'<div style="font-size:1.1rem;font-weight:800;color:var(--m)">:</div>'
-      +'<div style="flex:1;text-align:center">'
-      +'<div style="font-size:.82rem;font-weight:600;margin-bottom:4px">'+w2+r.t2.map(esc).join(' / ')+'</div>'
-      +'<div style="font-size:2rem;font-weight:800;color:'+(r.winner===2?'var(--p,#0af)':'var(--t)')+'">'+r.s2+'</div>'
-      +'</div></div>'
+      +scoreBlock
       +'</div>';
   }).join('');
 }
