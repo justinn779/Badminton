@@ -478,7 +478,7 @@ body.dark .gb-badge{background:#1e3a5f}
 <!-- 結束比賽確認 Modal -->
 <div class="mo" id="edit-next-mo">
 <div class="mb" style="max-width:360px" onclick="event.stopPropagation()">
-  <h2 style="margin-bottom:14px">調整下一輪</h2>
+  <h2 id="edit-next-title" style="margin-bottom:14px">調整下一輪</h2>
   <div id="edit-next-body"></div>
   <div class="ma" style="margin-top:16px">
     <button class="btn bp" style="flex:1" onclick="closeEditNext()">完成</button>
@@ -1628,23 +1628,35 @@ function adjSchedCount(id,d){
 
 /* ===== 換人 ===== */
 var editNextSelected=null;
+var editTarget='next';
 function showEditNext(){
   if(!sched.next)return;
+  editTarget='next';
   editNextSelected=null;
+  document.getElementById('edit-next-title').textContent='調整下一輪';
+  renderEditNext();
+  document.getElementById('edit-next-mo').classList.add('show');
+}
+function showEditCurrent(){
+  if(!sched.current)return;
+  editTarget='current';
+  editNextSelected=null;
+  document.getElementById('edit-next-title').textContent='調整本輪';
   renderEditNext();
   document.getElementById('edit-next-mo').classList.add('show');
 }
 function closeEditNext(){
   document.getElementById('edit-next-mo').classList.remove('show');
+  if(editTarget==='current')sched.next=computeNext();
   renderScheduling();
 }
 function recalcNextSums(){
-  var n=sched.next;if(!n)return;
+  var n=sched[editTarget];if(!n)return;
   n.l1=Math.round(n.t1.reduce(function(a,p){return a+pRating(p)/100;},0)*100)/100;
   n.l2=Math.round(n.t2.reduce(function(a,p){return a+pRating(p)/100;},0)*100)/100;
 }
 function renderEditNext(){
-  var n=sched.next;if(!n)return;
+  var n=sched[editTarget];if(!n)return;
   var inIds=[n.t1[0].id,n.t1[1].id,n.t2[0].id,n.t2[1].id];
   var bench=sched.attending.filter(function(p){return inIds.indexOf(p.id)===-1;});
   function pbtn(p){
@@ -1662,7 +1674,7 @@ function renderEditNext(){
   document.getElementById('edit-next-body').innerHTML=h;
 }
 function selectEditPlayer(id){
-  var n=sched.next;if(!n)return;
+  var n=sched[editTarget];if(!n)return;
   if(!editNextSelected){editNextSelected=id;renderEditNext();return;}
   if(editNextSelected===id){editNextSelected=null;renderEditNext();return;}
   var slots=[{t:'t1',i:0,p:n.t1[0]},{t:'t1',i:1,p:n.t1[1]},{t:'t2',i:0,p:n.t2[0]},{t:'t2',i:1,p:n.t2[1]}];
@@ -2051,6 +2063,18 @@ function nextRound(){
   document.getElementById('fab-sched').style.display=(sched.active&&sched.current)?'':'none';
 }
 
+function skipRound(){
+  if(!sched.active||!sched.current)return;
+  if(!sched.next){toast('目前沒有可替換的下一輪組合');return;}
+  sched.current=sched.next;
+  sched.next=computeNext();
+  renderScheduling();
+  ['.round-current','.round-next'].forEach(function(sel){
+    var el=document.querySelector(sel);
+    if(el)el.classList.add('round-enter');
+  });
+  toast('已跳過本輪');
+}
 function endGame(){
   document.getElementById('end-game-mo').classList.add('show');
 }
@@ -2140,7 +2164,12 @@ function renderScheduling(){
   /* current round */
   if(sched.active&&sched.current){
     body+='<div class="card round-current" style="border:2px solid var(--p);margin-bottom:10px">'
-      +'<div style="font-size:.78rem;font-weight:700;color:var(--p);margin-bottom:10px">本輪</div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
+      +'<span style="font-size:.78rem;font-weight:700;color:var(--p)">本輪</span>'
+      +'<div style="display:flex;gap:6px">'
+      +'<button class="btn bo" style="padding:5px 13px;font-size:.78rem" onclick="showEditCurrent()">換人</button>'
+      +'<button class="btn bo" style="padding:5px 13px;font-size:.78rem" onclick="skipRound()">跳過本輪</button>'
+      +'</div></div>'
       +renderRoundCard(sched.current)+'</div>';
   }
 
