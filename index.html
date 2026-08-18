@@ -11,7 +11,7 @@
 <title>羽球團</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-:root{--p:#2563eb;--s:#16a34a;--d:#dc2626;--bg:#f1f5f9;--c:#fff;--t:#1e293b;--m:#64748b;--b:#e2e8f0;--r:10px}
+:root{--p:#2563eb;--s:#16a34a;--d:#dc2626;--w:#d97706;--wbg:#fffbeb;--bg:#f1f5f9;--c:#fff;--t:#1e293b;--m:#64748b;--b:#e2e8f0;--r:10px}
 html,body{height:100%;overflow:hidden}
 body{display:flex;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--t);-webkit-text-size-adjust:100%}
 header{flex-shrink:0;background:var(--p);color:#fff;padding:11px 14px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:100}
@@ -59,6 +59,7 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 .rst{flex-shrink:0}
 .mo{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:300;align-items:center;justify-content:center;padding:16px}
 .mo.show{display:flex}
+#apm{z-index:301}
 .mb{background:var(--c);border-radius:var(--r);padding:22px;width:100%;max-width:310px;text-align:center}
 .mb h2{font-size:1rem;margin-bottom:7px}
 .mb p{color:var(--m);font-size:.85rem;margin-bottom:18px;line-height:1.5}
@@ -179,22 +180,43 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 
 /* Scheduling view */
 #vs.view.active{overflow:hidden;padding:0;display:flex;flex-direction:column}
-.vs-hdr{flex-shrink:0;padding:10px 14px;background:var(--c);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.vs-hdr{flex-shrink:0;padding:10px 14px;background:var(--c);border-bottom:1px solid var(--b);display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
 .vs-hdr-title{font-size:.9rem;font-weight:700;color:var(--t)}
-.vs-body{flex:1;overflow-y:auto;padding:12px 12px 140px}
+.vs-body{flex:1;overflow-y:auto;padding:12px 12px 24px}
+@media(min-width:900px){.vs-body{max-width:880px;margin:0 auto;width:100%}}
 .sched-team{flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center}
 .sched-team-name{font-size:.95rem;font-weight:600;color:var(--t);line-height:1.4}
-.sched-team-meta{font-size:.72rem;color:var(--m)}
-.sched-team-sum{font-size:.78rem;color:var(--p);font-weight:700;margin-top:5px}
-.sched-player-chip{background:var(--bg);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;align-items:center;gap:2px;min-width:64px}
-.sched-chip-name{font-size:.95rem;font-weight:600;color:var(--t)}
-.sched-chip-meta{font-size:.73rem;color:var(--m)}
-.sched-chip-cnt{font-size:1.15rem;font-weight:800;color:var(--p)}
-.sched-chip-adj{display:flex;align-items:center;gap:5px}
 .sched-chip-adj-btn{background:none;border:none;outline:none;-webkit-appearance:none;appearance:none;color:var(--m);font-size:1rem;font-weight:700;cursor:pointer;padding:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;line-height:1}
 .sched-chip-adj-btn:active{opacity:.4}
 .score-adj-btn{background:var(--bg);border:none;outline:none;-webkit-appearance:none;border-radius:10px;width:44px;height:44px;font-size:1.4rem;font-weight:700;color:var(--p);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
 .score-adj-btn:active{opacity:.5}
+
+/* Court count picker */
+.court-opt{flex:1;min-width:34px;padding:6px 0;border:2px solid var(--b);border-radius:8px;background:var(--c);color:var(--t);font-size:.85rem;font-weight:700;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.court-opt.sel{border-color:var(--p);color:var(--p);background:#eff6ff}
+
+/* Multi-court scheduling layout */
+.courts-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px}
+@media(min-width:680px){.courts-grid{grid-template-columns:repeat(2,1fr)}}
+.court-card{background:var(--c);border-radius:var(--r);padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:2px solid var(--p)}
+.court-card.empty{border:2px dashed var(--b);display:flex;align-items:center;justify-content:center;min-height:88px;color:var(--m);font-size:.82rem;text-align:center;padding:16px}
+.court-hdr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.court-label{font-size:.78rem;font-weight:700;color:var(--p);white-space:nowrap}
+.court-actions{display:flex;gap:6px;flex-wrap:wrap}
+.court-actions .btn{padding:5px 11px;font-size:.75rem}
+.queue-title{font-size:.78rem;font-weight:700;color:var(--w);margin:2px 0 8px}
+.queue-row{display:flex;flex-direction:column;gap:10px;margin-bottom:12px}
+@media(min-width:680px){.queue-row{display:grid;grid-template-columns:repeat(2,1fr)}}
+.queue-card{background:var(--wbg);border-radius:var(--r);padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:2px solid var(--w)}
+.queue-hdr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;flex-wrap:wrap}
+.queue-idx{font-size:.78rem;font-weight:700;color:var(--w)}
+.queue-edit-btn{background:none;border:none;color:var(--p);font-size:.75rem;font-weight:600;cursor:pointer;padding:4px 6px;-webkit-tap-highlight-color:transparent}
+.queue-team{font-size:.76rem;font-weight:600;color:var(--t);line-height:1.4;text-align:center}
+.queue-team-sum{font-size:.68rem;color:var(--w);font-weight:700;margin:2px 0 4px;text-align:center}
+.pc-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--b)}
+.pc-row:last-child{border-bottom:none}
+.pc-name{font-weight:600;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pc-cnt{font-size:1.05rem;font-weight:800;color:var(--p);min-width:20px;text-align:center}
 
 /* Login */
 .login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;background:var(--bg)}
@@ -237,7 +259,7 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 .level-ref-btn{background:none;border:none;color:var(--p);font-size:.78rem;font-weight:600;cursor:pointer;padding:0;text-decoration:underline;text-underline-offset:2px;-webkit-tap-highlight-color:transparent}
 
 /* Dark mode */
-body.dark{--bg:#0f172a;--c:#1e293b;--t:#e2e8f0;--m:#94a3b8;--b:#334155}
+body.dark{--bg:#0f172a;--c:#1e293b;--t:#e2e8f0;--m:#94a3b8;--b:#334155;--w:#fbbf24;--wbg:#2f2410}
 body.dark .sync-bar{background:#0a1628;color:#60a5fa}
 body.dark .gc:active{background:#1e3a5f}
 body.dark .gm-btn.edit{background:#1e3a5f;color:#93c5fd}
@@ -255,6 +277,7 @@ body.dark .attend-sel{background:#1e3a5f}
 body.dark .ji-badge{background:#1e3a5f}
 .gb-badge{font-size:.75rem;color:var(--p);background:#eff6ff;border-radius:8px;padding:5px 10px;display:inline-flex;align-items:center;gap:5px;margin-bottom:4px}
 body.dark .gb-badge{background:#1e3a5f}
+body.dark .court-opt.sel{background:#1e3a5f}
 
 /* Settings modal */
 .settings-info{text-align:left;padding:0 0 14px;border-bottom:1px solid var(--b);margin-bottom:14px}
@@ -301,8 +324,6 @@ body.dark .gb-badge{background:#1e3a5f}
 <div id="vm" class="view">
 <div id="pl"></div>
 </div>
-
-<div class="fab" id="fab-sched" style="display:none"><button class="btn bs" style="max-width:320px;width:100%" onclick="nextRoundBtn()">下一輪 ▶</button></div>
 
 <!-- 記帳頁 -->
 <div id="vb" class="view">
@@ -487,7 +508,7 @@ body.dark .gb-badge{background:#1e3a5f}
 </div>
 <div class="mo" id="score-mo">
 <div class="mb" style="max-width:340px" onclick="event.stopPropagation()">
-  <h2 style="margin-bottom:14px">填入比賽結果</h2>
+  <h2 id="score-mo-title" style="margin-bottom:14px">填入比賽結果</h2>
   <div style="display:flex;gap:8px;margin-bottom:14px">
     <button id="score-t1-btn" class="btn bo" style="flex:1;font-size:.82rem;white-space:normal;line-height:1.3" onclick="selectScoreWinner(1)"></button>
     <button id="score-t2-btn" class="btn bo" style="flex:1;font-size:.82rem;white-space:normal;line-height:1.3" onclick="selectScoreWinner(2)"></button>
@@ -508,6 +529,19 @@ body.dark .gb-badge{background:#1e3a5f}
   <div class="ma">
     <button class="btn bo" onclick="skipScore()">略過</button>
     <button class="btn bp" onclick="confirmScore()">確認</button>
+  </div>
+</div>
+</div>
+<div class="mo" id="player-counts-mo" onclick="this.classList.remove('show')">
+<div class="mb" style="max-width:380px;text-align:left" onclick="event.stopPropagation()">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <h2 style="margin-bottom:0">出席管理</h2>
+    <button onclick="showAddPlayerModal()" style="background:none;border:1px solid var(--p);color:var(--p);font-size:.78rem;font-weight:600;cursor:pointer;padding:4px 9px;border-radius:8px;white-space:nowrap">＋ 新增人員</button>
+  </div>
+  <div style="font-size:.74rem;color:var(--m);margin-bottom:8px">勾選＝出席中，可隨時加入遲到、移除早退的球員</div>
+  <div id="player-counts-body" style="max-height:56vh;overflow-y:auto"></div>
+  <div class="ma" style="margin-top:16px">
+    <button class="btn bp" style="flex:1" onclick="document.getElementById('player-counts-mo').classList.remove('show')">關閉</button>
   </div>
 </div>
 </div>
@@ -672,16 +706,30 @@ body.dark .gb-badge{background:#1e3a5f}
 <!-- 今日出席 Bottom Sheet -->
 <div class="bsht" id="attend-bsht" onclick="hideAttendSheet()">
 <div class="bsht-body" onclick="event.stopPropagation()" style="max-height:80vh;overflow-y:auto">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
-    <div style="display:flex;align-items:center;gap:8px">
-      <div class="bsht-title" style="margin-bottom:0">選擇今日出席球員</div>
-      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--m);cursor:pointer;white-space:nowrap">
-        <input type="checkbox" id="gender-balance-chk" style="cursor:pointer"> 性別平衡
-      </label>
-    </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+    <div class="bsht-title" style="margin-bottom:0">選擇今日出席球員</div>
     <div style="display:flex;align-items:center;gap:4px">
       <button onclick="showAddPlayerModal()" style="background:none;border:1px solid var(--p);color:var(--p);font-size:.82rem;font-weight:600;cursor:pointer;padding:4px 10px;border-radius:8px">＋ 新增人員</button>
       <button onclick="selectAllAttend()" style="background:none;border:none;color:var(--p);font-size:.85rem;font-weight:600;cursor:pointer;padding:4px 8px">全選</button>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;padding:8px 10px;background:var(--bg);border-radius:8px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:.82rem;font-weight:600;color:var(--t);white-space:nowrap">場地數</span>
+      <div style="display:flex;gap:6px;flex:1;min-width:140px" id="court-count-group">
+        <button type="button" class="court-opt" data-c="1" onclick="setCourtCount(1)">1</button>
+        <button type="button" class="court-opt" data-c="2" onclick="setCourtCount(2)">2</button>
+        <button type="button" class="court-opt" data-c="3" onclick="setCourtCount(3)">3</button>
+        <button type="button" class="court-opt" data-c="4" onclick="setCourtCount(4)">4</button>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:16px;flex-wrap:wrap">
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--m);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="gender-balance-chk" style="cursor:pointer"> 性別平衡
+      </label>
+      <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--m);cursor:pointer;white-space:nowrap">
+        <input type="checkbox" id="record-score-chk" checked style="cursor:pointer"> 記錄比分
+      </label>
     </div>
   </div>
   <div id="attend-list"></div>
@@ -954,6 +1002,7 @@ function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g
 /* ===== State ===== */
 var players=[],gc={},groups=[],tab='game';
 var gameMode=null; /* null | 'schedule' | 'manual' */
+var pendingCourts=1;
 var billTab='summary',expenses=[],jiPaid={},linRecords=[];
 var matchHistory=[];
 
@@ -976,7 +1025,6 @@ function switchTab(t){
   document.getElementById('vm').classList.toggle('active',t==='manage');
   document.getElementById('vb').classList.toggle('active',t==='bill');
 
-  document.getElementById('fab-sched').style.display=(t==='game'&&gameMode==='schedule'&&sched.active&&sched.current)?'':'none';
   if(t==='game')renderGameTab();
   if(t==='bill')renderBill();
 }
@@ -1144,11 +1192,11 @@ function togP(id,v){var p=players.find(function(p){return p.id===id;});if(p)p.se
 
 function renderPlayerItem(p){
   var hasInfo=p.level&&p.gender;
-  var badge=hasInfo
-    ?'<span style="font-size:.7rem;color:var(--m);background:var(--bg);border-radius:8px;padding:2px 7px;flex-shrink:0">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':'♀')+'</span>'
+  var nameHtml=hasInfo?pNameLevel(p):esc(p.name);
+  var badge=hasInfo?''
     :'<span style="font-size:.7rem;color:var(--m);background:var(--bg);border-radius:8px;padding:2px 7px;flex-shrink:0">待補資料</span>';
   return '<div class="pi" data-pid="'+p.id+'">'
-    +'<span class="pn">'+esc(p.name)+'</span>'
+    +'<span class="pn">'+nameHtml+'</span>'
     +badge
     +'<button class="pd" style="color:var(--p);font-size:1rem;padding:8px 12px" onclick="showPeSheet(\''+p.id+'\')">✎</button>'
     +'</div>';
@@ -1186,13 +1234,21 @@ function addPlayerFromModal(){
   if(!apmGender){toast('請選擇性別');return;}
   var gid=document.getElementById('apm-group').value||null;
   var id=''+Date.now();
-  players.push({id:id,name:name,selected:true,isJi:false,groupId:gid,
-    level:lvl||undefined,gender:apmGender||undefined,hiddenRating:(lvl||1)*100});
+  var newPlayer={id:id,name:name,selected:true,isJi:false,groupId:gid,
+    level:lvl||undefined,gender:apmGender||undefined,hiddenRating:(lvl||1)*100};
+  players.push(newPlayer);
   gc[id]=0;
   hideAddPlayerModal();
   save();
   renderManage();
   if(document.getElementById('attend-bsht').classList.contains('show'))renderAttendSheet();
+  if(sched.active){
+    sched.attending.push(newPlayer);
+    sched.counts[id]=0;
+    rebuildQueue();
+    renderScheduling();
+    if(document.getElementById('player-counts-mo').classList.contains('show'))renderPlayerCounts();
+  }
 }
 
 /* ── 群組展開（手機） ── */
@@ -1445,8 +1501,20 @@ function startGame(){
   if(players.length<4){document.getElementById('no-player-mo').classList.add('show');return;}
   attendSelIds={};
   players.forEach(function(p){if(p.selected)attendSelIds[p.id]=true;});
+  pendingCourts=sched.courts||1;
+  document.getElementById('record-score-chk').checked=(sched.recordScore!==false);
   renderAttendSheet();
+  renderCourtCountUI();
   document.getElementById('attend-bsht').classList.add('show');
+}
+function setCourtCount(n){
+  pendingCourts=n;
+  renderCourtCountUI();
+}
+function renderCourtCountUI(){
+  document.querySelectorAll('.court-opt').forEach(function(b){
+    b.classList.toggle('sel',parseInt(b.dataset.c)===pendingCourts);
+  });
 }
 
 /* ── 今日出席選擇 ── */
@@ -1474,12 +1542,12 @@ function renderAttendSheet(){
 }
 function renderAttendItem(p){
   var sel=!!attendSelIds[p.id];
+  var nameHtml=(p.level&&p.gender)?pNameLevel(p):esc(p.name);
   return '<div class="bsht-item'+(sel?' attend-sel':'')+'" onclick="toggleAttend(\''+p.id+'\')">'
     +'<input type="checkbox" '+(sel?'checked':'')
     +' style="width:18px;height:18px;accent-color:var(--p);pointer-events:none;flex-shrink:0"/>'
     +'<div style="flex:1">'
-    +'<div style="font-weight:600;font-size:.92rem">'+esc(p.name)+'</div>'
-    +((p.level||p.gender)?'<div style="font-size:.74rem;color:var(--m)">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</div>':'')
+    +'<div style="font-weight:600;font-size:.92rem">'+nameHtml+'</div>'
     +'</div></div>';
 }
 function toggleAttend(id){
@@ -1496,8 +1564,9 @@ function confirmAttend(){
   if(!sel.length){toast('請至少選擇一位球員');return;}
   players.forEach(function(p){p.selected=!!attendSelIds[p.id];});
   var gb=document.getElementById('gender-balance-chk').checked;
+  var rs=document.getElementById('record-score-chk').checked;
   hideAttendSheet();
-  goScheduling(gb);
+  goScheduling(gb,rs);
 }
 function hideAttendSheet(){document.getElementById('attend-bsht').classList.remove('show');}
 function getCols(n){return window.innerWidth>window.innerHeight?Math.min(n,4):Math.min(n,2);}
@@ -1619,85 +1688,126 @@ function savePeSheet(){
 function pRating(p){return p.hiddenRating||(p.level||1)*100;}
 function pLevelStr(p){return (pRating(p)/100).toFixed(2);}
 function updatePlayerLevel(p){p.level=Math.max(1,Math.floor(pRating(p)/100));}
+function pNameLevel(p){return '('+pLevelStr(p)+') '+esc(p.name)+(p.gender?' '+(p.gender==='M'?'♂':'♀'):'');}
 
 function adjSchedCount(id,d){
   sched.counts[id]=Math.max(0,(sched.counts[id]||0)+d);
-  var el=document.querySelector('.sched-player-chip[data-pid="'+id+'"] .sched-chip-cnt');
+  var el=document.querySelector('.pc-cnt[data-pid="'+id+'"]');
   if(el)el.textContent=sched.counts[id];
 }
 
+/* ===== 出席管理 ===== */
+function showPlayerCounts(){
+  renderPlayerCounts();
+  document.getElementById('player-counts-mo').classList.add('show');
+}
+function renderPlayerCounts(){
+  var el=document.getElementById('player-counts-body');
+  if(!el)return;
+  if(!players.length){el.innerHTML='<div class="eh">尚無球員</div>';return;}
+  var attendingIds={};
+  sched.attending.forEach(function(p){attendingIds[p.id]=true;});
+  el.innerHTML=players.map(function(p){
+    var isIn=!!attendingIds[p.id];
+    var hasInfo=p.level&&p.gender;
+    var cnt=sched.counts[p.id]||0;
+    return '<div class="pc-row">'
+      +'<label style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;cursor:pointer">'
+      +'<input type="checkbox" '+(isIn?'checked':'')+' onchange="toggleMidAttend(\''+p.id+'\',this.checked)" style="width:19px;height:19px;accent-color:var(--p);cursor:pointer;flex-shrink:0"/>'
+      +'<span class="pc-name" style="flex:1">'+(hasInfo?pNameLevel(p):esc(p.name)+'（未設定級數/性別）')+'</span>'
+      +'</label>'
+      +(isIn?('<div style="display:flex;align-items:center;gap:8px;flex-shrink:0">'
+        +'<button class="sched-chip-adj-btn" onclick="adjSchedCount(\''+p.id+'\',-1)">−</button>'
+        +'<span class="pc-cnt" data-pid="'+p.id+'">'+cnt+'</span>'
+        +'<button class="sched-chip-adj-btn" onclick="adjSchedCount(\''+p.id+'\',1)">+</button>'
+        +'</div>'):'')
+      +'</div>';
+  }).join('');
+}
+function toggleMidAttend(id,on){
+  var p=players.find(function(x){return x.id===id;});
+  if(!p)return;
+  if(on){
+    if(!p.level||!p.gender){toast(p.name+' 尚未設定級數或性別，無法加入');renderPlayerCounts();return;}
+    if(!sched.attending.some(function(x){return x.id===id;})){
+      sched.attending.push(p);
+      sched.counts[id]=0;
+    }
+  }else{
+    var onCourt=sched.playing.some(function(r){return r&&roundIds(r).indexOf(id)>=0;});
+    if(onCourt){toast(p.name+' 正在場上比賽，請先結束該場地再移除');renderPlayerCounts();return;}
+    sched.attending=sched.attending.filter(function(x){return x.id!==id;});
+    delete sched.counts[id];
+  }
+  rebuildQueue();
+  renderScheduling();
+  renderPlayerCounts();
+}
+
 /* ===== 換人 ===== */
-var editNextSelected=null;
-var editTarget='next';
-function showEditNext(){
-  if(!sched.next)return;
-  editTarget='next';
-  editNextSelected=null;
-  document.getElementById('edit-next-title').textContent='調整下一輪';
-  renderEditNext();
+var editTarget=null; /* {arr:'playing'|'queue', idx:number} */
+function getEditRound(){return editTarget?sched[editTarget.arr][editTarget.idx]:null;}
+function showEditPlaying(idx){
+  if(!sched.playing[idx])return;
+  editTarget={arr:'playing',idx:idx};
+  document.getElementById('edit-next-title').textContent='調整場地 '+(idx+1);
+  renderEditRound();
   document.getElementById('edit-next-mo').classList.add('show');
 }
-function showEditCurrent(){
-  if(!sched.current)return;
-  editTarget='current';
-  editNextSelected=null;
-  document.getElementById('edit-next-title').textContent='調整本輪';
-  renderEditNext();
+function showEditQueue(idx){
+  if(!sched.queue[idx])return;
+  editTarget={arr:'queue',idx:idx};
+  document.getElementById('edit-next-title').textContent='調整候補 '+(idx+1);
+  renderEditRound();
   document.getElementById('edit-next-mo').classList.add('show');
 }
 function closeEditNext(){
   document.getElementById('edit-next-mo').classList.remove('show');
-  if(editTarget==='current')sched.next=computeNext();
+  editTarget=null;
   renderScheduling();
 }
 function recalcNextSums(){
-  var n=sched[editTarget];if(!n)return;
+  var n=getEditRound();if(!n)return;
   n.l1=Math.round(n.t1.reduce(function(a,p){return a+pRating(p)/100;},0)*100)/100;
   n.l2=Math.round(n.t2.reduce(function(a,p){return a+pRating(p)/100;},0)*100)/100;
 }
-function renderEditNext(){
-  var n=sched[editTarget];if(!n)return;
-  var inIds=[n.t1[0].id,n.t1[1].id,n.t2[0].id,n.t2[1].id];
-  var bench=sched.attending.filter(function(p){return inIds.indexOf(p.id)===-1;});
-  function pbtn(p){
-    var sel=editNextSelected===p.id;
-    return '<button class="btn '+(sel?'bp':'bo')+'" style="flex:1;min-width:0;font-size:.82rem;padding:8px 6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" onclick="selectEditPlayer(\''+p.id+'\')" title="'+esc(p.name)+'">'+esc(p.name)+'</button>';
+/* 每個位置一個下拉選單：選項排除本輪其他 3 個位置已選的人（同一場比賽不能有重複球員），
+   選了誰就直接換上，避免人多時按鈕擠成一團。 */
+function renderEditRound(){
+  var n=getEditRound();if(!n)return;
+  var slots=[{t:'t1',i:0},{t:'t1',i:1},{t:'t2',i:0},{t:'t2',i:1}];
+  function slotSelect(t,i){
+    var current=n[t][i];
+    var otherIds=slots.filter(function(s){return !(s.t===t&&s.i===i);}).map(function(s){return n[s.t][s.i].id;});
+    var options=sched.attending.filter(function(p){return otherIds.indexOf(p.id)===-1;});
+    if(!options.some(function(p){return p.id===current.id;}))options=[current].concat(options);
+    return '<select class="ng-sel" style="width:100%" onchange="selectEditSlot(\''+t+'\','+i+',this.value)">'
+      +options.map(function(p){return '<option value="'+p.id+'"'+(p.id===current.id?' selected':'')+'>'+pNameLevel(p)+'</option>';}).join('')
+      +'</select>';
   }
   var h='<div style="font-size:.75rem;font-weight:700;color:var(--p);margin-bottom:6px">隊伍 1</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:12px">'+pbtn(n.t1[0])+pbtn(n.t1[1])+'</div>'
+    +'<div style="display:flex;flex-direction:column;gap:8px;margin-bottom:14px">'+slotSelect('t1',0)+slotSelect('t1',1)+'</div>'
     +'<div style="font-size:.75rem;font-weight:700;color:var(--s);margin-bottom:6px">隊伍 2</div>'
-    +'<div style="display:flex;gap:8px;margin-bottom:12px">'+pbtn(n.t2[0])+pbtn(n.t2[1])+'</div>';
-  if(bench.length){
-    h+='<div style="font-size:.75rem;font-weight:700;color:var(--m);margin-bottom:6px">候補</div>'
-      +'<div style="display:flex;gap:6px;flex-wrap:wrap">'+bench.map(pbtn).join('')+'</div>';
-  }
+    +'<div style="display:flex;flex-direction:column;gap:8px">'+slotSelect('t2',0)+slotSelect('t2',1)+'</div>';
   document.getElementById('edit-next-body').innerHTML=h;
 }
-function selectEditPlayer(id){
-  var n=sched[editTarget];if(!n)return;
-  if(!editNextSelected){editNextSelected=id;renderEditNext();return;}
-  if(editNextSelected===id){editNextSelected=null;renderEditNext();return;}
-  var slots=[{t:'t1',i:0,p:n.t1[0]},{t:'t1',i:1,p:n.t1[1]},{t:'t2',i:0,p:n.t2[0]},{t:'t2',i:1,p:n.t2[1]}];
-  var s1=slots.find(function(s){return s.p.id===editNextSelected;});
-  var s2=slots.find(function(s){return s.p.id===id;});
-  if(s1&&s2){
-    var tmp=n[s1.t][s1.i];n[s1.t][s1.i]=n[s2.t][s2.i];n[s2.t][s2.i]=tmp;
-  }else if(s1){
-    var bp=sched.attending.find(function(p){return p.id===id;});
-    if(bp)n[s1.t][s1.i]=bp;
-  }else if(s2){
-    var bp2=sched.attending.find(function(p){return p.id===editNextSelected;});
-    if(bp2)n[s2.t][s2.i]=bp2;
-  }
+function selectEditSlot(t,i,playerId){
+  var n=getEditRound();if(!n)return;
+  var p=sched.attending.find(function(x){return x.id===playerId;});
+  if(!p)return;
+  n[t][i]=p;
   recalcNextSums();
-  editNextSelected=null;
-  renderEditNext();
+  renderEditRound();
 }
 
 /* ===== 計分 ===== */
-var scoreWinner=0,scoreCurrent=null;
-function showScoreModal(){
-  scoreCurrent=sched.current;
+var scoreWinner=0,scoreCurrent=null,scoreCourtIdx=-1;
+function showScoreModal(idx){
+  var r=sched.playing[idx];
+  if(!r)return;
+  scoreCourtIdx=idx;
+  scoreCurrent=r;
+  document.getElementById('score-mo-title').textContent='場地 '+(idx+1)+'・填入比賽結果';
   var t1n=scoreCurrent.t1.map(function(p){return p.name;}).join(' & ');
   var t2n=scoreCurrent.t2.map(function(p){return p.name;}).join(' & ');
   document.getElementById('score-t1-btn').textContent=t1n;
@@ -1748,7 +1858,7 @@ function confirmScore(){
   matchHistory.unshift(rec);
   clearTimeout(st);st=setTimeout(fsSave,1200);
   document.getElementById('score-mo').classList.remove('show');
-  advanceRound();
+  finishCourt(scoreCourtIdx,true);
 }
 function skipScore(){
   var cur=scoreCurrent;
@@ -1770,7 +1880,28 @@ function skipScore(){
     clearTimeout(st);st=setTimeout(fsSave,1200);
   }
   document.getElementById('score-mo').classList.remove('show');
-  advanceRound();
+  finishCourt(scoreCourtIdx,true);
+}
+/* 本場比賽未開啟「記錄比分」：直接結束，不跳出計分視窗、不計算 ELO */
+function finishNoScore(idx){
+  var cur=sched.playing[idx];
+  if(!cur)return;
+  var today=new Date().toLocaleDateString('zh-TW');
+  var dayRound=matchHistory.filter(function(x){return x.date===today;}).length+1;
+  var rec={
+    id:'mh'+Date.now(),
+    date:today,
+    round:dayRound,
+    t1:cur.t1.map(function(p){return p.name;}),
+    t2:cur.t2.map(function(p){return p.name;}),
+    t1ids:cur.t1.map(function(p){return p.id;}),
+    t2ids:cur.t2.map(function(p){return p.id;}),
+    s1:null,s2:null,
+    winner:null
+  };
+  matchHistory.unshift(rec);
+  clearTimeout(st);st=setTimeout(fsSave,1200);
+  finishCourt(idx,true);
 }
 function computeDelta(t1,t2,winTeam,winScore,loseScore,K){
   var r1=(pRating(t1[0])+pRating(t1[1]))/2;
@@ -1922,24 +2053,33 @@ function clearHistoryConfirm(){
 }
 
 /* ===== 排點 ===== */
-var sched={active:false,genderBalance:false,counts:{},history:[],current:null,next:null,attending:[]};
+var sched={active:false,genderBalance:false,recordScore:true,courts:1,counts:{},history:[],playing:[],queue:[],attending:[]};
 
+function roundIds(r){return [r.t1[0].id,r.t1[1].id,r.t2[0].id,r.t2[1].id];}
 
-function goScheduling(gb){
+function goScheduling(gb,recordScore){
   var sel=players.filter(function(p){return p.selected;});
   if(sel.length<4){toast('請至少選擇 4 位球員');return;}
   var missing=sel.filter(function(p){return !p.level||!p.gender;});
   if(missing.length){toast(missing[0].name+' 等球員尚未設定級數或性別');return;}
   gameMode='schedule';
   sched.genderBalance=!!gb;
+  sched.recordScore=recordScore!==false;
+  sched.courts=Math.max(1,Math.min(4,pendingCourts||1));
   sched.active=true;
   sched.attending=sel.slice();
   sched.counts={};sched.history=[];
   sel.forEach(function(p){sched.counts[p.id]=0;});
-  sched.current=generateRound(sched.attending,sched.counts,sched.history,sched.genderBalance);
-  sched.next=computeNext();
+  sched.playing=[];
+  var reserved={};
+  for(var i=0;i<sched.courts;i++){
+    var pool=sched.attending.filter(function(p){return !reserved[p.id];});
+    var r=pool.length>=4?generateRound(sched.attending,sched.counts,sched.history,sched.genderBalance,pool):null;
+    sched.playing.push(r);
+    if(r)roundIds(r).forEach(function(id){reserved[id]=true;});
+  }
+  rebuildQueue();
   switchTab('game');
-  document.getElementById('fab-sched').style.display=sched.current?'':'none';
 }
 
 function combinations(arr,k){
@@ -1999,8 +2139,8 @@ function scoreGroup(group,split,counts,history,attending){
   return overallRange*1000+levelDiff*2+pairRepeats*5;
 }
 
-function generateRound(attending,counts,history,genderBalance){
-  var groups=getValidGroups(attending,genderBalance);
+function generateRound(attending,counts,history,genderBalance,pool){
+  var groups=getValidGroups(pool||attending,genderBalance);
   if(!groups.length)return null;
   var bestScore=Infinity,bestResult=null;
   groups.forEach(function(group){
@@ -2011,95 +2151,104 @@ function generateRound(attending,counts,history,genderBalance){
   return bestResult;
 }
 
-
-function computeNext(){
-  if(!sched.current)return null;
+/* Rebuild the whole preview queue (length = courts+1), drawn only from
+   players who aren't currently on a court. Only the front of the queue
+   (queue[0]) is ever actually committed to a freed court — the rest are
+   speculative previews that get regenerated from scratch on every court
+   transition — so queue slots may reuse the same players between each
+   other (they play sequentially, never at the same time); fairness
+   scoring still spreads them out whenever there are enough free players. */
+function rebuildQueue(){
+  var busy={};
+  sched.playing.forEach(function(r){if(r)roundIds(r).forEach(function(id){busy[id]=true;});});
+  var pool=sched.attending.filter(function(p){return !busy[p.id];});
   var tent=Object.assign({},sched.counts);
-  [sched.current.t1[0],sched.current.t1[1],sched.current.t2[0],sched.current.t2[1]].forEach(function(p){tent[p.id]=(tent[p.id]||0)+1;});
-  var tentHist=sched.history.concat([{t1:[sched.current.t1[0].id,sched.current.t1[1].id],t2:[sched.current.t2[0].id,sched.current.t2[1].id]}]);
-  return generateRound(sched.attending,tent,tentHist,sched.genderBalance);
-}
-
-function nextRoundBtn(){
-  if(!sched.active||!sched.current)return;
-  showScoreModal();
-}
-function advanceRound(){
-  if(!sched.active||!sched.current)return;
-  var curCard=document.querySelector('.round-current');
-  var nxtCard=document.querySelector('.round-next');
-  if(curCard||nxtCard){
-    [curCard,nxtCard].forEach(function(el){
-      if(!el)return;
-      el.style.transition='transform .18s ease,opacity .18s ease';
-      el.style.transform='translateY(-22px)';
-      el.style.opacity='0';
-    });
-    setTimeout(nextRound,170);
-  }else{
-    nextRound();
+  var tentHist=sched.history.slice();
+  var queue=[];
+  var need=sched.courts+1;
+  for(var i=0;i<need;i++){
+    if(pool.length<4)break;
+    var r=generateRound(sched.attending,tent,tentHist,sched.genderBalance,pool);
+    if(!r)break;
+    queue.push(r);
+    roundIds(r).forEach(function(id){tent[id]=(tent[id]||0)+1;});
+    tentHist.push({t1:[r.t1[0].id,r.t1[1].id],t2:[r.t2[0].id,r.t2[1].id]});
   }
+  sched.queue=queue;
 }
 
-function nextRound(){
-  if(!sched.active||!sched.current)return;
-  var cur=sched.current;
-  var justPlayed=[cur.t1[0].id,cur.t1[1].id,cur.t2[0].id,cur.t2[1].id];
-  justPlayed.forEach(function(id){sched.counts[id]=(sched.counts[id]||0)+1;});
-  sched.history.push({t1:[cur.t1[0].id,cur.t1[1].id],t2:[cur.t2[0].id,cur.t2[1].id]});
-  sched.current=sched.next;
-  sched.next=computeNext();
+/* A court's round has ended. recordCounts=true records it into match
+   history / play counts (normal finish or 略過計分); recordCounts=false
+   discards it entirely (跳過本場) so it never counts toward anyone's
+   play count or round history. Either way the freed court is refilled
+   from the front of the queue and the queue is rebuilt. */
+function finishCourt(idx,recordCounts){
+  var cur=sched.playing[idx];
+  if(!cur)return;
+  if(recordCounts){
+    roundIds(cur).forEach(function(id){sched.counts[id]=(sched.counts[id]||0)+1;});
+    sched.history.push({t1:[cur.t1[0].id,cur.t1[1].id],t2:[cur.t2[0].id,cur.t2[1].id]});
+  }
+  var justPlayed=roundIds(cur);
+  sched.playing[idx]=sched.queue.length?sched.queue.shift():null;
+  rebuildQueue();
   renderScheduling();
-  /* animate new cards in */
-  ['.round-current','.round-next'].forEach(function(sel){
-    var el=document.querySelector(sel);
-    if(el)el.classList.add('round-enter');
-  });
-  /* roll-up chips for players who just played */
+  var card=document.querySelector('.court-card[data-court="'+idx+'"]');
+  if(card)card.classList.add('round-enter');
+  if(document.getElementById('player-counts-mo').classList.contains('show'))renderPlayerCounts();
   justPlayed.forEach(function(id){
-    var chip=document.querySelector('.sched-player-chip[data-pid="'+id+'"] .sched-chip-cnt');
+    var chip=document.querySelector('.pc-cnt[data-pid="'+id+'"]');
     if(chip){chip.classList.remove('num-up');void chip.offsetWidth;chip.classList.add('num-up');}
   });
-  document.getElementById('fab-sched').style.display=(sched.active&&sched.current)?'':'none';
 }
 
-function skipRound(){
-  if(!sched.active||!sched.current)return;
-  if(!sched.next){toast('目前沒有可替換的下一輪組合');return;}
-  sched.current=sched.next;
-  sched.next=computeNext();
-  renderScheduling();
-  ['.round-current','.round-next'].forEach(function(sel){
-    var el=document.querySelector(sel);
-    if(el)el.classList.add('round-enter');
-  });
-  toast('已跳過本輪');
+function skipCourtRound(idx){
+  if(!sched.active||!sched.playing[idx])return;
+  finishCourt(idx,false);
+  toast('已跳過本場，未列入紀錄');
 }
+
 function endGame(){
   document.getElementById('end-game-mo').classList.add('show');
 }
 function confirmEndGame(){
   document.getElementById('end-game-mo').classList.remove('show');
-  sched.active=false;sched.current=null;sched.next=null;sched.history=[];sched.counts={};sched.attending=[];
+  sched.active=false;sched.playing=[];sched.queue=[];sched.history=[];sched.counts={};sched.attending=[];
   players.forEach(function(p){p.selected=false;});
   gameMode=null;
-  document.getElementById('fab-sched').style.display='none';
   renderGameTab();
 }
 
 function renderRoundCard(round){
-  function teamHtml(team,lsum){
+  function teamHtml(team){
     return '<div class="sched-team">'
-      +team.map(function(p){return '<div class="sched-team-name">'+esc(p.name)+'</div>'
-        +'<div class="sched-team-meta">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':'♀')+'</div>';}).join('')
-      +'<div class="sched-team-sum">Σ '+parseFloat(lsum).toFixed(2)+'</div>'
+      +team.map(function(p){return '<div class="sched-team-name">'+pNameLevel(p)+'</div>';}).join('')
       +'</div>';
   }
   return '<div style="display:flex;gap:8px;align-items:stretch">'
+    +teamHtml(round.t1)
+    +'<div style="display:flex;align-items:center;padding:0 4px;font-size:1.1rem;font-weight:800;color:var(--m)">vs</div>'
+    +teamHtml(round.t2)
+    +'</div>';
+}
+
+function renderQueueCard(round,idx){
+  function teamHtml(team,lsum){
+    return '<div class="sched-team">'
+      +team.map(function(p){return '<div class="queue-team">'+pNameLevel(p)+'</div>';}).join('')
+      +'<div class="queue-team-sum">Σ '+parseFloat(lsum).toFixed(2)+'</div>'
+      +'</div>';
+  }
+  return '<div class="queue-card" data-queue="'+idx+'">'
+    +'<div class="queue-hdr">'
+    +'<span class="queue-idx">候補 '+(idx+1)+'</span>'
+    +'<button class="queue-edit-btn" onclick="showEditQueue('+idx+')">調整</button>'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;align-items:stretch">'
     +teamHtml(round.t1,round.l1)
     +'<div style="display:flex;align-items:center;padding:0 4px;font-size:1.1rem;font-weight:800;color:var(--m)">vs</div>'
     +teamHtml(round.t2,round.l2)
-    +'</div>';
+    +'</div></div>';
 }
 
 function renderScheduling(){
@@ -2110,79 +2259,57 @@ function renderScheduling(){
   /* ── Top header bar (only when active) ── */
   var hdrHtml='';
   if(sched.active){
-    var rounds=sched.history.length+(sched.current?1:0);
     hdrHtml='<div class="vs-hdr">'
-      +'<span class="vs-hdr-title">排點中・第 '+rounds+' 輪</span>'
-      +'<button class="btn bd" style="padding:8px 16px;font-size:.85rem" onclick="endGame()">結束比賽</button>'
-      +'</div>';
+      +'<span class="vs-hdr-title">'+sched.courts+' 片場地・已完成 '+sched.history.length+' 輪</span>'
+      +'<div style="display:flex;gap:6px;flex-shrink:0">'
+      +'<button class="btn bo" style="padding:8px 12px;font-size:.82rem" onclick="showPlayerCounts()">出席管理</button>'
+      +'<button class="btn bd" style="padding:8px 12px;font-size:.82rem" onclick="endGame()">結束比賽</button>'
+      +'</div></div>';
   }
 
   /* ── Scrollable body ── */
   var body='';
 
-  /* gender balance indicator */
+  /* mode indicators */
   if(sched.genderBalance){
     body+='<div class="gb-badge">⚖️ 性別平衡啟用中</div>';
   }
+  if(sched.active&&sched.recordScore===false){
+    body+='<div class="gb-badge">📝 本場不記錄比分</div>';
+  }
 
-  /* attending players */
-  if(attending.length){
-    var n=attending.length;
-    var mkChip=function(p){
-      var cnt=sched.counts[p.id]||0;
-      return '<div class="sched-player-chip" data-pid="'+p.id+'">'
-        +'<span class="sched-chip-name">'+esc(p.name)+'</span>'
-        +'<span class="sched-chip-meta">Lv.'+pLevelStr(p)+' '+(p.gender==='M'?'♂':p.gender==='F'?'♀':'?')+'</span>'
-        +'<div class="sched-chip-adj">'
-        +'<button class="sched-chip-adj-btn" onclick="event.stopPropagation();adjSchedCount(\''+p.id+'\',-1)">−</button>'
-        +'<span class="sched-chip-cnt">'+cnt+'</span>'
-        +'<button class="sched-chip-adj-btn" onclick="event.stopPropagation();adjSchedCount(\''+p.id+'\',1)">+</button>'
-        +'</div>'
-        +'</div>';
-    };
-    body+='<div class="card"><div class="sum-section-title" style="margin-bottom:8px">出席球員（'+n+'人）</div>';
-    if(n<=5){
-      /* single row — grid evenly fills width */
-      body+='<div style="display:grid;grid-template-columns:repeat('+n+',1fr);gap:6px">';
-      attending.forEach(function(p){body+=mkChip(p);});
-      body+='</div>';
-    }else{
-      /* two rows — ceil top row, floor bottom row, both centred */
-      var top=Math.ceil(n/2);
-      body+='<div style="display:flex;flex-direction:column;gap:6px">';
-      body+='<div style="display:flex;gap:6px;justify-content:center">';
-      attending.slice(0,top).forEach(function(p){body+=mkChip(p);});
-      body+='</div><div style="display:flex;gap:6px;justify-content:center">';
-      attending.slice(top).forEach(function(p){body+=mkChip(p);});
-      body+='</div></div>';
-    }
-    body+='</div>';
-  }else{
+  if(!attending.length){
     body+='<div class="card"><div class="eh">請先點「▶ 開始今日比賽」選擇今日出席球員</div></div>';
   }
 
-  /* current round */
-  if(sched.active&&sched.current){
-    body+='<div class="card round-current" style="border:2px solid var(--p);margin-bottom:10px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-      +'<span style="font-size:.78rem;font-weight:700;color:var(--p)">本輪</span>'
-      +'<div style="display:flex;gap:6px">'
-      +'<button class="btn bo" style="padding:5px 13px;font-size:.78rem" onclick="showEditCurrent()">換人</button>'
-      +'<button class="btn bo" style="padding:5px 13px;font-size:.78rem" onclick="skipRound()">跳過本輪</button>'
-      +'</div></div>'
-      +renderRoundCard(sched.current)+'</div>';
+  /* courts currently playing */
+  if(sched.active&&sched.playing.length){
+    body+='<div class="courts-grid">';
+    sched.playing.forEach(function(round,idx){
+      if(round){
+        body+='<div class="court-card round-current" data-court="'+idx+'">'
+          +'<div class="court-hdr">'
+          +'<span class="court-label">場地 '+(idx+1)+'</span>'
+          +'<div class="court-actions">'
+          +'<button class="btn bo" onclick="showEditPlaying('+idx+')">換人</button>'
+          +'<button class="btn bo" onclick="skipCourtRound('+idx+')">跳過本場</button>'
+          +'<button class="btn bp" onclick="'+(sched.recordScore===false?'finishNoScore':'showScoreModal')+'('+idx+')">本場結束</button>'
+          +'</div></div>'
+          +renderRoundCard(round)+'</div>';
+      }else{
+        body+='<div class="court-card empty" data-court="'+idx+'">場地 '+(idx+1)+'・目前人數不足，暫停使用</div>';
+      }
+    });
+    body+='</div>';
   }
 
-  /* next round preview */
-  if(sched.active&&sched.next){
-    body+='<div class="card round-next" style="opacity:.85;margin-bottom:10px">'
-      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'
-      +'<span style="font-size:.78rem;font-weight:700;color:var(--m)">下輪（預覽）</span>'
-      +'<button class="btn bo" style="padding:5px 13px;font-size:.78rem" onclick="showEditNext()">調整</button>'
-      +'</div>'
-      +renderRoundCard(sched.next)+'</div>';
+  /* upcoming queue preview */
+  if(sched.active&&sched.queue.length){
+    body+='<div class="queue-title">候補排點（'+sched.queue.length+'）</div>';
+    body+='<div class="queue-row">';
+    sched.queue.forEach(function(round,idx){body+=renderQueueCard(round,idx);});
+    body+='</div>';
   }
-
 
   el.innerHTML=hdrHtml+'<div class="vs-body">'+body+'</div>';
 }
