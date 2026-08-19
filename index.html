@@ -186,6 +186,7 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 @media(min-width:900px){.vs-body{max-width:880px;margin:0 auto;width:100%}}
 .sched-team{flex:1;background:var(--bg);border-radius:10px;padding:10px;text-align:center}
 .sched-team-name{font-size:.95rem;font-weight:600;color:var(--t);line-height:1.4}
+.lvl-tag{font-size:.82em;font-weight:400;color:var(--m);margin:0 2px}
 .sched-chip-adj-btn{background:none;border:none;outline:none;-webkit-appearance:none;appearance:none;color:var(--m);font-size:1rem;font-weight:700;cursor:pointer;padding:0;width:22px;height:22px;display:flex;align-items:center;justify-content:center;-webkit-tap-highlight-color:transparent;touch-action:manipulation;line-height:1}
 .sched-chip-adj-btn:active{opacity:.4}
 .score-adj-btn{background:var(--bg);border:none;outline:none;-webkit-appearance:none;border-radius:10px;width:44px;height:44px;font-size:1.4rem;font-weight:700;color:var(--p);cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:flex;align-items:center;justify-content:center}
@@ -1688,7 +1689,8 @@ function savePeSheet(){
 function pRating(p){return p.hiddenRating||(p.level||1)*100;}
 function pLevelStr(p){return (pRating(p)/100).toFixed(2);}
 function updatePlayerLevel(p){p.level=Math.max(1,Math.floor(pRating(p)/100));}
-function pNameLevel(p){return '('+pLevelStr(p)+') '+esc(p.name)+(p.gender?' '+(p.gender==='M'?'♂':'♀'):'');}
+function pNameLevel(p){return esc(p.name)+'<span class="lvl-tag">('+pLevelStr(p)+')</span>'+(p.gender?(p.gender==='M'?'♂':'♀'):'');}
+function pNameLevelText(p){return p.name+'('+pLevelStr(p)+')'+(p.gender?(p.gender==='M'?'♂':'♀'):'');}
 
 function adjSchedCount(id,d){
   sched.counts[id]=Math.max(0,(sched.counts[id]||0)+d);
@@ -1782,7 +1784,7 @@ function renderEditRound(){
     var options=sched.attending.filter(function(p){return otherIds.indexOf(p.id)===-1;});
     if(!options.some(function(p){return p.id===current.id;}))options=[current].concat(options);
     return '<select class="ng-sel" style="width:100%" onchange="selectEditSlot(\''+t+'\','+i+',this.value)">'
-      +options.map(function(p){return '<option value="'+p.id+'"'+(p.id===current.id?' selected':'')+'>'+pNameLevel(p)+'</option>';}).join('')
+      +options.map(function(p){return '<option value="'+p.id+'"'+(p.id===current.id?' selected':'')+'>'+esc(pNameLevelText(p))+'</option>';}).join('')
       +'</select>';
   }
   var h='<div style="font-size:.75rem;font-weight:700;color:var(--p);margin-bottom:6px">隊伍 1</div>'
