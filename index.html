@@ -729,7 +729,7 @@ body.dark .court-opt.sel{background:#1e3a5f}
         <input type="checkbox" id="gender-balance-chk" style="cursor:pointer"> 性別平衡
       </label>
       <label style="display:flex;align-items:center;gap:4px;font-size:.78rem;color:var(--m);cursor:pointer;white-space:nowrap">
-        <input type="checkbox" id="record-score-chk" checked style="cursor:pointer"> 記錄比分
+        <input type="checkbox" id="record-score-chk" style="cursor:pointer"> 記錄比分
       </label>
     </div>
   </div>
@@ -2055,7 +2055,7 @@ function clearHistoryConfirm(){
 }
 
 /* ===== 排點 ===== */
-var sched={active:false,genderBalance:false,recordScore:true,courts:1,counts:{},history:[],playing:[],queue:[],attending:[]};
+var sched={active:false,genderBalance:false,recordScore:false,courts:1,counts:{},history:[],playing:[],queue:[],attending:[]};
 
 function roundIds(r){return [r.t1[0].id,r.t1[1].id,r.t2[0].id,r.t2[1].id];}
 
@@ -2150,14 +2150,21 @@ function generateRound(attending,counts,history,genderBalance,pool){
    attending player, not just ones currently free — courts and queue are
    allowed to share players (see 換人), so with few attendees this still
    fills all courts+1 slots instead of leaving the queue short/empty.
-   Only the front of the queue (queue[0]) is ever actually committed to a
-   freed court — the rest are speculative previews regenerated from
-   scratch on every court transition — so queue slots may reuse the same
-   players between each other; fairness scoring still spreads them out
-   whenever there are enough attendees to do so. */
+   Players currently on a court are given a tentative +1 count (as if
+   their match just finished) so the fairness scoring steers the queue
+   away from immediately re-suggesting them as candidate 1 — but still
+   falls back to reusing them when there simply aren't enough other
+   attendees. Only the front of the queue (queue[0]) is ever actually
+   committed to a freed court — the rest are speculative previews
+   regenerated from scratch on every court transition. */
 function rebuildQueue(){
   var tent=Object.assign({},sched.counts);
   var tentHist=sched.history.slice();
+  sched.playing.forEach(function(r){
+    if(!r)return;
+    roundIds(r).forEach(function(id){tent[id]=(tent[id]||0)+1;});
+    tentHist.push({t1:[r.t1[0].id,r.t1[1].id],t2:[r.t2[0].id,r.t2[1].id]});
+  });
   var queue=[];
   var need=sched.courts+1;
   for(var i=0;i<need;i++){
@@ -2174,9 +2181,10 @@ function rebuildQueue(){
 /* A court's round has ended. recordCounts=true records it into match
    history / play counts (normal finish or 略過計分); recordCounts=false
    discards it entirely (跳過本場) so it never counts toward anyone's
-   play count or round history. Either way the court goes back to empty
-   — someone has to physically tap 上場 to bring the next group on, it
-   isn't auto-filled — and the queue is rebuilt. */
+   play count or round history. Either way the court is immediately
+   refilled from the front of the queue (candidate 1) so play keeps
+   flowing — it only sits empty (needing a 上場 tap) at the very start
+   of the session, or if the queue has nobody left to offer. */
 function finishCourt(idx,recordCounts){
   var cur=sched.playing[idx];
   if(!cur)return;
@@ -2185,9 +2193,11 @@ function finishCourt(idx,recordCounts){
     sched.history.push({t1:[cur.t1[0].id,cur.t1[1].id],t2:[cur.t2[0].id,cur.t2[1].id]});
   }
   var justPlayed=roundIds(cur);
-  sched.playing[idx]=null;
+  sched.playing[idx]=sched.queue.length?sched.queue.shift():null;
   rebuildQueue();
   renderScheduling();
+  var card=document.querySelector('.court-card[data-court="'+idx+'"]');
+  if(card)card.classList.add('round-enter');
   if(document.getElementById('player-counts-mo').classList.contains('show'))renderPlayerCounts();
   justPlayed.forEach(function(id){
     var chip=document.querySelector('.pc-cnt[data-pid="'+id+'"]');
