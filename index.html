@@ -2153,24 +2153,23 @@ function generateRound(attending,counts,history,genderBalance,pool){
   return bestResult;
 }
 
-/* Rebuild the whole preview queue (length = courts+1), drawn only from
-   players who aren't currently on a court. Only the front of the queue
-   (queue[0]) is ever actually committed to a freed court — the rest are
-   speculative previews that get regenerated from scratch on every court
-   transition — so queue slots may reuse the same players between each
-   other (they play sequentially, never at the same time); fairness
-   scoring still spreads them out whenever there are enough free players. */
+/* Rebuild the whole preview queue (length = courts+1). Draws from every
+   attending player, not just ones currently free — courts and queue are
+   allowed to share players (see 換人), so with few attendees this still
+   fills all courts+1 slots instead of leaving the queue short/empty.
+   Only the front of the queue (queue[0]) is ever actually committed to a
+   freed court — the rest are speculative previews regenerated from
+   scratch on every court transition — so queue slots may reuse the same
+   players between each other; fairness scoring still spreads them out
+   whenever there are enough attendees to do so. */
 function rebuildQueue(){
-  var busy={};
-  sched.playing.forEach(function(r){if(r)roundIds(r).forEach(function(id){busy[id]=true;});});
-  var pool=sched.attending.filter(function(p){return !busy[p.id];});
   var tent=Object.assign({},sched.counts);
   var tentHist=sched.history.slice();
   var queue=[];
   var need=sched.courts+1;
   for(var i=0;i<need;i++){
-    if(pool.length<4)break;
-    var r=generateRound(sched.attending,tent,tentHist,sched.genderBalance,pool);
+    if(sched.attending.length<4)break;
+    var r=generateRound(sched.attending,tent,tentHist,sched.genderBalance);
     if(!r)break;
     queue.push(r);
     roundIds(r).forEach(function(id){tent[id]=(tent[id]||0)+1;});
