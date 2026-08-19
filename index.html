@@ -200,7 +200,7 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 .courts-grid{display:grid;grid-template-columns:1fr;gap:10px;margin-bottom:12px}
 @media(min-width:680px){.courts-grid{grid-template-columns:repeat(2,1fr)}}
 .court-card{background:var(--c);border-radius:var(--r);padding:12px;box-shadow:0 1px 4px rgba(0,0,0,.06);border:2px solid var(--p)}
-.court-card.empty{border:2px dashed var(--b);display:flex;align-items:center;justify-content:center;min-height:88px;color:var(--m);font-size:.82rem;text-align:center;padding:16px}
+.court-card.empty{border:2px dashed var(--b);display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:88px;color:var(--m);font-size:.82rem;text-align:center;padding:16px}
 .court-hdr{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:10px;flex-wrap:wrap}
 .court-label{font-size:.78rem;font-weight:700;color:var(--p);white-space:nowrap}
 .court-actions{display:flex;gap:6px;flex-wrap:wrap}
@@ -2072,14 +2072,7 @@ function goScheduling(gb,recordScore){
   sched.attending=sel.slice();
   sched.counts={};sched.history=[];
   sel.forEach(function(p){sched.counts[p.id]=0;});
-  sched.playing=[];
-  var reserved={};
-  for(var i=0;i<sched.courts;i++){
-    var pool=sched.attending.filter(function(p){return !reserved[p.id];});
-    var r=pool.length>=4?generateRound(sched.attending,sched.counts,sched.history,sched.genderBalance,pool):null;
-    sched.playing.push(r);
-    if(r)roundIds(r).forEach(function(id){reserved[id]=true;});
-  }
+  sched.playing=new Array(sched.courts).fill(null);
   rebuildQueue();
   switchTab('game');
 }
@@ -2181,8 +2174,9 @@ function rebuildQueue(){
 /* A court's round has ended. recordCounts=true records it into match
    history / play counts (normal finish or 略過計分); recordCounts=false
    discards it entirely (跳過本場) so it never counts toward anyone's
-   play count or round history. Either way the freed court is refilled
-   from the front of the queue and the queue is rebuilt. */
+   play count or round history. Either way the court goes back to empty
+   — someone has to physically tap 上場 to bring the next group on, it
+   isn't auto-filled — and the queue is rebuilt. */
 function finishCourt(idx,recordCounts){
   var cur=sched.playing[idx];
   if(!cur)return;
@@ -2191,11 +2185,9 @@ function finishCourt(idx,recordCounts){
     sched.history.push({t1:[cur.t1[0].id,cur.t1[1].id],t2:[cur.t2[0].id,cur.t2[1].id]});
   }
   var justPlayed=roundIds(cur);
-  sched.playing[idx]=sched.queue.length?sched.queue.shift():null;
+  sched.playing[idx]=null;
   rebuildQueue();
   renderScheduling();
-  var card=document.querySelector('.court-card[data-court="'+idx+'"]');
-  if(card)card.classList.add('round-enter');
   if(document.getElementById('player-counts-mo').classList.contains('show'))renderPlayerCounts();
   justPlayed.forEach(function(id){
     var chip=document.querySelector('.pc-cnt[data-pid="'+id+'"]');
@@ -2207,6 +2199,17 @@ function skipCourtRound(idx){
   if(!sched.active||!sched.playing[idx])return;
   finishCourt(idx,false);
   toast('已跳過本場，未列入紀錄');
+}
+
+/* 上場：把候補 1（隊列最前面）拉上這個空場地 */
+function startCourt(idx){
+  if(!sched.active||sched.playing[idx])return;
+  if(!sched.queue.length){toast('目前沒有候補可以上場');return;}
+  sched.playing[idx]=sched.queue.shift();
+  rebuildQueue();
+  renderScheduling();
+  var card=document.querySelector('.court-card[data-court="'+idx+'"]');
+  if(card)card.classList.add('round-enter');
 }
 
 function endGame(){
@@ -2298,7 +2301,12 @@ function renderScheduling(){
           +'</div></div>'
           +renderRoundCard(round)+'</div>';
       }else{
-        body+='<div class="court-card empty" data-court="'+idx+'">場地 '+(idx+1)+'・目前人數不足，暫停使用</div>';
+        body+='<div class="court-card empty" data-court="'+idx+'">'
+          +'<div class="court-label" style="margin-bottom:8px">場地 '+(idx+1)+'</div>'
+          +(sched.queue.length
+            ?'<button class="btn bs" onclick="startCourt('+idx+')">▶ 上場</button>'
+            :'<div style="font-size:.82rem;color:var(--m)">目前人數不足，暫停使用</div>')
+          +'</div>';
       }
     });
     body+='</div>';
