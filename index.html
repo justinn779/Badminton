@@ -214,6 +214,8 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 .queue-edit-btn{background:none;border:none;color:var(--p);font-size:.75rem;font-weight:600;cursor:pointer;padding:4px 6px;-webkit-tap-highlight-color:transparent}
 .queue-team{font-size:.76rem;font-weight:600;color:var(--t);line-height:1.4;text-align:center}
 .queue-team-sum{font-size:.68rem;color:var(--w);font-weight:700;margin:2px 0 4px;text-align:center}
+.queue-warn{font-size:.72rem;color:var(--d);background:#fef2f2;border-radius:8px;padding:6px 8px;margin-bottom:8px;line-height:1.4;font-weight:600}
+body.dark .queue-warn{background:#3b1515}
 .pc-row{display:flex;align-items:center;gap:10px;padding:9px 2px;border-bottom:1px solid var(--b)}
 .pc-row:last-child{border-bottom:none}
 .pc-name{font-weight:600;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -2403,6 +2405,23 @@ function renderRoundCard(round){
     +'</div>';
 }
 
+/* Ids of players currently on a court whose on-court appearance is already
+   their 2nd consecutive round (they also played the round right before this
+   one). Used to warn when 候補1 would send them straight back out for a 3rd
+   round in a row with zero rest. */
+function twoInARowIds(){
+  var ids={};
+  if(!sched.history.length)return ids;
+  var lastIds={};
+  var last=sched.history[sched.history.length-1];
+  last.t1.concat(last.t2).forEach(function(id){lastIds[id]=true;});
+  sched.playing.forEach(function(r){
+    if(!r)return;
+    roundIds(r).forEach(function(id){if(lastIds[id])ids[id]=true;});
+  });
+  return ids;
+}
+
 function renderQueueCard(round,idx){
   function teamHtml(team,lsum){
     return '<div class="sched-team">'
@@ -2410,11 +2429,18 @@ function renderQueueCard(round,idx){
       +'<div class="queue-team-sum">Σ '+parseFloat(lsum).toFixed(2)+'</div>'
       +'</div>';
   }
+  var warnHtml='';
+  if(idx===0){
+    var atRisk=twoInARowIds();
+    var names=round.t1.concat(round.t2).filter(function(p){return atRisk[p.id];}).map(function(p){return p.name;});
+    if(names.length)warnHtml='<div class="queue-warn">⚠️ '+names.map(esc).join('、')+' 已連續 2 場在場上，排這組會變成連續 3 場</div>';
+  }
   return '<div class="queue-card" data-queue="'+idx+'">'
     +'<div class="queue-hdr">'
     +'<span class="queue-idx">候補 '+(idx+1)+'</span>'
     +'<button class="queue-edit-btn" onclick="showEditQueue('+idx+')">調整</button>'
     +'</div>'
+    +warnHtml
     +'<div style="display:flex;gap:8px;align-items:stretch">'
     +teamHtml(round.t1,round.l1)
     +'<div style="display:flex;align-items:center;padding:0 4px;font-size:1.1rem;font-weight:800;color:var(--m)">vs</div>'
