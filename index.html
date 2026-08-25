@@ -2117,10 +2117,26 @@ function scoreGroup(group,split,counts,history,attending){
   var afterCounts=attending.map(function(p){return (counts[p.id]||0)+(inGroup[p.id]?1:0);});
   var overallRange=Math.max.apply(null,afterCounts)-Math.min.apply(null,afterCounts);
 
-  /* Priority 2: level diff between teams */
+  /* Priority 2: prefer players who've rested longer. Count range alone doesn't stop
+     the same person being re-picked round after round with little/no rest whenever
+     several people tie on count (which happens constantly) — with few attendees a
+     round can't always avoid everyone from the round right before it, so a flat
+     "just played last round" check just shifts who gets forced back on immediately.
+     Looking back a few rounds with a decaying penalty spreads that forced overlap
+     around instead of repeatedly landing on the same unlucky person. */
+  var restWeights=[3,2,1]; // penalty for having played 1 / 2 / 3 rounds ago
+  var restPenalty=0;
+  group.forEach(function(p){
+    for(var back=1;back<=restWeights.length&&back<=history.length;back++){
+      var r=history[history.length-back];
+      if(r.t1.indexOf(p.id)>=0||r.t2.indexOf(p.id)>=0)restPenalty+=restWeights[back-1];
+    }
+  });
+
+  /* Priority 3: level diff between teams */
   var levelDiff=split.diff;
 
-  /* Priority 3: avoid repeating same partner pairs */
+  /* Priority 4: avoid repeating same partner pairs */
   var pairRepeats=0;
   var newPairs=[[split.t1[0].id,split.t1[1].id],[split.t2[0].id,split.t2[1].id]];
   history.forEach(function(r){
@@ -2131,7 +2147,7 @@ function scoreGroup(group,split,counts,history,attending){
     });
   });
 
-  return overallRange*1000+levelDiff*2+pairRepeats*5;
+  return overallRange*1000+restPenalty*60+levelDiff*2+pairRepeats*5;
 }
 
 function generateRound(attending,counts,history,genderBalance,pool){
@@ -2146,17 +2162,14 @@ function generateRound(attending,counts,history,genderBalance,pool){
   return bestResult;
 }
 
-/* Rebuild the whole preview queue (length = courts+1). Draws from every
-   attending player, not just ones currently free — courts and queue are
-   allowed to share players (see 換人), so with few attendees this still
-   fills all courts+1 slots instead of leaving the queue short/empty.
-   Players currently on a court are given a tentative +1 count (as if
-   their match just finished) so the fairness scoring steers the queue
-   away from immediately re-suggesting them as candidate 1 — but still
-   falls back to reusing them when there simply aren't enough other
-   attendees. Only the front of the queue (queue[0]) is ever actually
-   committed to a freed court — the rest are speculative previews
-   regenerated from scratch on every court transition. */
+/* Rebuild the whole preview queue (length = courts+1). Players currently on a
+   court are folded into the tentative history so they count as "just played"
+   for rest purposes (see the rest-penalty in scoreGroup). Courts and queue are
+   allowed to share players when there simply aren't enough attendees to avoid
+   it (see 換人), so this still fills all courts+1 slots instead of leaving the
+   queue short/empty. Only the front of the queue (queue[0]) is ever actually
+   committed to a freed court — the rest are speculative previews regenerated
+   from scratch on every court transition. */
 function rebuildQueue(){
   var tent=Object.assign({},sched.counts);
   var tentHist=sched.history.slice();
