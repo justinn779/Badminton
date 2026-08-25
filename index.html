@@ -219,6 +219,29 @@ header h1{font-size:1.1rem;font-weight:700;white-space:nowrap}
 .pc-name{font-weight:600;font-size:.9rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .pc-cnt{font-size:1.05rem;font-weight:800;color:var(--p);min-width:20px;text-align:center}
 
+/* Scoreboard */
+.sb-role-opt{width:100%;padding:20px;font-size:1.05rem;font-weight:700;border-radius:14px;margin-bottom:12px;border:2px solid var(--b);background:var(--c);color:var(--t);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
+.sb-role-opt:active{background:var(--bg)}
+.sb-overlay{display:none;position:fixed;inset:0;z-index:350;background:var(--bg);flex-direction:column}
+.sb-overlay.show{display:flex}
+.sb-hdr{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;padding-top:calc(12px + env(safe-area-inset-top,0px));background:var(--c);box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.sb-hdr-title{font-size:.9rem;font-weight:700;color:var(--t)}
+.sb-body{flex:1;display:flex;flex-direction:column;gap:10px;padding:14px;min-height:0}
+@media(orientation:landscape){.sb-body{flex-direction:row}}
+.sb-team{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:16px;gap:10px;min-height:0;padding:12px}
+.sb-team.t1{background:#eff6ff;border:3px solid var(--p)}
+.sb-team.t2{background:#f0fdf4;border:3px solid var(--s)}
+body.dark .sb-team.t1{background:#1e3a5f}
+body.dark .sb-team.t2{background:#14291f}
+.sb-team-name{font-size:1.05rem;font-weight:700;color:var(--t);text-align:center}
+.sb-score{font-size:min(24vw,24vh,180px);font-weight:800;line-height:1;color:var(--t)}
+.sb-adj-row{display:flex;gap:16px;flex-shrink:0}
+.sb-adj-btn{width:60px;height:60px;border-radius:50%;border:none;font-size:1.7rem;font-weight:800;color:#fff;cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:flex;align-items:center;justify-content:center;-webkit-appearance:none}
+.sb-team.t1 .sb-adj-btn{background:var(--p)}
+.sb-team.t2 .sb-adj-btn{background:var(--s)}
+.sb-adj-btn:active{opacity:.7;transform:scale(.94)}
+.sb-vs{flex-shrink:0;text-align:center;font-size:.85rem;font-weight:700;color:var(--m)}
+
 /* Login */
 .login-wrap{display:flex;flex-direction:column;align-items:center;justify-content:center;flex:1;padding:24px;background:var(--bg)}
 .login-card{background:var(--c);border-radius:16px;padding:32px 24px;width:100%;max-width:340px;box-shadow:0 4px 20px rgba(0,0,0,.1);text-align:center}
@@ -545,6 +568,22 @@ body.dark .court-opt.sel{background:#1e3a5f}
     <button class="btn bp" style="flex:1" onclick="document.getElementById('player-counts-mo').classList.remove('show')">關閉</button>
   </div>
 </div>
+</div>
+<div class="mo" id="sb-role-mo" onclick="hideSbRole()">
+<div class="mb" onclick="event.stopPropagation()">
+  <h2 style="margin-bottom:6px">記分板</h2>
+  <p style="color:var(--m);font-size:.82rem;margin-bottom:16px">這台裝置要做什麼？</p>
+  <button class="sb-role-opt" onclick="sbChooseRole('control')">📱 我要控分</button>
+  <button class="sb-role-opt" onclick="sbChooseRole('display')">📺 我要看比分</button>
+  <button class="btn bo" style="width:100%" onclick="hideSbRole()">取消</button>
+</div>
+</div>
+<div class="sb-overlay" id="sb-overlay">
+  <div class="sb-hdr">
+    <span class="sb-hdr-title" id="sb-hdr-title">記分板</span>
+    <button class="btn bo" onclick="sbExit()">關閉</button>
+  </div>
+  <div class="sb-body" id="sb-body"></div>
 </div>
 <div class="mo" id="end-game-mo" onclick="this.classList.remove('show')">
 <div class="mb" onclick="event.stopPropagation()">
@@ -1803,8 +1842,11 @@ function selectEditSlot(t,i,playerId){
 }
 
 /* ===== 計分 ===== */
-var scoreWinner=0,scoreCurrent=null,scoreCourtIdx=-1;
-function showScoreModal(idx){
+var scoreWinner=0,scoreCurrent=null,scoreCourtIdx=-1,scorePrefilled=false;
+/* prefill (optional) = {s1,s2} from the 記分板 scoreboard — keeps the tallied
+   score instead of the usual 21/18 default, and doesn't let picking a winner
+   button reset it back to 21/18. */
+function showScoreModal(idx,prefill){
   var r=sched.playing[idx];
   if(!r)return;
   scoreCourtIdx=idx;
@@ -1817,9 +1859,11 @@ function showScoreModal(idx){
   scoreWinner=0;
   document.getElementById('score-t1-btn').className='btn bo';
   document.getElementById('score-t2-btn').className='btn bo';
-  document.getElementById('score-s1').textContent=21;
-  document.getElementById('score-s2').textContent=18;
+  scorePrefilled=!!prefill;
+  document.getElementById('score-s1').textContent=prefill?prefill.s1:21;
+  document.getElementById('score-s2').textContent=prefill?prefill.s2:18;
   document.getElementById('score-mo').classList.add('show');
+  if(prefill&&prefill.s1!==prefill.s2)selectScoreWinner(prefill.s1>prefill.s2?1:2);
 }
 function adjScore(side,d){
   var el=document.getElementById('score-s'+side);
@@ -1830,6 +1874,7 @@ function selectScoreWinner(t){
   scoreWinner=t;
   document.getElementById('score-t1-btn').className='btn '+(t===1?'bp':'bo');
   document.getElementById('score-t2-btn').className='btn '+(t===2?'bp':'bo');
+  if(scorePrefilled)return;
   if(t===1){document.getElementById('score-s1').textContent=21;document.getElementById('score-s2').textContent=18;}
   else{document.getElementById('score-s1').textContent=18;document.getElementById('score-s2').textContent=21;}
 }
@@ -1905,6 +1950,105 @@ function finishNoScore(idx){
   clearTimeout(st);st=setTimeout(fsSave,1200);
   finishCourt(idx,true);
 }
+
+/* ===== 記分板 ===== */
+/* Live cross-device scoreboard. Writes go straight to Firestore on every tap
+   (no debounce, unlike the rest of the app's autosave) so a second device
+   logged into the same account sees updates almost immediately via
+   onSnapshot. Kept in its own users/{uid}/live/court{N} doc, separate from
+   the normal players/bill docs, so unrelated data edits never trigger this
+   listener and vice versa. */
+var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbState={s1:0,s2:0,t1n:'',t2n:''};
+
+function sbDocRef(idx){
+  return db.collection('users').doc(currentUser.uid).collection('live').doc('court'+idx);
+}
+function showScoreboardRole(idx){
+  if(!sched.playing[idx])return;
+  sbCourtIdx=idx;
+  document.getElementById('sb-role-mo').classList.add('show');
+}
+function hideSbRole(){
+  document.getElementById('sb-role-mo').classList.remove('show');
+}
+function sbChooseRole(role){
+  hideSbRole();
+  sbRole=role;
+  if(role==='control')sbStartControl();else sbStartDisplay();
+}
+function sbStartControl(){
+  var r=sched.playing[sbCourtIdx];
+  if(!r){toast('這個場地目前沒有比賽');return;}
+  var t1n=r.t1.map(function(p){return p.name;}).join(' & ');
+  var t2n=r.t2.map(function(p){return p.name;}).join(' & ');
+  sbState={s1:0,s2:0,t1n:t1n,t2n:t2n};
+  sbDocRef(sbCourtIdx).set({active:true,t1n:t1n,t2n:t2n,s1:0,s2:0,updatedAt:Date.now()})
+    .catch(function(){toast('記分板連線失敗，請檢查網路');});
+  document.getElementById('sb-hdr-title').textContent='場地 '+(sbCourtIdx+1)+'・控分中';
+  renderSbControl();
+  document.getElementById('sb-overlay').classList.add('show');
+}
+function renderSbControl(){
+  var el=document.getElementById('sb-body');
+  el.className='sb-body';
+  el.innerHTML=
+    '<div class="sb-team t1">'
+      +'<div class="sb-team-name">'+esc(sbState.t1n)+'</div>'
+      +'<div class="sb-score" id="sb-s1">'+sbState.s1+'</div>'
+      +'<div class="sb-adj-row"><button class="sb-adj-btn" onclick="sbAdjust(1,-1)">−</button><button class="sb-adj-btn" onclick="sbAdjust(1,1)">＋</button></div>'
+    +'</div>'
+    +'<div class="sb-vs">VS</div>'
+    +'<div class="sb-team t2">'
+      +'<div class="sb-team-name">'+esc(sbState.t2n)+'</div>'
+      +'<div class="sb-score" id="sb-s2">'+sbState.s2+'</div>'
+      +'<div class="sb-adj-row"><button class="sb-adj-btn" onclick="sbAdjust(2,-1)">−</button><button class="sb-adj-btn" onclick="sbAdjust(2,1)">＋</button></div>'
+    +'</div>'
+    +'<button class="btn bp" style="padding:14px;font-size:1rem;flex-shrink:0" onclick="sbFinish()">結束計分，前往確認比賽結果</button>';
+}
+function sbAdjust(team,d){
+  var key='s'+team;
+  sbState[key]=Math.max(0,sbState[key]+d);
+  document.getElementById('sb-'+key).textContent=sbState[key];
+  var patch={updatedAt:Date.now()};
+  patch[key]=sbState[key];
+  sbDocRef(sbCourtIdx).update(patch).catch(function(){});
+}
+function sbFinish(){
+  var idx=sbCourtIdx,s1=sbState.s1,s2=sbState.s2;
+  sbDocRef(idx).delete().catch(function(){});
+  sbCloseOverlay();
+  showScoreModal(idx,{s1:s1,s2:s2});
+}
+function sbStartDisplay(){
+  document.getElementById('sb-hdr-title').textContent='場地 '+(sbCourtIdx+1)+'・比分';
+  var el=document.getElementById('sb-body');
+  el.className='sb-body';
+  el.innerHTML='<div class="eh" style="margin:auto">連線中...</div>';
+  document.getElementById('sb-overlay').classList.add('show');
+  if(sbUnsub)sbUnsub();
+  sbUnsub=sbDocRef(sbCourtIdx).onSnapshot(function(doc){
+    if(!doc.exists||!doc.data().active){
+      el.innerHTML='<div class="eh" style="margin:auto">尚無比分資料</div>';
+      return;
+    }
+    var d=doc.data();
+    el.innerHTML=
+      '<div class="sb-team t1"><div class="sb-team-name">'+esc(d.t1n||'')+'</div><div class="sb-score">'+d.s1+'</div></div>'
+      +'<div class="sb-vs">VS</div>'
+      +'<div class="sb-team t2"><div class="sb-team-name">'+esc(d.t2n||'')+'</div><div class="sb-score">'+d.s2+'</div></div>';
+  },function(){
+    el.innerHTML='<div class="eh" style="margin:auto">連線失敗</div>';
+  });
+}
+function sbCloseOverlay(){
+  document.getElementById('sb-overlay').classList.remove('show');
+  if(sbUnsub){sbUnsub();sbUnsub=null;}
+  sbRole=null;
+}
+function sbExit(){
+  sbCloseOverlay();
+}
+
 function computeDelta(t1,t2,winTeam,winScore,loseScore,K){
   var r1=(pRating(t1[0])+pRating(t1[1]))/2;
   var r2=(pRating(t2[0])+pRating(t2[1]))/2;
@@ -2320,6 +2464,7 @@ function renderScheduling(){
           +'<div class="court-actions">'
           +'<button class="btn bo" onclick="showEditPlaying('+idx+')">換人</button>'
           +'<button class="btn bo" onclick="skipCourtRound('+idx+')">跳過本場</button>'
+          +'<button class="btn bo" onclick="showScoreboardRole('+idx+')">記分板</button>'
           +'<button class="btn bp" onclick="'+(sched.recordScore===false?'finishNoScore':'showScoreModal')+'('+idx+')">本場結束</button>'
           +'</div></div>'
           +renderRoundCard(round)+'</div>';
