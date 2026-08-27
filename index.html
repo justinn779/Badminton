@@ -2148,11 +2148,14 @@ function renderSbSetupBoard(){
       +'<span class="sb-name-side">'+label+'</span>'
       +'</div>';
   }
+  /* 顏色固定在畫面左右邊，不跟著隊伍換邊——拖曳交換兩隊左右邊時只有名字
+     跟著換，色塊本身（class 用 isLeftSide 決定，不是 team）留在原本那側，
+     這樣拖曳的時候顏色不會一直跳。 */
   function panel(team,isLeftSide){
     var rightIdx=team===1?st.t1RightIdx:st.t2RightIdx;
     var topIdx=isLeftSide?1-rightIdx:rightIdx, topLabel=isLeftSide?'左':'右';
     var botIdx=isLeftSide?rightIdx:1-rightIdx, botLabel=isLeftSide?'右':'左';
-    return '<div class="sb-team t'+team+'" data-team="'+team+'">'
+    return '<div class="sb-team '+(isLeftSide?'t1':'t2')+'" data-team="'+team+'">'
       +'<div class="sb-team-label">隊伍 '+team+'</div>'
       +row(team,topIdx,topLabel)
       +'<div class="sb-setup-mid">拖曳換邊<br>點選開球者</div>'
