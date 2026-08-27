@@ -252,7 +252,8 @@ body.dark .queue-warn{background:#3b1515}
    straight across — instead of both teams showing "right" on top. 🏸 marks
    whoever's serving. */
 .sb-team{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;overflow:hidden;gap:2px;padding:8px 4px}
-.sb-team.sb-interactive{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.sb-team.sb-interactive{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none}
+.sb-swipe-hint{position:absolute;bottom:10px;font-size:min(2.6vw,3vh,26px);color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.02em}
 .sb-team.sb-interactive:active{filter:brightness(1.15)}
 .sb-team.t1{background:#2563eb}
 .sb-team.t2{background:#dc2626}
@@ -2203,14 +2204,17 @@ function sbServerIdx(team,score,rightIdx,server){
   if(server!==team)return -1;
   return (score%2===0)?rightIdx:(1-rightIdx);
 }
-/* interactive=true (控分端): 點整個色塊就是幫這隊加分，不用另外按鈕。
+/* interactive=true: 點整個色塊就是幫這隊加分，不用另外按鈕。
    右/左是站在該隊自己的角度、面對對手時的左右手，跟「畫面上實際站在哪一
    側」有關，不是跟隊伍編號綁死的 — 因為兩隊誰在左誰在右是可以交換的
    （見 leftTeam），畫面左側的那隊面向右邊，右手指向畫面下方；畫面右側
    的那隊面向左邊，右手指向畫面上方（兩人面對面，左右互為鏡像）。所以呼
    叫端要傳「這個面板現在畫在螢幕左側嗎」，不能用 team===1 猜。目前發球
-   的人名字旁邊會有 🏸。 */
-function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide){
+   的人名字旁邊會有 🏸。
+   swipeable=true（查看記分板顯示端）: 沒有另外的撤銷按鈕可按，改成同一
+   個色塊「輕點＝加分、下滑＝退回上一分」用手勢辨識（見 sbPanelDown/Up），
+   跟控分卡片單純 onclick 加分不同。 */
+function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide,swipeable){
   var serverIdx=sbServerIdx(team,score,rightIdx,server);
   function nameRow(idx,label){
     var serving=idx===serverIdx;
@@ -2222,13 +2226,62 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide
   }
   var topIdx=isLeftSide?1-rightIdx:rightIdx, topLabel=isLeftSide?'左':'右';
   var botIdx=isLeftSide?rightIdx:1-rightIdx, botLabel=isLeftSide?'右':'左';
+  var gestureAttrs=swipeable
+    ?' onpointerdown="sbPanelDown(event,'+team+')" onpointerup="sbPanelUp(event,'+team+')" onpointercancel="sbPanelCancel()"'
+    :' onclick="sbScore('+team+')"';
   return '<div class="sb-team t'+team+(interactive?' sb-interactive':'')+'"'
-    +(interactive?' onclick="sbScore('+team+')"':'')+'>'
+    +(interactive?gestureAttrs:'')+'>'
     +'<div class="sb-team-label">隊伍 '+team+'</div>'
     +nameRow(topIdx,topLabel)
     +'<div class="sb-score">'+score+'</div>'
     +nameRow(botIdx,botLabel)
+    +(swipeable?'<div class="sb-swipe-hint">點一下 +1・下滑 -1</div>':'')
     +'</div>';
+}
+/* ── 查看記分板顯示端的手勢：輕點加分、下滑退回上一分 ──
+   輕點跟下滑都是直接寫回 Firestore（讀最新的 sbLastDoc 當基準），跟控分
+   卡片各自維護本地 sbState 是分開的兩條路——兩邊都可能同時在動這場比賽，
+   這裡永遠以「當下讀到的最新資料」為準，寫回時一併附上 prev 快照，這樣
+   不管上一分是哪一端按的，下滑退回都查得到、退得回去。 */
+var sbPanelTouch=null;
+function sbPanelDown(e,team){
+  sbPanelTouch={team:team,startX:e.clientX,startY:e.clientY};
+}
+function sbPanelCancel(){sbPanelTouch=null;}
+function sbPanelUp(e,team){
+  if(!sbPanelTouch||sbPanelTouch.team!==team)return;
+  var dx=e.clientX-sbPanelTouch.startX, dy=e.clientY-sbPanelTouch.startY;
+  sbPanelTouch=null;
+  if(dy>60&&Math.abs(dx)<100){
+    sbDisplayUndo(team);
+  }else if(Math.abs(dy)<20&&Math.abs(dx)<20){
+    sbDisplayScore(team);
+  }
+}
+function sbDisplayScore(team){
+  if(!sbLastDoc||!sbLastDoc.exists)return;
+  var d=sbLastDoc.data();
+  if(!d.active)return;
+  var cur={s1:d.s1||0,s2:d.s2||0,t1RightIdx:d.t1RightIdx||0,t2RightIdx:d.t2RightIdx||0,server:d.server};
+  var next=sbApplyScoreDelta(cur,team);
+  sbDocRef(sbCourtIdx).set({
+    active:true,t1p:d.t1p,t2p:d.t2p,
+    s1:next.s1,s2:next.s2,t1RightIdx:next.t1RightIdx,t2RightIdx:next.t2RightIdx,server:next.server,
+    leftTeam:d.leftTeam||1,prev:cur,updatedAt:Date.now()
+  }).catch(function(){toast('記分板連線失敗，請檢查網路');});
+}
+function sbDisplayUndo(team){
+  if(!sbLastDoc||!sbLastDoc.exists)return;
+  var d=sbLastDoc.data();
+  if(!d.active||!d.prev){toast('目前沒有可以退回的上一分');return;}
+  var scoredTeam=(d.s1||0)>(d.prev.s1||0)?1:((d.s2||0)>(d.prev.s2||0)?2:0);
+  if(scoredTeam!==team){toast('上一分不是這隊得的，請在另一邊下滑');return;}
+  var p=d.prev;
+  sbDocRef(sbCourtIdx).set({
+    active:true,t1p:d.t1p,t2p:d.t2p,
+    s1:p.s1,s2:p.s2,t1RightIdx:p.t1RightIdx,t2RightIdx:p.t2RightIdx,server:p.server,
+    leftTeam:d.leftTeam||1,prev:null,updatedAt:Date.now()
+  }).catch(function(){toast('記分板連線失敗，請檢查網路');});
 }
 /* 排點畫面上方的記分板卡片（控分本體）。sched.active 為 false 時（結束
    比賽/尚未排點）不會有東西呼叫這裡，因為 sbCloseInline 會清空 sbCourtIdx。 */
@@ -2250,16 +2303,28 @@ function renderSbCard(){
     +'</div>'
     +'</div>';
 }
-function sbScore(team){
-  sbState.hist.push({s1:sbState.s1,s2:sbState.s2,t1RightIdx:sbState.t1RightIdx,t2RightIdx:sbState.t2RightIdx,server:sbState.server});
-  if(sbState.hist.length>200)sbState.hist.shift();
-  if(team===1)sbState.s1++;else sbState.s2++;
-  if(sbState.server===team){
-    if(team===1)sbState.t1RightIdx=1-sbState.t1RightIdx;else sbState.t2RightIdx=1-sbState.t2RightIdx;
+/* Applies one point for `team` to a {s1,s2,t1RightIdx,t2RightIdx,server}
+   snapshot and returns the new snapshot — the same serve/position rule
+   used everywhere a point gets scored, whether that's the control card's
+   tap, its 撤銷 button (in reverse), or a tap/swipe on the 查看記分板
+   display (see sbDisplayScore/sbDisplayUndo below). */
+function sbApplyScoreDelta(s,team){
+  var n={s1:s.s1,s2:s.s2,t1RightIdx:s.t1RightIdx,t2RightIdx:s.t2RightIdx,server:s.server};
+  if(team===1)n.s1++;else n.s2++;
+  if(n.server===team){
+    if(team===1)n.t1RightIdx=1-n.t1RightIdx;else n.t2RightIdx=1-n.t2RightIdx;
   }else{
-    sbState.server=team;
+    n.server=team;
   }
-  sbSyncAndRender();
+  return n;
+}
+function sbScore(team){
+  var prev={s1:sbState.s1,s2:sbState.s2,t1RightIdx:sbState.t1RightIdx,t2RightIdx:sbState.t2RightIdx,server:sbState.server};
+  sbState.hist.push(prev);
+  if(sbState.hist.length>200)sbState.hist.shift();
+  var next=sbApplyScoreDelta(sbState,team);
+  sbState.s1=next.s1;sbState.s2=next.s2;sbState.t1RightIdx=next.t1RightIdx;sbState.t2RightIdx=next.t2RightIdx;sbState.server=next.server;
+  sbSyncAndRender(prev);
 }
 function sbUndo(){
   if(!sbState.hist.length)return;
@@ -2267,9 +2332,14 @@ function sbUndo(){
   sbState.s1=prev.s1;sbState.s2=prev.s2;
   sbState.t1RightIdx=prev.t1RightIdx;sbState.t2RightIdx=prev.t2RightIdx;
   sbState.server=prev.server;
-  sbSyncAndRender();
+  sbSyncAndRender(null);
 }
-function sbSyncAndRender(){
+/* prevSnapshot (optional): the state right before this write, stored as
+   `prev` in Firestore so ANY device — not just this one's local undo
+   button — can correctly reverse the single most recent point (see
+   sbDisplayUndo). Pass null/omit after an undo itself, since there's
+   nothing further to quick-undo at that point. */
+function sbSyncAndRender(prevSnapshot){
   renderScheduling();
   sbDocRef(sbCourtIdx).set({
     active:true,
@@ -2278,6 +2348,7 @@ function sbSyncAndRender(){
     t1RightIdx:sbState.t1RightIdx,t2RightIdx:sbState.t2RightIdx,
     server:sbState.server,
     leftTeam:sbState.leftTeam,
+    prev:prevSnapshot||null,
     updatedAt:Date.now()
   }).catch(function(){toast('記分板連線失敗，請檢查網路');});
 }
@@ -2340,8 +2411,8 @@ function sbRenderDisplay(){
      是控分畫面的鏡射：控分把隊伍1放左邊，這裡就放右邊。 */
   var controlLeftTeam=d.leftTeam||1;
   var t1Left=controlLeftTeam!==1;
-  var p1=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false,t1Left);
-  var p2=sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false,!t1Left);
+  var p1=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,true,t1Left,true);
+  var p2=sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,true,!t1Left,true);
   el.innerHTML=t1Left?(p1+p2):(p2+p1);
 }
 function sbCloseOverlay(){
