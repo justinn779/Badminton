@@ -1944,16 +1944,13 @@ function selectScoreWinner(t){
   if(t===1){document.getElementById('score-s1').textContent=21;document.getElementById('score-s2').textContent=18;}
   else{document.getElementById('score-s1').textContent=18;document.getElementById('score-s2').textContent=21;}
 }
-function confirmScore(){
-  if(!scoreWinner){toast('請選擇勝方');return;}
-  var s1=parseInt(document.getElementById('score-s1').textContent)||0;
-  var s2=parseInt(document.getElementById('score-s2').textContent)||0;
-  if(s1===s2){toast('得分不可相同');return;}
-  var cur=scoreCurrent;
-  var winTeam=scoreWinner===1?cur.t1:cur.t2;
-  var loseTeam=scoreWinner===1?cur.t2:cur.t1;
-  var winScore=scoreWinner===1?s1:s2;
-  var loseScore=scoreWinner===1?s2:s1;
+/* 依照已經明確知道的比分/勝方記一場比賽並結束該場地——手動填分
+   （confirmScore）跟記分板直接結束（sbFinish）共用，兩邊都是「比分已經
+   確定」的情況，差別只在比分是使用者手動選的還是記分板自動算出來的。 */
+function recordMatchResult(idx,cur,winner,s1,s2){
+  var winTeam=winner===1?cur.t1:cur.t2;
+  var winScore=winner===1?s1:s2;
+  var loseScore=winner===1?s2:s1;
   applyMatchRating(cur.t1,cur.t2,winTeam,winScore,loseScore);
   var today=new Date().toLocaleDateString('zh-TW');
   var dayRound=matchHistory.filter(function(x){return x.date===today;}).length+1;
@@ -1966,12 +1963,19 @@ function confirmScore(){
     t1ids:cur.t1.map(function(p){return p.id;}),
     t2ids:cur.t2.map(function(p){return p.id;}),
     s1:s1,s2:s2,
-    winner:scoreWinner
+    winner:winner
   };
   matchHistory.unshift(rec);
   clearTimeout(st);st=setTimeout(fsSave,1200);
+  finishCourt(idx,true);
+}
+function confirmScore(){
+  if(!scoreWinner){toast('請選擇勝方');return;}
+  var s1=parseInt(document.getElementById('score-s1').textContent)||0;
+  var s2=parseInt(document.getElementById('score-s2').textContent)||0;
+  if(s1===s2){toast('得分不可相同');return;}
   document.getElementById('score-mo').classList.remove('show');
-  finishCourt(scoreCourtIdx,true);
+  recordMatchResult(scoreCourtIdx,scoreCurrent,scoreWinner,s1,s2);
 }
 function skipScore(){
   var cur=scoreCurrent;
@@ -2396,13 +2400,26 @@ function sbCancelInline(idx){
   sbDocRef(idx).delete().catch(function(){});
   sbCloseInline(idx);
 }
+/* 記分板結束比賽：比分本來就是一分一分算出來的，已經很明確，不用再跳
+   出填分視窗讓使用者確認/調整一次——直接照記分板的比分記錄、結束本場。
+   平手（提早結束等異常狀況）沒辦法自動判斷勝方，這種例外才退回填分視窗
+   讓使用者自己選；sched.recordScore===false（本場不記錄比分）則直接
+   略過計分，比照一般場地卡片「本場結束」的規則。 */
 function sbFinish(idx){
   var st=sbCtrl[idx];
   if(!st)return;
   var s1=st.s1,s2=st.s2;
+  var cur=sched.playing[idx];
   sbDocRef(idx).delete().catch(function(){});
   sbCloseInline(idx);
-  showScoreModal(idx,{s1:s1,s2:s2});
+  if(!cur)return;
+  if(sched.recordScore===false){
+    finishNoScore(idx);
+  }else if(s1===s2){
+    showScoreModal(idx,{s1:s1,s2:s2});
+  }else{
+    recordMatchResult(idx,cur,s1>s2?1:2,s1,s2);
+  }
 }
 
 /* ── 顯示端（查看記分板）：純讀取全螢幕，跟控分卡片共用同一套面板渲染 ──
