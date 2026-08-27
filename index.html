@@ -228,17 +228,8 @@ body.dark .queue-warn{background:#3b1515}
 .sb-pick-row .sb-role-opt{margin-bottom:0;flex:1}
 .sb-pick-remove{flex-shrink:0;width:48px;border-radius:12px;border:2px solid var(--b);background:var(--c);color:var(--d);font-size:1.1rem;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
 .sb-pick-remove:active{background:var(--bg)}
-/* 開球設定：拖曳排站位 */
-.sb-setup-swap{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
-.sb-setup-team-row{background:var(--bg);border-radius:12px;padding:10px}
-.sb-setup-team-row.sb-setup-serving{outline:2px solid var(--p)}
-.sb-setup-team-name{font-size:.75rem;font-weight:700;color:var(--m);margin-bottom:8px}
-.sb-swap-row{display:flex;gap:8px}
-.sb-swap-slot{flex:1;border:2px dashed var(--b);border-radius:10px;padding:8px 6px;text-align:center;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
-.sb-swap-slot-label{font-size:.65rem;color:var(--m);font-weight:700}
-.sb-swap-chip{background:var(--p);color:#fff;border-radius:8px;padding:8px 10px;font-size:.85rem;font-weight:700;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;width:100%;-webkit-tap-highlight-color:transparent}
-.sb-swap-chip.t2{background:var(--d)}
-.sb-swap-chip.sb-swap-dragging{opacity:.35}
+/* 開球設定：拖曳排站位（一個色塊 ghost 跟著手指走，樣式跟記分板本體共用
+   .sb-team/.sb-name-row 等 class，見下方及 renderSbSetupBoard） */
 .sb-swap-ghost{position:fixed;z-index:400;pointer-events:none;border-radius:8px;padding:8px 14px;font-size:.85rem;font-weight:700;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 /* Fullscreen — display-only viewer (查看記分板 entry point) */
 .sb-overlay{display:none;position:fixed;inset:0;z-index:350;background:var(--bg);flex-direction:column}
@@ -274,6 +265,16 @@ body.dark .queue-warn{background:#3b1515}
    stack more breathing room to actually use it (~85-90% of the half),
    while staying safely under 100% since .sb-team clips overflow. */
 .sb-body.sb-scoreboard .sb-team{gap:1.6vh}
+
+/* 開球設定畫面：跟純顯示端共用 .sb-team/.sb-name-row 等視覺，只是把中間的
+   比分數字換成拖曳／點選的提示文字，下面多一條「開始計分」的固定操作列。 */
+.sb-body.sb-setup-board{flex-direction:column;padding:0;gap:0}
+.sb-setup-teams{flex:1;display:flex;flex-direction:row;min-height:0;gap:1.6vh}
+.sb-setup-teams .sb-team{gap:1.6vh}
+.sb-setup-row{cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
+.sb-setup-mid{font-size:.72rem;color:rgba(255,255,255,.55);font-weight:600;text-align:center;padding:2px 10px}
+.sb-setup-bar{flex-shrink:0;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--c)}
+.sb-setup-bar .btn{width:100%;padding:16px;font-size:1rem}
 
 /* Inline control card — sits above 排點's courts-grid instead of taking over
    the screen, so the app is fully usable while a match is being scored. */
@@ -615,13 +616,8 @@ body.dark .court-opt.sel{background:#1e3a5f}
   </div>
 </div>
 </div>
-<!-- 記分板開球設定：小視窗，設定完直接關掉，控分本體是排點畫面上方的卡片 -->
-<div class="mo" id="sb-setup-mo" onclick="sbCancelSetup()">
-<div class="mb" onclick="event.stopPropagation()">
-  <h2 id="sb-setup-title" style="margin-bottom:14px">開球設定</h2>
-  <div id="sb-setup-body"></div>
-</div>
-</div>
+<!-- 記分板開球設定：跟記分板本體共用同一個全螢幕 overlay（見下方 #sb-overlay），
+     只是內容換成可拖曳的設定畫面，設定完按「開始計分」才切到排點上方的控分卡片 -->
 <!-- 記分板：純顯示端全螢幕（查看記分板 入口用） -->
 <div class="sb-overlay" id="sb-overlay">
   <div class="sb-hdr">
@@ -2025,7 +2021,7 @@ function finishNoScore(idx){
    onSnapshot. Kept in its own users/{uid}/live/court{N} doc, separate from
    the normal players/bill docs, so unrelated data edits never trigger this
    listener and vice versa. */
-var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbSetupTeam=null,sbStaleTimer=null,sbLastDoc=null;
+var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbStaleTimer=null,sbLastDoc=null;
 var sbState={s1:0,s2:0,t1p:['',''],t2p:['',''],t1RightIdx:0,t2RightIdx:0,server:null,hist:[]};
 var SB_STALE_MS=10*60*1000; // actively-open viewer: no update in 10 min → flag as abandoned (long, so a normal pause between points doesn't flicker to an error)
 var SB_PICKER_STALE_MS=2*60*1000; // the "查看記分板" court list is stricter — don't offer picking a match that's been quiet this long
@@ -2055,8 +2051,8 @@ window.addEventListener('pagehide',function(){
 });
 /* 排點畫面場地卡片上的「記分板」：按下去這台裝置就是控分端，不用再選
    角色 — 純顯示（給其他裝置看）走的是另一個入口（查看記分板），不會經過
-   這裡。開球設定用小視窗問完就關掉，控分本體是排點畫面上方的卡片
-   （見 renderSbCard），不佔滿整個畫面。 */
+   這裡。開球設定畫在跟記分板本體同一個全螢幕 overlay 上（見 renderSbSetupBoard），
+   設定完按「開始計分」才切到排點畫面上方的控分卡片（見 renderSbCard）。 */
 function showScoreboardRole(idx){
   var r=sched.playing[idx];
   if(!r)return;
@@ -2071,9 +2067,9 @@ function showScoreboardRole(idx){
     leftTeam:1, /* which team is on screen-left in 控分（this device）— 查看記分板 always shows the mirror of this, since it faces the players from the opposite side */
     hist:[]
   };
-  sbSetupTeam=null;
-  renderSbSetup();
-  document.getElementById('sb-setup-mo').classList.add('show');
+  document.getElementById('sb-hdr-title').textContent='場地 '+(idx+1)+'・開球設定';
+  renderSbSetupBoard();
+  document.getElementById('sb-overlay').classList.add('show');
 }
 /* 比賽分頁「開始比賽」下方的純顯示端入口：不靠這台裝置自己有排點資料
    （sched.playing）才看得到場地卡片 — 排點狀態本來就沒有跨裝置同步，所以
@@ -2119,107 +2115,99 @@ function pickSbCourt(idx){
   sbRole='display';
   sbStartDisplay();
 }
-/* ── 控分：開球設定（小視窗）──
-   雙打發球規則：發球方得分＝同一邊繼續發球但左右換位；接發球方得分＝發球權
-   轉移但雙方都不換邊。任一隊此刻由誰發球，可從「該隊比分奇偶＋目前站右邊
-   是誰」推算出來，不用額外存「發球員」欄位。 */
-function renderSbSetup(){
-  document.getElementById('sb-setup-title').textContent='場地 '+(sbCourtIdx+1)+'・開球設定';
-  var el=document.getElementById('sb-setup-body');
-  if(sbSetupTeam==null){
-    el.innerHTML='<div style="font-weight:700;margin-bottom:14px;color:var(--t)">哪一隊先發球？</div>'
-      +'<button class="sb-role-opt" onclick="sbPickServeTeam(1)">'+esc(sbState.t1p.join(' & '))+'</button>'
-      +'<button class="sb-role-opt" onclick="sbPickServeTeam(2)">'+esc(sbState.t2p.join(' & '))+'</button>'
-      +'<button class="btn bo" style="width:100%" onclick="sbCancelSetup()">取消</button>';
-  }else{
-    renderSbSetupSwap();
-  }
-}
-function sbPickServeTeam(team){
-  sbSetupTeam=team;
-  renderSbSetup();
-}
-/* 站位確認：發球方跟接發球方都要選，用拖曳的方式在「右」「左」兩個格子
-   之間互換球員（只有兩人兩格，拖過去就是跟原本站那格的人互換）。 */
-function renderSbSetupSwap(){
-  var el=document.getElementById('sb-setup-body');
-  function teamRow(team){
-    var names=team===1?sbState.t1p:sbState.t2p;
+/* ── 控分：開球設定（跟記分板本體同一套全螢幕、同一套色塊渲染）──
+   單一畫面設定完直接開始，不用再分頁：
+   - 拖一位球員到「對面隊伍」的色塊＝兩隊左右互換（取代原本的⇄交換按鈕）
+   - 拖一位球員到「自己隊伍的另一個位置」＝跟隊友換邊
+   - 輕點（幾乎沒移動）某位球員＝這位就是開局發球的人 —— 雙打規則裡 0:0
+     發球一定站右邊，所以點誰就直接把誰擺到右邊格、該隊設為發球方
+   都是同一組手勢（見 sbSetupRowDown/Move/Up），跟計分階段的拖曳/輕點分開一套。
+   選了發球者才能按「開始計分」。 */
+function renderSbSetupBoard(){
+  var el=document.getElementById('sb-body');
+  el.className='sb-body sb-setup-board';
+  function row(team,idx,label){
     var rightIdx=team===1?sbState.t1RightIdx:sbState.t2RightIdx;
-    var serving=team===sbSetupTeam;
-    function slot(idx,side){
-      return '<div class="sb-swap-slot" data-team="'+team+'" data-side="'+side+'">'
-        +'<div class="sb-swap-slot-label">'+(side==='R'?'右':'左')+'</div>'
-        +'<div class="sb-swap-chip'+(team===2?' t2':'')+'" onpointerdown="sbSwapPointerDown(event,'+team+')">'+esc(names[idx]||'')+'</div>'
-        +'</div>';
-    }
-    return '<div class="sb-setup-team-row'+(serving?' sb-setup-serving':'')+'">'
-      +'<div class="sb-setup-team-name">隊伍 '+team+(serving?'（先發球）':'（接發球）')+'</div>'
-      +'<div class="sb-swap-row">'+slot(rightIdx,'R')+slot(1-rightIdx,'L')+'</div>'
+    var names=team===1?sbState.t1p:sbState.t2p;
+    var serving=sbState.server===team&&idx===rightIdx;
+    return '<div class="sb-name-row sb-setup-row'+(serving?' sb-name-serve':'')+'" data-team="'+team+'" data-idx="'+idx+'"'
+      +' onpointerdown="sbSetupRowDown(event,'+team+','+idx+')">'
+      +(serving?'<span class="sb-ball">🏸</span>':'')
+      +'<span class="sb-name-text">'+esc(names[idx]||'')+'</span>'
+      +'<span class="sb-name-side">'+label+'</span>'
       +'</div>';
   }
-  var rightTeam=sbState.leftTeam===1?2:1;
-  el.innerHTML='<div style="font-weight:700;margin-bottom:4px;color:var(--t)">確認雙方站位</div>'
-    +'<div style="font-size:.76rem;color:var(--m);margin-bottom:12px">拖曳球員可以跟隊友互換左右邊</div>'
-    +'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:14px">'
-    +'<span style="font-size:.78rem;color:var(--t)">控分畫面：<b>隊伍'+sbState.leftTeam+'在左、隊伍'+rightTeam+'在右</b><br><span style="color:var(--m);font-size:.7rem">查看記分板會自動顯示相反方向（面對面的角度）</span></span>'
-    +'<button class="btn bo" style="padding:8px 12px;font-size:.78rem;flex-shrink:0" onclick="sbToggleLeftTeam()">⇄ 交換</button>'
-    +'</div>'
-    +'<div class="sb-setup-swap">'+teamRow(1)+teamRow(2)+'</div>'
-    +'<button class="btn bp" style="width:100%" onclick="sbConfirmSetup()">✓ 確認，開始計分</button>'
-    +'<button class="btn bo" style="width:100%;margin-top:6px" onclick="sbSetupTeam=null;renderSbSetup()">上一步</button>';
-}
-function sbToggleLeftTeam(){
-  sbState.leftTeam=sbState.leftTeam===1?2:1;
-  renderSbSetupSwap();
-}
-var sbSwapDrag=null;
-function sbSwapPointerDown(e,team){
-  e.preventDefault();
-  var chip=e.currentTarget;
-  var slot=chip.closest('.sb-swap-slot');
-  var ghost=document.createElement('div');
-  ghost.className='sb-swap-ghost'+(team===2?' t2':'');
-  ghost.style.background=team===1?'#2563eb':'#dc2626';
-  ghost.textContent=chip.textContent;
-  document.body.appendChild(ghost);
-  sbSwapDrag={team:team,origSide:slot.dataset.side,ghost:ghost};
-  chip.classList.add('sb-swap-dragging');
-  sbSwapMove(e);
-  document.addEventListener('pointermove',sbSwapMove);
-  document.addEventListener('pointerup',sbSwapUp);
-}
-function sbSwapMove(e){
-  if(!sbSwapDrag)return;
-  sbSwapDrag.ghost.style.left=(e.clientX-42)+'px';
-  sbSwapDrag.ghost.style.top=(e.clientY-18)+'px';
-}
-function sbSwapUp(e){
-  if(!sbSwapDrag)return;
-  document.removeEventListener('pointermove',sbSwapMove);
-  document.removeEventListener('pointerup',sbSwapUp);
-  var d=sbSwapDrag;sbSwapDrag=null;
-  d.ghost.remove();
-  var chip=document.querySelector('.sb-swap-dragging');
-  if(chip)chip.classList.remove('sb-swap-dragging');
-  var el=document.elementFromPoint(e.clientX,e.clientY);
-  var slot=el&&el.closest('.sb-swap-slot');
-  if(slot&&parseInt(slot.dataset.team,10)===d.team&&slot.dataset.side!==d.origSide){
-    if(d.team===1)sbState.t1RightIdx=1-sbState.t1RightIdx;
-    else sbState.t2RightIdx=1-sbState.t2RightIdx;
-    renderSbSetupSwap();
+  function panel(team,isLeftSide){
+    var rightIdx=team===1?sbState.t1RightIdx:sbState.t2RightIdx;
+    var topIdx=isLeftSide?1-rightIdx:rightIdx, topLabel=isLeftSide?'左':'右';
+    var botIdx=isLeftSide?rightIdx:1-rightIdx, botLabel=isLeftSide?'右':'左';
+    return '<div class="sb-team t'+team+'" data-team="'+team+'">'
+      +'<div class="sb-team-label">隊伍 '+team+'</div>'
+      +row(team,topIdx,topLabel)
+      +'<div class="sb-setup-mid">拖曳換邊・點選開球者</div>'
+      +row(team,botIdx,botLabel)
+      +'</div>';
   }
+  var t1Left=sbState.leftTeam!==2;
+  var p1=panel(1,t1Left), p2=panel(2,!t1Left);
+  el.innerHTML='<div class="sb-setup-teams">'+(t1Left?(p1+p2):(p2+p1))+'</div>'
+    +'<div class="sb-setup-bar"><button class="btn bp" id="sb-setup-start"'+(sbState.server?'':' disabled')+' onclick="sbConfirmSetup()">▶ 開始計分</button></div>';
+}
+var sbSetupDrag=null;
+function sbSetupRowDown(e,team,idx){
+  e.preventDefault();
+  var row=e.currentTarget;
+  var ghost=document.createElement('div');
+  ghost.className='sb-swap-ghost';
+  ghost.style.background=team===1?'#2563eb':'#dc2626';
+  ghost.textContent=row.querySelector('.sb-name-text').textContent;
+  document.body.appendChild(ghost);
+  sbSetupDrag={team:team,idx:idx,ghost:ghost,startX:e.clientX,startY:e.clientY,moved:false};
+  sbSetupMove(e);
+  document.addEventListener('pointermove',sbSetupMove);
+  document.addEventListener('pointerup',sbSetupUp);
+}
+function sbSetupMove(e){
+  if(!sbSetupDrag)return;
+  var d=sbSetupDrag;
+  if(!d.moved&&(Math.abs(e.clientX-d.startX)>8||Math.abs(e.clientY-d.startY)>8))d.moved=true;
+  d.ghost.style.left=(e.clientX-42)+'px';
+  d.ghost.style.top=(e.clientY-18)+'px';
+}
+function sbSetupUp(e){
+  if(!sbSetupDrag)return;
+  document.removeEventListener('pointermove',sbSetupMove);
+  document.removeEventListener('pointerup',sbSetupUp);
+  var d=sbSetupDrag;sbSetupDrag=null;
+  d.ghost.remove();
+  if(!d.moved){
+    /* 輕點＝指定這位開球：搬去自己隊伍的右邊格（0:0 發球規則），該隊設為發球方 */
+    if(d.team===1)sbState.t1RightIdx=d.idx;else sbState.t2RightIdx=d.idx;
+    sbState.server=d.team;
+    renderSbSetupBoard();
+    return;
+  }
+  var el2=document.elementFromPoint(e.clientX,e.clientY);
+  var targetRow=el2&&el2.closest('.sb-name-row[data-team]');
+  var pTeam=null;
+  if(targetRow){
+    pTeam=parseInt(targetRow.dataset.team,10);
+    if(pTeam===d.team&&parseInt(targetRow.dataset.idx,10)===d.idx){renderSbSetupBoard();return;}
+  }else{
+    var panel=el2&&el2.closest('.sb-team[data-team]');
+    if(panel)pTeam=parseInt(panel.dataset.team,10);
+  }
+  if(pTeam===d.team){
+    if(d.team===1)sbState.t1RightIdx=1-sbState.t1RightIdx;else sbState.t2RightIdx=1-sbState.t2RightIdx;
+  }else if(pTeam){
+    sbState.leftTeam=sbState.leftTeam===1?2:1;
+  }
+  renderSbSetupBoard();
 }
 function sbConfirmSetup(){
-  sbState.server=sbSetupTeam;
-  sbSetupTeam=null;
-  document.getElementById('sb-setup-mo').classList.remove('show');
+  if(!sbState.server)return;
+  document.getElementById('sb-overlay').classList.remove('show');
   sbSyncAndRender();
-}
-function sbCancelSetup(){
-  if(sbSwapDrag){document.removeEventListener('pointermove',sbSwapMove);document.removeEventListener('pointerup',sbSwapUp);sbSwapDrag.ghost.remove();sbSwapDrag=null;}
-  document.getElementById('sb-setup-mo').classList.remove('show');
-  sbRole=null;sbCourtIdx=-1;sbSetupTeam=null;
 }
 
 /* ── 計分面板：控分卡片跟純顯示端共用同一套渲染 ── */
@@ -2375,7 +2363,7 @@ function sbSyncAndRender(prevSnapshot){
   }).catch(function(){toast('記分板連線失敗，請檢查網路');});
 }
 function sbCloseInline(){
-  sbRole=null;sbCourtIdx=-1;sbSetupTeam=null;
+  sbRole=null;sbCourtIdx=-1;
   renderScheduling();
 }
 function sbCancelInline(){
@@ -2444,7 +2432,8 @@ function sbCloseOverlay(){
   sbStaleTimer=null;
   sbLastDoc=null;
   sbRole=null;
-  sbSetupTeam=null;
+  sbCourtIdx=-1;
+  if(sbSetupDrag){document.removeEventListener('pointermove',sbSetupMove);document.removeEventListener('pointerup',sbSetupUp);sbSetupDrag.ghost.remove();sbSetupDrag=null;}
 }
 function sbExit(){
   sbCloseOverlay();
@@ -2786,7 +2775,7 @@ function endGame(){
 function confirmEndGame(){
   document.getElementById('end-game-mo').classList.remove('show');
   if(sbRole==='control'&&sbCourtIdx>=0)sbDocRef(sbCourtIdx).delete().catch(function(){});
-  sbRole=null;sbCourtIdx=-1;sbSetupTeam=null;
+  sbRole=null;sbCourtIdx=-1;
   sched.active=false;sched.playing=[];sched.queue=[];sched.history=[];sched.counts={};sched.attending=[];
   players.forEach(function(p){p.selected=false;});
   gameMode=null;
