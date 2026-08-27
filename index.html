@@ -733,7 +733,17 @@ body.dark .court-opt.sel{background:#1e3a5f}
     <button class="btn bo" style="width:100%;font-size:.85rem" onclick="linkGoogle()">綁定 Google 帳號</button>
     <div style="font-size:.75rem;color:var(--m);margin-top:6px">綁定後可同時用 Google 或手機號碼登入同一帳號</div>
   </div>
+  <button class="btn bo" style="width:100%;margin-bottom:10px" onclick="hideSettings();showSbCourtPicker()">📺 查看記分板</button>
   <button class="btn bd" style="width:100%" onclick="doLogout()">登出</button>
+</div>
+</div>
+
+<!-- 記分板：直接查看（不需要這台裝置自己有排點資料） -->
+<div class="mo" id="sb-pick-mo" onclick="document.getElementById('sb-pick-mo').classList.remove('show')">
+<div class="mb" onclick="event.stopPropagation()">
+  <h2 style="margin-bottom:14px">查看哪個場地的比分？</h2>
+  <div style="display:flex;flex-direction:column;gap:10px" id="sb-pick-body"></div>
+  <button class="btn bo" style="width:100%;margin-top:12px" onclick="document.getElementById('sb-pick-mo').classList.remove('show')">取消</button>
 </div>
 </div>
 
@@ -1972,6 +1982,22 @@ function showScoreboardRole(idx){
 }
 function hideSbRole(){
   document.getElementById('sb-role-mo').classList.remove('show');
+}
+/* 設定 → 查看記分板：純顯示端入口，不靠這台裝置自己有排點資料（sched.playing）
+   才看得到場地卡片 — 排點狀態本來就沒有跨裝置同步，所以平板只要跟控分那台
+   登入同一個帳號，直接選場地編號就能看，不用自己也跑一次排點。 */
+function showSbCourtPicker(){
+  var body=document.getElementById('sb-pick-body');
+  body.innerHTML=[0,1,2,3].map(function(i){
+    return '<button class="sb-role-opt" onclick="pickSbCourt('+i+')">場地 '+(i+1)+'</button>';
+  }).join('');
+  document.getElementById('sb-pick-mo').classList.add('show');
+}
+function pickSbCourt(idx){
+  document.getElementById('sb-pick-mo').classList.remove('show');
+  sbCourtIdx=idx;
+  sbRole='display';
+  sbStartDisplay();
 }
 function sbChooseRole(role){
   hideSbRole();
