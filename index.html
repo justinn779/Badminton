@@ -259,12 +259,17 @@ body.dark .queue-warn{background:#3b1515}
 .sb-team-label{position:absolute;top:8px;font-size:.68rem;font-weight:700;color:rgba(255,255,255,.7);letter-spacing:.03em}
 .sb-team.t1 .sb-team-label{left:10px}
 .sb-team.t2 .sb-team-label{right:10px}
-.sb-name-row{display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%;padding:0 6px}
-.sb-name-text{font-size:min(8.5vw,2.3rem);font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.sb-name-row{display:flex;align-items:center;justify-content:center;gap:10px;max-width:100%;padding:0 6px}
+.sb-name-text{font-size:min(9.5vw,12vh,130px);font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .sb-name-row.sb-name-serve .sb-name-text{color:var(--w)}
-.sb-name-side{font-size:min(3.2vw,.72rem);color:rgba(255,255,255,.65);font-weight:700;flex-shrink:0}
-.sb-ball{font-size:min(6.5vw,1.6rem);flex-shrink:0}
-.sb-score{font-size:min(24vw,30vh,190px);font-weight:800;line-height:1;color:#fff;margin:2px 0}
+.sb-name-side{font-size:min(3.2vw,4vh,36px);color:rgba(255,255,255,.65);font-weight:700;flex-shrink:0}
+.sb-ball{font-size:min(8vw,9.5vh,105px);flex-shrink:0}
+.sb-score{font-size:min(30vw,40vh,460px);font-weight:800;line-height:1;color:#fff;margin:4px 0}
+/* Fullscreen display specifically (not the compact inline control card) —
+   the panel is basically full viewport height, so give the name/score/name
+   stack more breathing room to actually use it (~85-90% of the half),
+   while staying safely under 100% since .sb-team clips overflow. */
+.sb-body.sb-scoreboard .sb-team{gap:1.6vh}
 
 /* Inline control card — sits above 排點's courts-grid instead of taking over
    the screen, so the app is fully usable while a match is being scored. */
