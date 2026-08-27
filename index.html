@@ -632,6 +632,18 @@ body.dark .court-opt.sel{background:#1e3a5f}
 </div>
 </div>
 
+<!-- 本場結束／記分板結束比賽 確認 Modal（共用，避免誤按直接結束） -->
+<div class="mo" id="end-match-mo" onclick="cancelEndMatch()">
+<div class="mb" onclick="event.stopPropagation()">
+  <h2>確定要結束本場嗎？</h2>
+  <p>結束後會進入填寫/確認比賽結果的畫面。</p>
+  <div class="ma">
+    <button class="btn bo" onclick="cancelEndMatch()">取消</button>
+    <button class="btn bd" onclick="runEndMatch()">確定結束</button>
+  </div>
+</div>
+</div>
+
 <!-- 人員不足 Modal -->
 <div class="mo" id="no-player-mo">
 <div class="mb">
@@ -2006,7 +2018,7 @@ function finishNoScore(idx){
    listener and vice versa. */
 var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbSetupTeam=null,sbStaleTimer=null,sbLastDoc=null;
 var sbState={s1:0,s2:0,t1p:['',''],t2p:['',''],t1RightIdx:0,t2RightIdx:0,server:null,hist:[]};
-var SB_STALE_MS=3*60*1000; // no score update in 3 min → treat as abandoned (see closing-the-app cleanup below)
+var SB_STALE_MS=10*60*1000; // no score update in 10 min → treat as abandoned (see closing-the-app cleanup below)
 
 function sbDocRef(idx){
   return db.collection('users').doc(currentUser.uid).collection('live').doc('court'+idx);
@@ -2187,11 +2199,13 @@ function sbServerIdx(team,score,rightIdx,server){
   return (score%2===0)?rightIdx:(1-rightIdx);
 }
 /* interactive=true (控分端): 點整個色塊就是幫這隊加分，不用另外按鈕。
-   右/左是站在該隊自己的角度、面對對手時的左右手，所以隊伍1（面向右）跟
-   隊伍2（面向左）左右剛好相反，就像兩人面對面時彼此的左右手是對調的
-   （隊伍1右在下、隊伍2右在上），不是兩隊都一樣。目前發球的人名字旁邊會
-   有 🏸。 */
-function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
+   右/左是站在該隊自己的角度、面對對手時的左右手，跟「畫面上實際站在哪一
+   側」有關，不是跟隊伍編號綁死的 — 因為兩隊誰在左誰在右是可以交換的
+   （見 leftTeam），畫面左側的那隊面向右邊，右手指向畫面下方；畫面右側
+   的那隊面向左邊，右手指向畫面上方（兩人面對面，左右互為鏡像）。所以呼
+   叫端要傳「這個面板現在畫在螢幕左側嗎」，不能用 team===1 猜。目前發球
+   的人名字旁邊會有 🏸。 */
+function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide){
   var serverIdx=sbServerIdx(team,score,rightIdx,server);
   function nameRow(idx,label){
     var serving=idx===serverIdx;
@@ -2201,13 +2215,8 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
       +'<span class="sb-name-side">'+label+'</span>'
       +'</div>';
   }
-  /* Right/left is defined from each player's own perspective facing their
-     opponent — so with team1 on screen-left facing right (toward the net)
-     and team2 on screen-right facing left, team1's right hand points toward
-     the BOTTOM of the screen while team2's right hand points toward the
-     TOP (mirror image, like two people facing each other). */
-  var topIdx=team===1?1-rightIdx:rightIdx, topLabel=team===1?'左':'右';
-  var botIdx=team===1?rightIdx:1-rightIdx, botLabel=team===1?'右':'左';
+  var topIdx=isLeftSide?1-rightIdx:rightIdx, topLabel=isLeftSide?'左':'右';
+  var botIdx=isLeftSide?rightIdx:1-rightIdx, botLabel=isLeftSide?'右':'左';
   return '<div class="sb-team t'+team+(interactive?' sb-interactive':'')+'"'
     +(interactive?' onclick="sbScore('+team+')"':'')+'>'
     +'<div class="sb-team-label">隊伍 '+team+'</div>'
@@ -2220,8 +2229,9 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
    比賽/尚未排點）不會有東西呼叫這裡，因為 sbCloseInline 會清空 sbCourtIdx。 */
 function renderSbCard(){
   if(sbRole!=='control'||sbCourtIdx<0)return '';
-  var p1=sbTeamPanelHtml(1,sbState.t1p,sbState.s1,sbState.t1RightIdx,sbState.server,true);
-  var p2=sbTeamPanelHtml(2,sbState.t2p,sbState.s2,sbState.t2RightIdx,sbState.server,true);
+  var t1Left=sbState.leftTeam!==2;
+  var p1=sbTeamPanelHtml(1,sbState.t1p,sbState.s1,sbState.t1RightIdx,sbState.server,true,t1Left);
+  var p2=sbTeamPanelHtml(2,sbState.t2p,sbState.s2,sbState.t2RightIdx,sbState.server,true,!t1Left);
   var panels=sbState.leftTeam===2?(p2+p1):(p1+p2);
   return '<div class="card sb-card">'
     +'<div class="sb-card-hdr">'
@@ -2231,7 +2241,7 @@ function renderSbCard(){
     +'<div class="sb-card-courts">'+panels+'</div>'
     +'<div class="sb-card-ctrl">'
     +'<button class="btn bo" onclick="event.stopPropagation();sbUndo()"'+(sbState.hist.length?'':' disabled')+'>↩️ 撤銷上一步</button>'
-    +'<button class="btn bd" onclick="event.stopPropagation();sbFinish()">結束比賽</button>'
+    +'<button class="btn bd" onclick="event.stopPropagation();confirmEndMatch(\'sb\')">結束比賽</button>'
     +'</div>'
     +'</div>';
 }
@@ -2317,16 +2327,17 @@ function sbRenderDisplay(){
   var d=doc.data();
   if(sbIsStale(d)){
     el.className='sb-body';
-    el.innerHTML='<div class="eh" style="margin:auto;padding:0 28px;text-align:center;line-height:1.6">⏸️ 這場記分板已超過 3 分鐘沒有更新<br>控分端可能已經關閉，比分僅供參考</div>';
+    el.innerHTML='<div class="eh" style="margin:auto;padding:0 28px;text-align:center;line-height:1.6">⏸️ 這場記分板已超過 10 分鐘沒有更新<br>控分端可能已經關閉，比分僅供參考</div>';
     return;
   }
   el.className='sb-body sb-scoreboard';
-  var p1=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false);
-  var p2=sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false);
   /* 查看記分板面對球員，跟控分端（自己看）是相反方向站，所以顯示順序永遠
      是控分畫面的鏡射：控分把隊伍1放左邊，這裡就放右邊。 */
   var controlLeftTeam=d.leftTeam||1;
-  el.innerHTML=controlLeftTeam===1?(p2+p1):(p1+p2);
+  var t1Left=controlLeftTeam!==1;
+  var p1=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false,t1Left);
+  var p2=sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false,!t1Left);
+  el.innerHTML=t1Left?(p1+p2):(p2+p1);
 }
 function sbCloseOverlay(){
   document.getElementById('sb-overlay').classList.remove('show');
@@ -2684,6 +2695,28 @@ function confirmEndGame(){
   renderGameTab();
 }
 
+/* 「本場結束」（場地卡片）跟「結束比賽」（記分板卡片）共用同一個確認視窗，
+   避免手滑直接把比賽結束掉。確認後才真的執行原本的動作。 */
+var pendingEnd=null;
+function confirmEndMatch(type,idx){
+  pendingEnd={type:type,idx:idx};
+  document.getElementById('end-match-mo').classList.add('show');
+}
+function cancelEndMatch(){
+  pendingEnd=null;
+  document.getElementById('end-match-mo').classList.remove('show');
+}
+function runEndMatch(){
+  document.getElementById('end-match-mo').classList.remove('show');
+  var p=pendingEnd;pendingEnd=null;
+  if(!p)return;
+  if(p.type==='court'){
+    if(sched.recordScore===false)finishNoScore(p.idx);else showScoreModal(p.idx);
+  }else if(p.type==='sb'){
+    sbFinish();
+  }
+}
+
 function renderRoundCard(round){
   function teamHtml(team){
     return '<div class="sched-team">'
@@ -2786,7 +2819,7 @@ function renderScheduling(){
           +'<button class="btn bo" onclick="showEditPlaying('+idx+')">換人</button>'
           +'<button class="btn bo" onclick="skipCourtRound('+idx+')">跳過本場</button>'
           +'<button class="btn bo" onclick="showScoreboardRole('+idx+')">記分板</button>'
-          +'<button class="btn bp" onclick="'+(sched.recordScore===false?'finishNoScore':'showScoreModal')+'('+idx+')">本場結束</button>'
+          +'<button class="btn bp" onclick="confirmEndMatch(\'court\','+idx+')">本場結束</button>'
           +'</div></div>'
           +renderRoundCard(round)+'</div>';
       }else{
