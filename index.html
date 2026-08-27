@@ -267,10 +267,8 @@ body.dark .queue-warn{background:#3b1515}
 .sb-body.sb-scoreboard .sb-team{gap:1.6vh}
 
 /* 開球設定：小視窗（不是全螢幕），套用跟控分卡片一樣的縮小尺寸
-   （.sb-card-courts，見下方），球員色塊中間的比分數字位置換成拖曳／
-   點選的提示文字。 */
+   （.sb-card-courts，見下方）。 */
 .sb-setup-row{cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
-.sb-setup-mid{font-size:.62rem;color:rgba(255,255,255,.55);font-weight:600;text-align:center;padding:2px 6px;line-height:1.4}
 
 /* Inline control card — sits inside 排點's courts-grid in place of that
    court's plain card while this device is scoring it (see renderScheduling),
@@ -2158,7 +2156,6 @@ function renderSbSetupBoard(){
     return '<div class="sb-team '+(isLeftSide?'t1':'t2')+'" data-team="'+team+'">'
       +'<div class="sb-team-label">隊伍 '+team+'</div>'
       +row(team,topIdx,topLabel)
-      +'<div class="sb-setup-mid">拖曳換邊<br>點選開球者</div>'
       +row(team,botIdx,botLabel)
       +'</div>';
   }
@@ -2247,7 +2244,9 @@ function sbServerIdx(team,score,rightIdx,server){
    （見 leftTeam），畫面左側的那隊面向右邊，右手指向畫面下方；畫面右側
    的那隊面向左邊，右手指向畫面上方（兩人面對面，左右互為鏡像）。所以呼
    叫端要傳「這個面板現在畫在螢幕左側嗎」，不能用 team===1 猜。目前發球
-   的人名字旁邊會有 🏸。
+   的人名字旁邊會有 🏸。顏色（t1=藍/t2=紅的 class）也是固定在畫面左右邊，
+   不是跟著隊伍走——同樣用 isLeftSide 決定，兩隊交換邊時只有名字換，色塊
+   留在原本那側，跟開球設定畫面一致（見 renderSbSetupBoard 的 panel()）。
    swipeable=true（查看記分板顯示端）: 沒有另外的撤銷按鈕可按，改成同一
    個色塊「輕點＝加分、下滑＝退回上一分」用手勢辨識（見 sbPanelDown/Up），
    跟控分卡片單純 onclick 加分不同。 */
@@ -2266,7 +2265,7 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide
   var gestureAttrs=swipeable
     ?' onpointerdown="sbPanelDown(event,'+team+')" onpointerup="sbPanelUp(event,'+team+')" onpointercancel="sbPanelCancel()"'
     :' onclick="sbScore('+ctrlIdx+','+team+')"';
-  return '<div class="sb-team t'+team+(interactive?' sb-interactive':'')+'"'
+  return '<div class="sb-team '+(isLeftSide?'t1':'t2')+(interactive?' sb-interactive':'')+'"'
     +(interactive?gestureAttrs:'')+'>'
     +'<div class="sb-team-label">隊伍 '+team+'</div>'
     +nameRow(topIdx,topLabel)
