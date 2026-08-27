@@ -266,19 +266,17 @@ body.dark .queue-warn{background:#3b1515}
    while staying safely under 100% since .sb-team clips overflow. */
 .sb-body.sb-scoreboard .sb-team{gap:1.6vh}
 
-/* 開球設定畫面：跟純顯示端共用 .sb-team/.sb-name-row 等視覺，只是把中間的
-   比分數字換成拖曳／點選的提示文字，下面多一條「開始計分」的固定操作列。 */
-.sb-body.sb-setup-board{flex-direction:column;padding:0;gap:0}
-.sb-setup-teams{flex:1;display:flex;flex-direction:row;min-height:0;gap:1.6vh}
-.sb-setup-teams .sb-team{gap:1.6vh}
+/* 開球設定：小視窗（不是全螢幕），套用跟控分卡片一樣的縮小尺寸
+   （.sb-card-courts，見下方），球員色塊中間的比分數字位置換成拖曳／
+   點選的提示文字。 */
 .sb-setup-row{cursor:grab;touch-action:none;-webkit-tap-highlight-color:transparent}
-.sb-setup-mid{font-size:.72rem;color:rgba(255,255,255,.55);font-weight:600;text-align:center;padding:2px 10px}
-.sb-setup-bar{flex-shrink:0;padding:14px;padding-bottom:calc(14px + env(safe-area-inset-bottom,0px));background:var(--c)}
-.sb-setup-bar .btn{width:100%;padding:16px;font-size:1rem}
+.sb-setup-mid{font-size:.62rem;color:rgba(255,255,255,.55);font-weight:600;text-align:center;padding:2px 6px;line-height:1.4}
 
-/* Inline control card — sits above 排點's courts-grid instead of taking over
-   the screen, so the app is fully usable while a match is being scored. */
-.sb-card{padding:0;overflow:hidden;margin-bottom:12px}
+/* Inline control card — sits inside 排點's courts-grid in place of that
+   court's plain card while this device is scoring it (see renderScheduling),
+   so the app is fully usable and other courts stay untouched. Multiple can
+   be active at once, one per court. */
+.sb-card{padding:0;overflow:hidden}
 .sb-card-hdr{display:flex;align-items:center;justify-content:space-between;padding:10px 14px}
 .sb-card-close{background:none;border:none;color:var(--m);font-size:1.1rem;line-height:1;cursor:pointer;padding:2px 8px;-webkit-tap-highlight-color:transparent}
 .sb-card-courts{display:flex;flex-direction:row;min-height:170px}
@@ -616,8 +614,13 @@ body.dark .court-opt.sel{background:#1e3a5f}
   </div>
 </div>
 </div>
-<!-- 記分板開球設定：跟記分板本體共用同一個全螢幕 overlay（見下方 #sb-overlay），
-     只是內容換成可拖曳的設定畫面，設定完按「開始計分」才切到排點上方的控分卡片 -->
+<!-- 記分板開球設定：小視窗，設定完直接關掉，控分本體是排點畫面上該場地的卡片 -->
+<div class="mo" id="sb-setup-mo" onclick="sbCancelSetup()">
+<div class="mb" onclick="event.stopPropagation()">
+  <h2 id="sb-setup-title" style="margin-bottom:14px">開球設定</h2>
+  <div id="sb-setup-body"></div>
+</div>
+</div>
 <!-- 記分板：純顯示端全螢幕（查看記分板 入口用） -->
 <div class="sb-overlay" id="sb-overlay">
   <div class="sb-hdr">
@@ -2021,8 +2024,10 @@ function finishNoScore(idx){
    onSnapshot. Kept in its own users/{uid}/live/court{N} doc, separate from
    the normal players/bill docs, so unrelated data edits never trigger this
    listener and vice versa. */
-var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbStaleTimer=null,sbLastDoc=null;
-var sbState={s1:0,s2:0,t1p:['',''],t2p:['',''],t1RightIdx:0,t2RightIdx:0,server:null,hist:[]};
+var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbStaleTimer=null,sbLastDoc=null; // 顯示端（查看記分板）專用，單一裝置一次只會看一場
+var sbCtrl={}; // idx -> 控分狀態 {s1,s2,t1p,t2p,t1RightIdx,t2RightIdx,server,leftTeam,hist}，這台裝置目前正在控分的所有場地，可以同時好幾場
+var sbModeOn=false; // 記分板「模式」：只要曾經開始過一次，之後任何場地補上新的一輪（上場／本場結束自動補位）都會自動跳出開球設定，不用每場都手動按「記分板」
+var sbSetupIdx=-1,sbSetupState=null; // 開球設定小視窗目前正在編輯的場地跟草稿狀態（跟 sbCtrl 分開，取消才不會留下半套資料）
 var SB_STALE_MS=10*60*1000; // actively-open viewer: no update in 10 min → flag as abandoned (long, so a normal pause between points doesn't flicker to an error)
 var SB_PICKER_STALE_MS=2*60*1000; // the "查看記分板" court list is stricter — don't offer picking a match that's been quiet this long
 
@@ -2045,31 +2050,32 @@ function sbIsStale(d,thresholdMs){
    fairly strict, and the picker's ✕ button letting anyone clear a session
    they know is dead immediately, without waiting on any timer at all. */
 window.addEventListener('pagehide',function(){
-  if(sbRole==='control'&&sbCourtIdx>=0&&currentUser){
-    try{sbDocRef(sbCourtIdx).delete();}catch(e){}
-  }
+  if(!currentUser)return;
+  Object.keys(sbCtrl).forEach(function(idx){
+    try{sbDocRef(idx).delete();}catch(e){}
+  });
 });
-/* 排點畫面場地卡片上的「記分板」：按下去這台裝置就是控分端，不用再選
-   角色 — 純顯示（給其他裝置看）走的是另一個入口（查看記分板），不會經過
-   這裡。開球設定畫在跟記分板本體同一個全螢幕 overlay 上（見 renderSbSetupBoard），
-   設定完按「開始計分」才切到排點畫面上方的控分卡片（見 renderSbCard）。 */
+/* 排點畫面場地卡片上的「記分板」，以及記分板模式開啟後新場次自動觸發
+   （見 finishCourt/startCourt）：跳出開球設定小視窗，預設先隨便指定隊伍1
+   的第一位開球，不用強迫使用者一定要點過一次才能開始——仍然可以拖曳／
+   點選調整，調完按「開始計分」才正式送出、變成排點畫面上該場地的控分卡片
+   （見 renderSbCard）。第一次成功送出會把 sbModeOn 打開。 */
 function showScoreboardRole(idx){
   var r=sched.playing[idx];
   if(!r)return;
-  sbCourtIdx=idx;
-  sbRole='control';
-  sbState={
+  sbSetupIdx=idx;
+  sbSetupState={
     s1:0,s2:0,
     t1p:r.t1.map(function(p){return p.name;}),
     t2p:r.t2.map(function(p){return p.name;}),
     t1RightIdx:0,t2RightIdx:0,
-    server:null,
+    server:1, /* 預設隊伍1第一位開球，使用者可以再改 */
     leftTeam:1, /* which team is on screen-left in 控分（this device）— 查看記分板 always shows the mirror of this, since it faces the players from the opposite side */
     hist:[]
   };
-  document.getElementById('sb-hdr-title').textContent='場地 '+(idx+1)+'・開球設定';
+  document.getElementById('sb-setup-title').textContent='場地 '+(idx+1)+'・開球設定';
   renderSbSetupBoard();
-  document.getElementById('sb-overlay').classList.add('show');
+  document.getElementById('sb-setup-mo').classList.add('show');
 }
 /* 比賽分頁「開始比賽」下方的純顯示端入口：不靠這台裝置自己有排點資料
    （sched.playing）才看得到場地卡片 — 排點狀態本來就沒有跨裝置同步，所以
@@ -2115,21 +2121,22 @@ function pickSbCourt(idx){
   sbRole='display';
   sbStartDisplay();
 }
-/* ── 控分：開球設定（跟記分板本體同一套全螢幕、同一套色塊渲染）──
-   單一畫面設定完直接開始，不用再分頁：
+/* ── 控分：開球設定（小視窗，套用跟控分卡片一樣的縮小尺寸）──
+   一個畫面設定完直接開始，不用再分頁：
    - 拖一位球員到「對面隊伍」的色塊＝兩隊左右互換（取代原本的⇄交換按鈕）
    - 拖一位球員到「自己隊伍的另一個位置」＝跟隊友換邊
    - 輕點（幾乎沒移動）某位球員＝這位就是開局發球的人 —— 雙打規則裡 0:0
      發球一定站右邊，所以點誰就直接把誰擺到右邊格、該隊設為發球方
    都是同一組手勢（見 sbSetupRowDown/Move/Up），跟計分階段的拖曳/輕點分開一套。
-   選了發球者才能按「開始計分」。 */
+   一進來就預設隊伍1第一位開球（見 showScoreboardRole），所以「開始計分」
+   一開始就能按，不用強迫先點過誰才能開始。 */
 function renderSbSetupBoard(){
-  var el=document.getElementById('sb-body');
-  el.className='sb-body sb-setup-board';
+  var el=document.getElementById('sb-setup-body');
+  var st=sbSetupState;
   function row(team,idx,label){
-    var rightIdx=team===1?sbState.t1RightIdx:sbState.t2RightIdx;
-    var names=team===1?sbState.t1p:sbState.t2p;
-    var serving=sbState.server===team&&idx===rightIdx;
+    var rightIdx=team===1?st.t1RightIdx:st.t2RightIdx;
+    var names=team===1?st.t1p:st.t2p;
+    var serving=st.server===team&&idx===rightIdx;
     return '<div class="sb-name-row sb-setup-row'+(serving?' sb-name-serve':'')+'" data-team="'+team+'" data-idx="'+idx+'"'
       +' onpointerdown="sbSetupRowDown(event,'+team+','+idx+')">'
       +(serving?'<span class="sb-ball">🏸</span>':'')
@@ -2138,20 +2145,21 @@ function renderSbSetupBoard(){
       +'</div>';
   }
   function panel(team,isLeftSide){
-    var rightIdx=team===1?sbState.t1RightIdx:sbState.t2RightIdx;
+    var rightIdx=team===1?st.t1RightIdx:st.t2RightIdx;
     var topIdx=isLeftSide?1-rightIdx:rightIdx, topLabel=isLeftSide?'左':'右';
     var botIdx=isLeftSide?rightIdx:1-rightIdx, botLabel=isLeftSide?'右':'左';
     return '<div class="sb-team t'+team+'" data-team="'+team+'">'
       +'<div class="sb-team-label">隊伍 '+team+'</div>'
       +row(team,topIdx,topLabel)
-      +'<div class="sb-setup-mid">拖曳換邊・點選開球者</div>'
+      +'<div class="sb-setup-mid">拖曳換邊<br>點選開球者</div>'
       +row(team,botIdx,botLabel)
       +'</div>';
   }
-  var t1Left=sbState.leftTeam!==2;
+  var t1Left=st.leftTeam!==2;
   var p1=panel(1,t1Left), p2=panel(2,!t1Left);
-  el.innerHTML='<div class="sb-setup-teams">'+(t1Left?(p1+p2):(p2+p1))+'</div>'
-    +'<div class="sb-setup-bar"><button class="btn bp" id="sb-setup-start"'+(sbState.server?'':' disabled')+' onclick="sbConfirmSetup()">▶ 開始計分</button></div>';
+  el.innerHTML='<div class="sb-card-courts">'+(t1Left?(p1+p2):(p2+p1))+'</div>'
+    +'<button class="btn bp" style="width:100%;margin-top:14px" onclick="sbConfirmSetup()">▶ 開始計分</button>'
+    +'<button class="btn bo" style="width:100%;margin-top:8px" onclick="sbCancelSetup()">取消</button>';
 }
 var sbSetupDrag=null;
 function sbSetupRowDown(e,team,idx){
@@ -2180,10 +2188,12 @@ function sbSetupUp(e){
   document.removeEventListener('pointerup',sbSetupUp);
   var d=sbSetupDrag;sbSetupDrag=null;
   d.ghost.remove();
+  var st=sbSetupState;
+  if(!st)return;
   if(!d.moved){
     /* 輕點＝指定這位開球：搬去自己隊伍的右邊格（0:0 發球規則），該隊設為發球方 */
-    if(d.team===1)sbState.t1RightIdx=d.idx;else sbState.t2RightIdx=d.idx;
-    sbState.server=d.team;
+    if(d.team===1)st.t1RightIdx=d.idx;else st.t2RightIdx=d.idx;
+    st.server=d.team;
     renderSbSetupBoard();
     return;
   }
@@ -2198,16 +2208,25 @@ function sbSetupUp(e){
     if(panel)pTeam=parseInt(panel.dataset.team,10);
   }
   if(pTeam===d.team){
-    if(d.team===1)sbState.t1RightIdx=1-sbState.t1RightIdx;else sbState.t2RightIdx=1-sbState.t2RightIdx;
+    if(d.team===1)st.t1RightIdx=1-st.t1RightIdx;else st.t2RightIdx=1-st.t2RightIdx;
   }else if(pTeam){
-    sbState.leftTeam=sbState.leftTeam===1?2:1;
+    st.leftTeam=st.leftTeam===1?2:1;
   }
   renderSbSetupBoard();
 }
 function sbConfirmSetup(){
-  if(!sbState.server)return;
-  document.getElementById('sb-overlay').classList.remove('show');
-  sbSyncAndRender();
+  if(!sbSetupState||!sbSetupState.server)return;
+  var idx=sbSetupIdx;
+  sbCtrl[idx]=sbSetupState;
+  sbSetupIdx=-1;sbSetupState=null;
+  document.getElementById('sb-setup-mo').classList.remove('show');
+  sbModeOn=true;
+  sbSyncAndRender(idx,null);
+}
+function sbCancelSetup(){
+  if(sbSetupDrag){document.removeEventListener('pointermove',sbSetupMove);document.removeEventListener('pointerup',sbSetupUp);sbSetupDrag.ghost.remove();sbSetupDrag=null;}
+  document.getElementById('sb-setup-mo').classList.remove('show');
+  sbSetupIdx=-1;sbSetupState=null;
 }
 
 /* ── 計分面板：控分卡片跟純顯示端共用同一套渲染 ── */
@@ -2225,7 +2244,7 @@ function sbServerIdx(team,score,rightIdx,server){
    swipeable=true（查看記分板顯示端）: 沒有另外的撤銷按鈕可按，改成同一
    個色塊「輕點＝加分、下滑＝退回上一分」用手勢辨識（見 sbPanelDown/Up），
    跟控分卡片單純 onclick 加分不同。 */
-function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide,swipeable){
+function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide,swipeable,ctrlIdx){
   var serverIdx=sbServerIdx(team,score,rightIdx,server);
   function nameRow(idx,label){
     var serving=idx===serverIdx;
@@ -2239,7 +2258,7 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide
   var botIdx=isLeftSide?rightIdx:1-rightIdx, botLabel=isLeftSide?'右':'左';
   var gestureAttrs=swipeable
     ?' onpointerdown="sbPanelDown(event,'+team+')" onpointerup="sbPanelUp(event,'+team+')" onpointercancel="sbPanelCancel()"'
-    :' onclick="sbScore('+team+')"';
+    :' onclick="sbScore('+ctrlIdx+','+team+')"';
   return '<div class="sb-team t'+team+(interactive?' sb-interactive':'')+'"'
     +(interactive?gestureAttrs:'')+'>'
     +'<div class="sb-team-label">隊伍 '+team+'</div>'
@@ -2250,7 +2269,7 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide
 }
 /* ── 查看記分板顯示端的手勢：輕點加分、下滑退回上一分 ──
    輕點跟下滑都是直接寫回 Firestore（讀最新的 sbLastDoc 當基準），跟控分
-   卡片各自維護本地 sbState 是分開的兩條路——兩邊都可能同時在動這場比賽，
+   卡片各自維護本地 sbCtrl[idx] 是分開的兩條路——兩邊都可能同時在動這場比賽，
    這裡永遠以「當下讀到的最新資料」為準，寫回時一併附上 prev 快照，這樣
    不管上一分是哪一端按的，下滑退回都查得到、退得回去。 */
 var sbPanelTouch=null;
@@ -2293,23 +2312,25 @@ function sbDisplayUndo(team){
     leftTeam:d.leftTeam||1,prev:null,updatedAt:Date.now()
   }).catch(function(){toast('記分板連線失敗，請檢查網路');});
 }
-/* 排點畫面上方的記分板卡片（控分本體）。sched.active 為 false 時（結束
-   比賽/尚未排點）不會有東西呼叫這裡，因為 sbCloseInline 會清空 sbCourtIdx。 */
-function renderSbCard(){
-  if(sbRole!=='control'||sbCourtIdx<0)return '';
-  var t1Left=sbState.leftTeam!==2;
-  var p1=sbTeamPanelHtml(1,sbState.t1p,sbState.s1,sbState.t1RightIdx,sbState.server,true,t1Left);
-  var p2=sbTeamPanelHtml(2,sbState.t2p,sbState.s2,sbState.t2RightIdx,sbState.server,true,!t1Left);
-  var panels=sbState.leftTeam===2?(p2+p1):(p1+p2);
+/* 場地卡片位置上的記分板卡片（控分本體）——見 renderScheduling，
+   sbCtrl[idx] 存在時會取代該場地原本的 court-card。多個場地可以同時
+   各自有一張，不用互斥。 */
+function renderSbCard(idx){
+  var st=sbCtrl[idx];
+  if(!st)return '';
+  var t1Left=st.leftTeam!==2;
+  var p1=sbTeamPanelHtml(1,st.t1p,st.s1,st.t1RightIdx,st.server,true,t1Left,false,idx);
+  var p2=sbTeamPanelHtml(2,st.t2p,st.s2,st.t2RightIdx,st.server,true,!t1Left,false,idx);
+  var panels=st.leftTeam===2?(p2+p1):(p1+p2);
   return '<div class="card sb-card">'
     +'<div class="sb-card-hdr">'
-    +'<span class="court-label">場地 '+(sbCourtIdx+1)+'・記分板</span>'
-    +'<button class="sb-card-close" onclick="sbCancelInline()">✕</button>'
+    +'<span class="court-label">場地 '+(idx+1)+'・記分板</span>'
+    +'<button class="sb-card-close" onclick="sbCancelInline('+idx+')">✕</button>'
     +'</div>'
     +'<div class="sb-card-courts">'+panels+'</div>'
     +'<div class="sb-card-ctrl">'
-    +'<button class="btn bo" onclick="event.stopPropagation();sbUndo()"'+(sbState.hist.length?'':' disabled')+'>↩️ 撤銷上一步</button>'
-    +'<button class="btn bd" onclick="event.stopPropagation();confirmEndMatch(\'sb\')">結束比賽</button>'
+    +'<button class="btn bo" onclick="event.stopPropagation();sbUndo('+idx+')"'+(st.hist.length?'':' disabled')+'>↩️ 撤銷上一步</button>'
+    +'<button class="btn bd" onclick="event.stopPropagation();confirmEndMatch(\'sb\','+idx+')">結束比賽</button>'
     +'</div>'
     +'</div>';
 }
@@ -2328,52 +2349,59 @@ function sbApplyScoreDelta(s,team){
   }
   return n;
 }
-function sbScore(team){
-  var prev={s1:sbState.s1,s2:sbState.s2,t1RightIdx:sbState.t1RightIdx,t2RightIdx:sbState.t2RightIdx,server:sbState.server};
-  sbState.hist.push(prev);
-  if(sbState.hist.length>200)sbState.hist.shift();
-  var next=sbApplyScoreDelta(sbState,team);
-  sbState.s1=next.s1;sbState.s2=next.s2;sbState.t1RightIdx=next.t1RightIdx;sbState.t2RightIdx=next.t2RightIdx;sbState.server=next.server;
-  sbSyncAndRender(prev);
+function sbScore(idx,team){
+  var st=sbCtrl[idx];
+  if(!st)return;
+  var prev={s1:st.s1,s2:st.s2,t1RightIdx:st.t1RightIdx,t2RightIdx:st.t2RightIdx,server:st.server};
+  st.hist.push(prev);
+  if(st.hist.length>200)st.hist.shift();
+  var next=sbApplyScoreDelta(st,team);
+  st.s1=next.s1;st.s2=next.s2;st.t1RightIdx=next.t1RightIdx;st.t2RightIdx=next.t2RightIdx;st.server=next.server;
+  sbSyncAndRender(idx,prev);
 }
-function sbUndo(){
-  if(!sbState.hist.length)return;
-  var prev=sbState.hist.pop();
-  sbState.s1=prev.s1;sbState.s2=prev.s2;
-  sbState.t1RightIdx=prev.t1RightIdx;sbState.t2RightIdx=prev.t2RightIdx;
-  sbState.server=prev.server;
-  sbSyncAndRender(null);
+function sbUndo(idx){
+  var st=sbCtrl[idx];
+  if(!st||!st.hist.length)return;
+  var prev=st.hist.pop();
+  st.s1=prev.s1;st.s2=prev.s2;
+  st.t1RightIdx=prev.t1RightIdx;st.t2RightIdx=prev.t2RightIdx;
+  st.server=prev.server;
+  sbSyncAndRender(idx,null);
 }
 /* prevSnapshot (optional): the state right before this write, stored as
    `prev` in Firestore so ANY device — not just this one's local undo
    button — can correctly reverse the single most recent point (see
    sbDisplayUndo). Pass null/omit after an undo itself, since there's
    nothing further to quick-undo at that point. */
-function sbSyncAndRender(prevSnapshot){
+function sbSyncAndRender(idx,prevSnapshot){
   renderScheduling();
-  sbDocRef(sbCourtIdx).set({
+  var st=sbCtrl[idx];
+  if(!st)return;
+  sbDocRef(idx).set({
     active:true,
-    t1p:sbState.t1p,t2p:sbState.t2p,
-    s1:sbState.s1,s2:sbState.s2,
-    t1RightIdx:sbState.t1RightIdx,t2RightIdx:sbState.t2RightIdx,
-    server:sbState.server,
-    leftTeam:sbState.leftTeam,
+    t1p:st.t1p,t2p:st.t2p,
+    s1:st.s1,s2:st.s2,
+    t1RightIdx:st.t1RightIdx,t2RightIdx:st.t2RightIdx,
+    server:st.server,
+    leftTeam:st.leftTeam,
     prev:prevSnapshot||null,
     updatedAt:Date.now()
   }).catch(function(){toast('記分板連線失敗，請檢查網路');});
 }
-function sbCloseInline(){
-  sbRole=null;sbCourtIdx=-1;
+function sbCloseInline(idx){
+  delete sbCtrl[idx];
   renderScheduling();
 }
-function sbCancelInline(){
-  sbDocRef(sbCourtIdx).delete().catch(function(){});
-  sbCloseInline();
-}
-function sbFinish(){
-  var idx=sbCourtIdx,s1=sbState.s1,s2=sbState.s2;
+function sbCancelInline(idx){
   sbDocRef(idx).delete().catch(function(){});
-  sbCloseInline();
+  sbCloseInline(idx);
+}
+function sbFinish(idx){
+  var st=sbCtrl[idx];
+  if(!st)return;
+  var s1=st.s1,s2=st.s2;
+  sbDocRef(idx).delete().catch(function(){});
+  sbCloseInline(idx);
   showScoreModal(idx,{s1:s1,s2:s2});
 }
 
@@ -2433,7 +2461,6 @@ function sbCloseOverlay(){
   sbLastDoc=null;
   sbRole=null;
   sbCourtIdx=-1;
-  if(sbSetupDrag){document.removeEventListener('pointermove',sbSetupMove);document.removeEventListener('pointerup',sbSetupUp);sbSetupDrag.ghost.remove();sbSetupDrag=null;}
 }
 function sbExit(){
   sbCloseOverlay();
@@ -2750,6 +2777,8 @@ function finishCourt(idx,recordCounts){
     var chip=document.querySelector('.pc-cnt[data-pid="'+id+'"]');
     if(chip){chip.classList.remove('num-up');void chip.offsetWidth;chip.classList.add('num-up');}
   });
+  /* 記分板模式開啟後，這個場地補上的新一輪自動跳出開球設定，不用再手動按「記分板」 */
+  if(sbModeOn&&sched.playing[idx])showScoreboardRole(idx);
 }
 
 function skipCourtRound(idx){
@@ -2767,6 +2796,8 @@ function startCourt(idx){
   renderScheduling();
   var card=document.querySelector('.court-card[data-court="'+idx+'"]');
   if(card)card.classList.add('round-enter');
+  /* 記分板模式開啟後，任何場地上場都自動跳出開球設定 */
+  if(sbModeOn)showScoreboardRole(idx);
 }
 
 function endGame(){
@@ -2774,8 +2805,9 @@ function endGame(){
 }
 function confirmEndGame(){
   document.getElementById('end-game-mo').classList.remove('show');
-  if(sbRole==='control'&&sbCourtIdx>=0)sbDocRef(sbCourtIdx).delete().catch(function(){});
-  sbRole=null;sbCourtIdx=-1;
+  Object.keys(sbCtrl).forEach(function(idx){sbDocRef(idx).delete().catch(function(){});});
+  sbCtrl={};
+  sbModeOn=false;
   sched.active=false;sched.playing=[];sched.queue=[];sched.history=[];sched.counts={};sched.attending=[];
   players.forEach(function(p){p.selected=false;});
   gameMode=null;
@@ -2800,7 +2832,7 @@ function runEndMatch(){
   if(p.type==='court'){
     if(sched.recordScore===false)finishNoScore(p.idx);else showScoreModal(p.idx);
   }else if(p.type==='sb'){
-    sbFinish();
+    sbFinish(p.idx);
   }
 }
 
@@ -2891,14 +2923,14 @@ function renderScheduling(){
     body+='<div class="card"><div class="eh">請先點「▶ 開始今日比賽」選擇今日出席球員</div></div>';
   }
 
-  /* 記分板控分卡片：有進行中的控分才會出現，蓋在場地清單上方 */
-  body+=renderSbCard();
-
   /* courts currently playing */
   if(sched.active&&sched.playing.length){
     body+='<div class="courts-grid">';
     sched.playing.forEach(function(round,idx){
-      if(round){
+      if(sbCtrl[idx]){
+        /* 這個場地目前是控分卡片，取代原本的 court-card；多個場地可以同時這樣 */
+        body+=renderSbCard(idx);
+      }else if(round){
         body+='<div class="court-card round-current" data-court="'+idx+'">'
           +'<div class="court-hdr">'
           +'<span class="court-label">場地 '+(idx+1)+'</span>'
