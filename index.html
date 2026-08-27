@@ -224,6 +224,18 @@ body.dark .queue-warn{background:#3b1515}
 /* Scoreboard */
 .sb-role-opt{width:100%;padding:20px;font-size:1.05rem;font-weight:700;border-radius:14px;margin-bottom:12px;border:2px solid var(--b);background:var(--c);color:var(--t);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
 .sb-role-opt:active{background:var(--bg)}
+/* 開球設定：拖曳排站位 */
+.sb-setup-swap{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
+.sb-setup-team-row{background:var(--bg);border-radius:12px;padding:10px}
+.sb-setup-team-row.sb-setup-serving{outline:2px solid var(--p)}
+.sb-setup-team-name{font-size:.75rem;font-weight:700;color:var(--m);margin-bottom:8px}
+.sb-swap-row{display:flex;gap:8px}
+.sb-swap-slot{flex:1;border:2px dashed var(--b);border-radius:10px;padding:8px 6px;text-align:center;min-height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.sb-swap-slot-label{font-size:.65rem;color:var(--m);font-weight:700}
+.sb-swap-chip{background:var(--p);color:#fff;border-radius:8px;padding:8px 10px;font-size:.85rem;font-weight:700;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none;width:100%;-webkit-tap-highlight-color:transparent}
+.sb-swap-chip.t2{background:var(--d)}
+.sb-swap-chip.sb-swap-dragging{opacity:.35}
+.sb-swap-ghost{position:fixed;z-index:400;pointer-events:none;border-radius:8px;padding:8px 14px;font-size:.85rem;font-weight:700;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.35)}
 /* Fullscreen — display-only viewer (查看記分板 entry point) */
 .sb-overlay{display:none;position:fixed;inset:0;z-index:350;background:var(--bg);flex-direction:column}
 .sb-overlay.show{display:flex}
@@ -233,8 +245,12 @@ body.dark .queue-warn{background:#3b1515}
 .sb-body.sb-scoreboard{gap:0;padding:0}
 
 /* Team half — shared by the fullscreen display and the inline control card.
-   Solid blue/red, edge to edge, one big name above the score and one below
-   (top→bottom = right→left service court), 🏸 next to whoever's serving. */
+   Solid blue/red, edge to edge, one big name above the score and one below.
+   Team 2's top/bottom is mirrored relative to team 1 (right↔left swapped)
+   so the two halves face each other like a real court — a serve from
+   team1's right (top) crosses diagonally to team2's right (bottom), not
+   straight across — instead of both teams showing "right" on top. 🏸 marks
+   whoever's serving. */
 .sb-team{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;overflow:hidden;gap:2px;padding:8px 4px}
 .sb-team.sb-interactive{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
 .sb-team.sb-interactive:active{filter:brightness(1.15)}
@@ -244,9 +260,10 @@ body.dark .queue-warn{background:#3b1515}
 .sb-team.t1 .sb-team-label{left:10px}
 .sb-team.t2 .sb-team-label{right:10px}
 .sb-name-row{display:flex;align-items:center;justify-content:center;gap:6px;max-width:100%;padding:0 6px}
-.sb-name-text{font-size:min(6.5vw,1.7rem);font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.sb-name-text{font-size:min(8.5vw,2.3rem);font-weight:800;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
 .sb-name-row.sb-name-serve .sb-name-text{color:var(--w)}
-.sb-ball{font-size:min(5.5vw,1.35rem);flex-shrink:0}
+.sb-name-side{font-size:min(3.2vw,.72rem);color:rgba(255,255,255,.65);font-weight:700;flex-shrink:0}
+.sb-ball{font-size:min(6.5vw,1.6rem);flex-shrink:0}
 .sb-score{font-size:min(24vw,30vh,190px);font-weight:800;line-height:1;color:#fff;margin:2px 0}
 
 /* Inline control card — sits above 排點's courts-grid instead of taking over
@@ -258,6 +275,7 @@ body.dark .queue-warn{background:#3b1515}
 .sb-card-courts .sb-score{font-size:min(11vw,60px)}
 .sb-card-courts .sb-name-text{font-size:min(3.8vw,.95rem)}
 .sb-card-courts .sb-ball{font-size:min(3.4vw,.9rem)}
+.sb-card-courts .sb-name-side{font-size:min(2.4vw,.6rem)}
 .sb-card-ctrl{display:flex;gap:10px;padding:10px 14px}
 .sb-card-ctrl .btn{flex:1;padding:10px;font-size:.85rem}
 
@@ -2056,25 +2074,83 @@ function renderSbSetup(){
       +'<button class="sb-role-opt" onclick="sbPickServeTeam(2)">'+esc(sbState.t2p.join(' & '))+'</button>'
       +'<button class="btn bo" style="width:100%" onclick="sbCancelSetup()">取消</button>';
   }else{
-    var names=sbSetupTeam===1?sbState.t1p:sbState.t2p;
-    el.innerHTML='<div style="font-weight:700;margin-bottom:14px;color:var(--t)">'+esc(names[0])+' 還是 '+esc(names[1])+' 站右邊發球？</div>'
-      +'<button class="sb-role-opt" onclick="sbPickRight(0)">'+esc(names[0])+'（站右邊）</button>'
-      +'<button class="sb-role-opt" onclick="sbPickRight(1)">'+esc(names[1])+'（站右邊）</button>'
-      +'<button class="btn bo" style="width:100%" onclick="sbSetupTeam=null;renderSbSetup()">上一步</button>';
+    renderSbSetupSwap();
   }
 }
 function sbPickServeTeam(team){
   sbSetupTeam=team;
   renderSbSetup();
 }
-function sbPickRight(idx){
-  if(sbSetupTeam===1)sbState.t1RightIdx=idx;else sbState.t2RightIdx=idx;
+/* 站位確認：發球方跟接發球方都要選，用拖曳的方式在「右」「左」兩個格子
+   之間互換球員（只有兩人兩格，拖過去就是跟原本站那格的人互換）。 */
+function renderSbSetupSwap(){
+  var el=document.getElementById('sb-setup-body');
+  function teamRow(team){
+    var names=team===1?sbState.t1p:sbState.t2p;
+    var rightIdx=team===1?sbState.t1RightIdx:sbState.t2RightIdx;
+    var serving=team===sbSetupTeam;
+    function slot(idx,side){
+      return '<div class="sb-swap-slot" data-team="'+team+'" data-side="'+side+'">'
+        +'<div class="sb-swap-slot-label">'+(side==='R'?'右':'左')+'</div>'
+        +'<div class="sb-swap-chip'+(team===2?' t2':'')+'" onpointerdown="sbSwapPointerDown(event,'+team+')">'+esc(names[idx]||'')+'</div>'
+        +'</div>';
+    }
+    return '<div class="sb-setup-team-row'+(serving?' sb-setup-serving':'')+'">'
+      +'<div class="sb-setup-team-name">隊伍 '+team+(serving?'（先發球）':'（接發球）')+'</div>'
+      +'<div class="sb-swap-row">'+slot(rightIdx,'R')+slot(1-rightIdx,'L')+'</div>'
+      +'</div>';
+  }
+  el.innerHTML='<div style="font-weight:700;margin-bottom:4px;color:var(--t)">確認雙方站位</div>'
+    +'<div style="font-size:.76rem;color:var(--m);margin-bottom:12px">拖曳球員可以跟隊友互換左右邊</div>'
+    +'<div class="sb-setup-swap">'+teamRow(1)+teamRow(2)+'</div>'
+    +'<button class="btn bp" style="width:100%" onclick="sbConfirmSetup()">✓ 確認，開始計分</button>'
+    +'<button class="btn bo" style="width:100%;margin-top:6px" onclick="sbSetupTeam=null;renderSbSetup()">上一步</button>';
+}
+var sbSwapDrag=null;
+function sbSwapPointerDown(e,team){
+  e.preventDefault();
+  var chip=e.currentTarget;
+  var slot=chip.closest('.sb-swap-slot');
+  var ghost=document.createElement('div');
+  ghost.className='sb-swap-ghost'+(team===2?' t2':'');
+  ghost.style.background=team===1?'#2563eb':'#dc2626';
+  ghost.textContent=chip.textContent;
+  document.body.appendChild(ghost);
+  sbSwapDrag={team:team,origSide:slot.dataset.side,ghost:ghost};
+  chip.classList.add('sb-swap-dragging');
+  sbSwapMove(e);
+  document.addEventListener('pointermove',sbSwapMove);
+  document.addEventListener('pointerup',sbSwapUp);
+}
+function sbSwapMove(e){
+  if(!sbSwapDrag)return;
+  sbSwapDrag.ghost.style.left=(e.clientX-42)+'px';
+  sbSwapDrag.ghost.style.top=(e.clientY-18)+'px';
+}
+function sbSwapUp(e){
+  if(!sbSwapDrag)return;
+  document.removeEventListener('pointermove',sbSwapMove);
+  document.removeEventListener('pointerup',sbSwapUp);
+  var d=sbSwapDrag;sbSwapDrag=null;
+  d.ghost.remove();
+  var chip=document.querySelector('.sb-swap-dragging');
+  if(chip)chip.classList.remove('sb-swap-dragging');
+  var el=document.elementFromPoint(e.clientX,e.clientY);
+  var slot=el&&el.closest('.sb-swap-slot');
+  if(slot&&parseInt(slot.dataset.team,10)===d.team&&slot.dataset.side!==d.origSide){
+    if(d.team===1)sbState.t1RightIdx=1-sbState.t1RightIdx;
+    else sbState.t2RightIdx=1-sbState.t2RightIdx;
+    renderSbSetupSwap();
+  }
+}
+function sbConfirmSetup(){
   sbState.server=sbSetupTeam;
   sbSetupTeam=null;
   document.getElementById('sb-setup-mo').classList.remove('show');
   sbSyncAndRender();
 }
 function sbCancelSetup(){
+  if(sbSwapDrag){document.removeEventListener('pointermove',sbSwapMove);document.removeEventListener('pointerup',sbSwapUp);sbSwapDrag.ghost.remove();sbSwapDrag=null;}
   document.getElementById('sb-setup-mo').classList.remove('show');
   sbRole=null;sbCourtIdx=-1;sbSetupTeam=null;
 }
@@ -2085,22 +2161,27 @@ function sbServerIdx(team,score,rightIdx,server){
   return (score%2===0)?rightIdx:(1-rightIdx);
 }
 /* interactive=true (控分端): 點整個色塊就是幫這隊加分，不用另外按鈕。
-   名字由上到下＝右發球區→左發球區，目前發球的人名字旁邊會有 🏸。 */
+   隊伍1由上到下＝右發球區→左發球區；隊伍2上下對調（左→右），這樣兩邊
+   面對面才會像真實球場一樣對角發球，不是兩隊都「右在上」。目前發球的人
+   名字旁邊會有 🏸。 */
 function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
   var serverIdx=sbServerIdx(team,score,rightIdx,server);
-  function nameRow(idx){
+  function nameRow(idx,label){
     var serving=idx===serverIdx;
     return '<div class="sb-name-row'+(serving?' sb-name-serve':'')+'">'
       +(serving?'<span class="sb-ball">🏸</span>':'')
       +'<span class="sb-name-text">'+esc(names[idx]||'')+'</span>'
+      +'<span class="sb-name-side">'+label+'</span>'
       +'</div>';
   }
+  var topIdx=team===1?rightIdx:1-rightIdx, topLabel=team===1?'右':'左';
+  var botIdx=team===1?1-rightIdx:rightIdx, botLabel=team===1?'左':'右';
   return '<div class="sb-team t'+team+(interactive?' sb-interactive':'')+'"'
     +(interactive?' onclick="sbScore('+team+')"':'')+'>'
     +'<div class="sb-team-label">隊伍 '+team+'</div>'
-    +nameRow(rightIdx)
+    +nameRow(topIdx,topLabel)
     +'<div class="sb-score">'+score+'</div>'
-    +nameRow(1-rightIdx)
+    +nameRow(botIdx,botLabel)
     +'</div>';
 }
 /* 排點畫面上方的記分板卡片（控分本體）。sched.active 為 false 時（結束
