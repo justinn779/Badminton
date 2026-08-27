@@ -224,6 +224,10 @@ body.dark .queue-warn{background:#3b1515}
 /* Scoreboard */
 .sb-role-opt{width:100%;padding:20px;font-size:1.05rem;font-weight:700;border-radius:14px;margin-bottom:12px;border:2px solid var(--b);background:var(--c);color:var(--t);cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
 .sb-role-opt:active{background:var(--bg)}
+.sb-pick-row{display:flex;gap:8px;align-items:stretch;margin-bottom:12px}
+.sb-pick-row .sb-role-opt{margin-bottom:0;flex:1}
+.sb-pick-remove{flex-shrink:0;width:48px;border-radius:12px;border:2px solid var(--b);background:var(--c);color:var(--d);font-size:1.1rem;cursor:pointer;-webkit-tap-highlight-color:transparent;-webkit-appearance:none}
+.sb-pick-remove:active{background:var(--bg)}
 /* 開球設定：拖曳排站位 */
 .sb-setup-swap{display:flex;flex-direction:column;gap:12px;margin-bottom:16px}
 .sb-setup-team-row{background:var(--bg);border-radius:12px;padding:10px}
@@ -253,7 +257,6 @@ body.dark .queue-warn{background:#3b1515}
    whoever's serving. */
 .sb-team{flex:1;position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:0;overflow:hidden;gap:2px;padding:8px 4px}
 .sb-team.sb-interactive{cursor:pointer;-webkit-tap-highlight-color:transparent;touch-action:none}
-.sb-swipe-hint{position:absolute;bottom:10px;font-size:min(2.6vw,3vh,26px);color:rgba(255,255,255,.55);font-weight:600;letter-spacing:.02em}
 .sb-team.sb-interactive:active{filter:brightness(1.15)}
 .sb-team.t1{background:#2563eb}
 .sb-team.t2{background:#dc2626}
@@ -2024,20 +2027,27 @@ function finishNoScore(idx){
    listener and vice versa. */
 var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbSetupTeam=null,sbStaleTimer=null,sbLastDoc=null;
 var sbState={s1:0,s2:0,t1p:['',''],t2p:['',''],t1RightIdx:0,t2RightIdx:0,server:null,hist:[]};
-var SB_STALE_MS=10*60*1000; // no score update in 10 min → treat as abandoned (see closing-the-app cleanup below)
+var SB_STALE_MS=10*60*1000; // actively-open viewer: no update in 10 min → flag as abandoned (long, so a normal pause between points doesn't flicker to an error)
+var SB_PICKER_STALE_MS=2*60*1000; // the "查看記分板" court list is stricter — don't offer picking a match that's been quiet this long
 
 function sbDocRef(idx){
   return db.collection('users').doc(currentUser.uid).collection('live').doc('court'+idx);
 }
-function sbIsStale(d){
-  return !d.updatedAt||(Date.now()-d.updatedAt)>SB_STALE_MS;
+function sbIsStale(d,thresholdMs){
+  return !d.updatedAt||(Date.now()-d.updatedAt)>(thresholdMs||SB_STALE_MS);
 }
 /* Closing the app mid-match (swiping it away, not pressing 結束比賽/✕)
    used to leave the Firestore doc active:true forever, so any viewer would
    see a permanently frozen score. pagehide is best-effort cleanup for the
-   common case (works on most browsers when the tab/app is actually closed);
-   sbIsStale + the picker filter below are the real fix, since pagehide
-   can't be relied on for a killed/crashed app. */
+   common case (works on most browsers when the tab/app is actually closed)
+   — but it's genuinely unreliable on mobile (the OS can kill the page
+   before any JS runs), so it's not the real fix, just a bonus for when it
+   does fire. There's no reliable way to detect "the other device is gone"
+   purely client-side without a presence feature this app doesn't have
+   (Firestore has no onDisconnect; that's Realtime Database), so the actual
+   fixes are: sbIsStale + SB_PICKER_STALE_MS keeping the 查看記分板 list
+   fairly strict, and the picker's ✕ button letting anyone clear a session
+   they know is dead immediately, without waiting on any timer at all. */
 window.addEventListener('pagehide',function(){
   if(sbRole==='control'&&sbCourtIdx>=0&&currentUser){
     try{sbDocRef(sbCourtIdx).delete();}catch(e){}
@@ -2080,14 +2090,27 @@ function showSbCourtPicker(){
     snap.forEach(function(doc){
       var m=/^court(\d+)$/.exec(doc.id);
       var d=doc.data();
-      if(m&&d.active&&!sbIsStale(d))active.push(parseInt(m[1]));
+      if(m&&d.active&&!sbIsStale(d,SB_PICKER_STALE_MS))active.push(parseInt(m[1]));
     });
     active.sort(function(a,b){return a-b;});
     body.innerHTML=active.length
-      ?active.map(function(i){return '<button class="sb-role-opt" onclick="pickSbCourt('+i+')">場地 '+(i+1)+'</button>';}).join('')
+      ?active.map(function(i){return '<div class="sb-pick-row">'
+          +'<button class="sb-role-opt" onclick="pickSbCourt('+i+')">場地 '+(i+1)+'</button>'
+          +'<button class="sb-pick-remove" onclick="event.stopPropagation();removeSbCourt('+i+')" title="移除這筆記分板">✕</button>'
+          +'</div>';}).join('')
       :'<div class="eh">目前沒有正在進行的記分板</div>';
   }).catch(function(){
     body.innerHTML='<div class="eh">讀取失敗，請檢查網路</div>';
+  });
+}
+/* 手動清掉一筆記分板 — 不用等任何自動偵測（本來就沒辦法可靠偵測到「對方
+   App 已經關掉」），看到卡住的場次自己按掉就好，立刻生效。 */
+function removeSbCourt(idx){
+  sbDocRef(idx).delete().then(function(){
+    toast('已移除場地 '+(idx+1)+' 的記分板');
+    showSbCourtPicker();
+  }).catch(function(){
+    toast('移除失敗，請檢查網路');
   });
 }
 function pickSbCourt(idx){
@@ -2235,7 +2258,6 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive,isLeftSide
     +nameRow(topIdx,topLabel)
     +'<div class="sb-score">'+score+'</div>'
     +nameRow(botIdx,botLabel)
-    +(swipeable?'<div class="sb-swipe-hint">點一下 +1・下滑 -1</div>':'')
     +'</div>';
 }
 /* ── 查看記分板顯示端的手勢：輕點加分、下滑退回上一分 ──
