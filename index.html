@@ -1989,14 +1989,27 @@ function hideSbRole(){
 }
 /* 比賽分頁「開始比賽」下方的純顯示端入口：不靠這台裝置自己有排點資料
    （sched.playing）才看得到場地卡片 — 排點狀態本來就沒有跨裝置同步，所以
-   平板只要跟控分那台登入同一個帳號，直接選場地編號就能看，不用自己也跑
-   一次排點。 */
+   平板只要跟控分那台登入同一個帳號就能看。場地清單改成直接查 Firestore
+   的 live 集合，只列出「目前真的有人在控分」的場地，而不是固定列 1~4
+   讓你自己猜。 */
 function showSbCourtPicker(){
   var body=document.getElementById('sb-pick-body');
-  body.innerHTML=[0,1,2,3].map(function(i){
-    return '<button class="sb-role-opt" onclick="pickSbCourt('+i+')">場地 '+(i+1)+'</button>';
-  }).join('');
+  body.innerHTML='<div class="eh">查詢中...</div>';
   document.getElementById('sb-pick-mo').classList.add('show');
+  if(!currentUser){body.innerHTML='<div class="eh">尚未登入</div>';return;}
+  db.collection('users').doc(currentUser.uid).collection('live').get().then(function(snap){
+    var active=[];
+    snap.forEach(function(doc){
+      var m=/^court(\d+)$/.exec(doc.id);
+      if(m&&doc.data().active)active.push(parseInt(m[1]));
+    });
+    active.sort(function(a,b){return a-b;});
+    body.innerHTML=active.length
+      ?active.map(function(i){return '<button class="sb-role-opt" onclick="pickSbCourt('+i+')">場地 '+(i+1)+'</button>';}).join('')
+      :'<div class="eh">目前沒有正在進行的記分板</div>';
+  }).catch(function(){
+    body.innerHTML='<div class="eh">讀取失敗，請檢查網路</div>';
+  });
 }
 function pickSbCourt(idx){
   document.getElementById('sb-pick-mo').classList.remove('show');
