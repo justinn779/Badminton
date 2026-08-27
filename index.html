@@ -2004,12 +2004,27 @@ function finishNoScore(idx){
    onSnapshot. Kept in its own users/{uid}/live/court{N} doc, separate from
    the normal players/bill docs, so unrelated data edits never trigger this
    listener and vice versa. */
-var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbSetupTeam=null;
+var sbCourtIdx=-1,sbRole=null,sbUnsub=null,sbSetupTeam=null,sbStaleTimer=null,sbLastDoc=null;
 var sbState={s1:0,s2:0,t1p:['',''],t2p:['',''],t1RightIdx:0,t2RightIdx:0,server:null,hist:[]};
+var SB_STALE_MS=3*60*1000; // no score update in 3 min → treat as abandoned (see closing-the-app cleanup below)
 
 function sbDocRef(idx){
   return db.collection('users').doc(currentUser.uid).collection('live').doc('court'+idx);
 }
+function sbIsStale(d){
+  return !d.updatedAt||(Date.now()-d.updatedAt)>SB_STALE_MS;
+}
+/* Closing the app mid-match (swiping it away, not pressing 結束比賽/✕)
+   used to leave the Firestore doc active:true forever, so any viewer would
+   see a permanently frozen score. pagehide is best-effort cleanup for the
+   common case (works on most browsers when the tab/app is actually closed);
+   sbIsStale + the picker filter below are the real fix, since pagehide
+   can't be relied on for a killed/crashed app. */
+window.addEventListener('pagehide',function(){
+  if(sbRole==='control'&&sbCourtIdx>=0&&currentUser){
+    try{sbDocRef(sbCourtIdx).delete();}catch(e){}
+  }
+});
 /* 排點畫面場地卡片上的「記分板」：按下去這台裝置就是控分端，不用再選
    角色 — 純顯示（給其他裝置看）走的是另一個入口（查看記分板），不會經過
    這裡。開球設定用小視窗問完就關掉，控分本體是排點畫面上方的卡片
@@ -2045,7 +2060,8 @@ function showSbCourtPicker(){
     var active=[];
     snap.forEach(function(doc){
       var m=/^court(\d+)$/.exec(doc.id);
-      if(m&&doc.data().active)active.push(parseInt(m[1]));
+      var d=doc.data();
+      if(m&&d.active&&!sbIsStale(d))active.push(parseInt(m[1]));
     });
     active.sort(function(a,b){return a-b;});
     body.innerHTML=active.length
@@ -2161,9 +2177,10 @@ function sbServerIdx(team,score,rightIdx,server){
   return (score%2===0)?rightIdx:(1-rightIdx);
 }
 /* interactive=true (控分端): 點整個色塊就是幫這隊加分，不用另外按鈕。
-   隊伍1由上到下＝右發球區→左發球區；隊伍2上下對調（左→右），這樣兩邊
-   面對面才會像真實球場一樣對角發球，不是兩隊都「右在上」。目前發球的人
-   名字旁邊會有 🏸。 */
+   右/左是站在該隊自己的角度、面對對手時的左右手，所以隊伍1（面向右）跟
+   隊伍2（面向左）左右剛好相反，就像兩人面對面時彼此的左右手是對調的
+   （隊伍1右在下、隊伍2右在上），不是兩隊都一樣。目前發球的人名字旁邊會
+   有 🏸。 */
 function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
   var serverIdx=sbServerIdx(team,score,rightIdx,server);
   function nameRow(idx,label){
@@ -2174,8 +2191,13 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
       +'<span class="sb-name-side">'+label+'</span>'
       +'</div>';
   }
-  var topIdx=team===1?rightIdx:1-rightIdx, topLabel=team===1?'右':'左';
-  var botIdx=team===1?1-rightIdx:rightIdx, botLabel=team===1?'左':'右';
+  /* Right/left is defined from each player's own perspective facing their
+     opponent — so with team1 on screen-left facing right (toward the net)
+     and team2 on screen-right facing left, team1's right hand points toward
+     the BOTTOM of the screen while team2's right hand points toward the
+     TOP (mirror image, like two people facing each other). */
+  var topIdx=team===1?1-rightIdx:rightIdx, topLabel=team===1?'左':'右';
+  var botIdx=team===1?rightIdx:1-rightIdx, botLabel=team===1?'右':'左';
   return '<div class="sb-team t'+team+(interactive?' sb-interactive':'')+'"'
     +(interactive?' onclick="sbScore('+team+')"':'')+'>'
     +'<div class="sb-team-label">隊伍 '+team+'</div>'
@@ -2248,7 +2270,11 @@ function sbFinish(){
   showScoreModal(idx,{s1:s1,s2:s2});
 }
 
-/* ── 顯示端（查看記分板）：純讀取全螢幕，跟控分卡片共用同一套面板渲染 ── */
+/* ── 顯示端（查看記分板）：純讀取全螢幕，跟控分卡片共用同一套面板渲染 ──
+   除了資料真的更新時 onSnapshot 會觸發重畫，也額外用計時器每 15 秒重新
+   檢查一次是否閒置過久（sbIsStale）— 因為 Firestore 監聽只在文件真的被
+   寫入時才會觸發，控分端如果直接關掉 App、不再寫入，畫面不會自己知道
+   「這其實已經沒人在控分了」，需要主動用時間去判斷。 */
 function sbStartDisplay(){
   document.getElementById('sb-hdr-title').textContent='場地 '+(sbCourtIdx+1)+'・比分';
   var el=document.getElementById('sb-body');
@@ -2256,24 +2282,43 @@ function sbStartDisplay(){
   el.innerHTML='<div class="eh" style="margin:auto">連線中...</div>';
   document.getElementById('sb-overlay').classList.add('show');
   if(sbUnsub)sbUnsub();
+  sbLastDoc=null;
   sbUnsub=sbDocRef(sbCourtIdx).onSnapshot(function(doc){
-    if(!doc.exists||!doc.data().active){
-      el.className='sb-body';
-      el.innerHTML='<div class="eh" style="margin:auto">尚無比分資料</div>';
-      return;
-    }
-    var d=doc.data();
-    el.className='sb-body sb-scoreboard';
-    el.innerHTML=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false)
-      +sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false);
+    sbLastDoc=doc;
+    sbRenderDisplay();
   },function(){
+    sbLastDoc=null;
     el.className='sb-body';
     el.innerHTML='<div class="eh" style="margin:auto">連線失敗</div>';
   });
+  clearInterval(sbStaleTimer);
+  sbStaleTimer=setInterval(sbRenderDisplay,15000);
+}
+function sbRenderDisplay(){
+  var el=document.getElementById('sb-body');
+  if(!el)return;
+  var doc=sbLastDoc;
+  if(!doc||!doc.exists||!doc.data().active){
+    el.className='sb-body';
+    el.innerHTML='<div class="eh" style="margin:auto">尚無比分資料</div>';
+    return;
+  }
+  var d=doc.data();
+  if(sbIsStale(d)){
+    el.className='sb-body';
+    el.innerHTML='<div class="eh" style="margin:auto;padding:0 28px;text-align:center;line-height:1.6">⏸️ 這場記分板已超過 3 分鐘沒有更新<br>控分端可能已經關閉，比分僅供參考</div>';
+    return;
+  }
+  el.className='sb-body sb-scoreboard';
+  el.innerHTML=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false)
+    +sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false);
 }
 function sbCloseOverlay(){
   document.getElementById('sb-overlay').classList.remove('show');
   if(sbUnsub){sbUnsub();sbUnsub=null;}
+  clearInterval(sbStaleTimer);
+  sbStaleTimer=null;
+  sbLastDoc=null;
   sbRole=null;
   sbSetupTeam=null;
 }
