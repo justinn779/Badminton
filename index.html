@@ -2040,6 +2040,7 @@ function showScoreboardRole(idx){
     t2p:r.t2.map(function(p){return p.name;}),
     t1RightIdx:0,t2RightIdx:0,
     server:null,
+    leftTeam:1, /* which team is on screen-left in 控分（this device）— 查看記分板 always shows the mirror of this, since it faces the players from the opposite side */
     hist:[]
   };
   sbSetupTeam=null;
@@ -2116,11 +2117,20 @@ function renderSbSetupSwap(){
       +'<div class="sb-swap-row">'+slot(rightIdx,'R')+slot(1-rightIdx,'L')+'</div>'
       +'</div>';
   }
+  var rightTeam=sbState.leftTeam===1?2:1;
   el.innerHTML='<div style="font-weight:700;margin-bottom:4px;color:var(--t)">確認雙方站位</div>'
     +'<div style="font-size:.76rem;color:var(--m);margin-bottom:12px">拖曳球員可以跟隊友互換左右邊</div>'
+    +'<div style="display:flex;align-items:center;justify-content:space-between;background:var(--bg);border-radius:10px;padding:10px 12px;margin-bottom:14px">'
+    +'<span style="font-size:.78rem;color:var(--t)">控分畫面：<b>隊伍'+sbState.leftTeam+'在左、隊伍'+rightTeam+'在右</b><br><span style="color:var(--m);font-size:.7rem">查看記分板會自動顯示相反方向（面對面的角度）</span></span>'
+    +'<button class="btn bo" style="padding:8px 12px;font-size:.78rem;flex-shrink:0" onclick="sbToggleLeftTeam()">⇄ 交換</button>'
+    +'</div>'
     +'<div class="sb-setup-swap">'+teamRow(1)+teamRow(2)+'</div>'
     +'<button class="btn bp" style="width:100%" onclick="sbConfirmSetup()">✓ 確認，開始計分</button>'
     +'<button class="btn bo" style="width:100%;margin-top:6px" onclick="sbSetupTeam=null;renderSbSetup()">上一步</button>';
+}
+function sbToggleLeftTeam(){
+  sbState.leftTeam=sbState.leftTeam===1?2:1;
+  renderSbSetupSwap();
 }
 var sbSwapDrag=null;
 function sbSwapPointerDown(e,team){
@@ -2210,15 +2220,15 @@ function sbTeamPanelHtml(team,names,score,rightIdx,server,interactive){
    比賽/尚未排點）不會有東西呼叫這裡，因為 sbCloseInline 會清空 sbCourtIdx。 */
 function renderSbCard(){
   if(sbRole!=='control'||sbCourtIdx<0)return '';
+  var p1=sbTeamPanelHtml(1,sbState.t1p,sbState.s1,sbState.t1RightIdx,sbState.server,true);
+  var p2=sbTeamPanelHtml(2,sbState.t2p,sbState.s2,sbState.t2RightIdx,sbState.server,true);
+  var panels=sbState.leftTeam===2?(p2+p1):(p1+p2);
   return '<div class="card sb-card">'
     +'<div class="sb-card-hdr">'
     +'<span class="court-label">場地 '+(sbCourtIdx+1)+'・記分板</span>'
     +'<button class="sb-card-close" onclick="sbCancelInline()">✕</button>'
     +'</div>'
-    +'<div class="sb-card-courts">'
-    +sbTeamPanelHtml(1,sbState.t1p,sbState.s1,sbState.t1RightIdx,sbState.server,true)
-    +sbTeamPanelHtml(2,sbState.t2p,sbState.s2,sbState.t2RightIdx,sbState.server,true)
-    +'</div>'
+    +'<div class="sb-card-courts">'+panels+'</div>'
     +'<div class="sb-card-ctrl">'
     +'<button class="btn bo" onclick="event.stopPropagation();sbUndo()"'+(sbState.hist.length?'':' disabled')+'>↩️ 撤銷上一步</button>'
     +'<button class="btn bd" onclick="event.stopPropagation();sbFinish()">結束比賽</button>'
@@ -2252,6 +2262,7 @@ function sbSyncAndRender(){
     s1:sbState.s1,s2:sbState.s2,
     t1RightIdx:sbState.t1RightIdx,t2RightIdx:sbState.t2RightIdx,
     server:sbState.server,
+    leftTeam:sbState.leftTeam,
     updatedAt:Date.now()
   }).catch(function(){toast('記分板連線失敗，請檢查網路');});
 }
@@ -2310,8 +2321,12 @@ function sbRenderDisplay(){
     return;
   }
   el.className='sb-body sb-scoreboard';
-  el.innerHTML=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false)
-    +sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false);
+  var p1=sbTeamPanelHtml(1,d.t1p||[],d.s1||0,d.t1RightIdx||0,d.server,false);
+  var p2=sbTeamPanelHtml(2,d.t2p||[],d.s2||0,d.t2RightIdx||0,d.server,false);
+  /* 查看記分板面對球員，跟控分端（自己看）是相反方向站，所以顯示順序永遠
+     是控分畫面的鏡射：控分把隊伍1放左邊，這裡就放右邊。 */
+  var controlLeftTeam=d.leftTeam||1;
+  el.innerHTML=controlLeftTeam===1?(p2+p1):(p1+p2);
 }
 function sbCloseOverlay(){
   document.getElementById('sb-overlay').classList.remove('show');
